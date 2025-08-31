@@ -154,7 +154,7 @@
             display: grid;
             grid-template-columns: 320px 1fr;
             grid-template-rows: auto auto auto 1fr;
-            grid-template-areas: "controls plot" "sampling plot" "conditionals plot" "formulas plot";
+            grid-template-areas: "controls plots" "sampling plots" "conditionals plots" "formulas plots";
             gap: 20px; padding: 20px; max-width: 1400px; margin: auto;
         }
         #gaussian-copula-app .panel { padding: 15px; border: 1px solid var(--border-color); border-radius: 5px; background-color: var(--panel-bg); }
@@ -162,7 +162,8 @@
         #gaussian-copula-app #gc-sampling-panel { grid-area: sampling; }
         #gaussian-copula-app #gc-conditionals-panel { grid-area: conditionals; }
         #gaussian-copula-app #gc-formulas-panel { grid-area: formulas; }
-        #gaussian-copula-app #gc-plot-container { grid-area: plot; padding: 0; display: flex; flex-direction: column; min-height: 500px; position: relative; }
+        #gaussian-copula-app #gc-plots-panel { grid-area: plots; display: flex; flex-direction: column; gap: 20px; padding: 0; border: none; background: transparent; }
+        #gaussian-copula-app .gc-plot-container { padding: 0; display: flex; flex-direction: column; min-height: 400px; position: relative; }
         #gaussian-copula-app h3 { margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
         #gaussian-copula-app h4 { margin-top: 0; }
         #gaussian-copula-app .param-group, #gaussian-copula-app .control-group { margin-bottom: 15px; }
@@ -177,13 +178,17 @@
         #gaussian-copula-app .axis path, #gaussian-copula-app .axis line { fill: none; stroke: #000; shape-rendering: crispEdges; }
         #gaussian-copula-app .scatter-dot { fill: lightblue; stroke: steelblue; opacity: 0.6; }
         #gaussian-copula-app .line-path { fill: none; stroke: #d9534f; stroke-width: 2px; }
+        #gaussian-copula-app .area-path { fill: steelblue; opacity: 0.3; }
+        #gaussian-copula-app #gc-density-tooltip { position: absolute; background-color: rgba(0, 0, 0, 0.75); color: white; padding: 5px 10px; border-radius: 3px; pointer-events: none; opacity: 0; font-size: 0.9em; z-index: 10; transform: translate(10px, -25px); }
+        #gaussian-copula-app .drag-selection { fill: rgba(255, 165, 0, 0.4); stroke: rgba(255, 165, 0, 1); stroke-width: 1px; }
+        #gaussian-copula-app .drag-text { font-size: 12px; font-weight: bold; fill: #d9534f; text-anchor: middle; }
 
         @media (max-width: 800px) {
             #distributions-app { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: "controls" "stats" "sampling" "plot"; }
             #distributions-app #stats-grid { grid-template-columns: 1fr; }
             #order-statistics-app { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: "controls" "stats" "plot"; }
             #order-statistics-app #os-stats-grid { grid-template-columns: 1fr; }
-            #gaussian-copula-app { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: "controls" "sampling" "conditionals" "plot" "formulas"; }
+            #gaussian-copula-app { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: "controls" "sampling" "conditionals" "plots" "formulas"; }
         }
     </style>
 </head>
@@ -496,19 +501,41 @@
                     <button id="gc-plot-cond-btn">Plot Conditional Density</button>
                 </div>
             </div>
-             <div id="gc-formulas-panel" class="panel">
-                <h3>Formulas</h3>
-                <p>Let \(u = F_X(x)\), \(v = F_Y(y)\), \(x' = \Phi^{-1}(u)\), and \(y' = \Phi^{-1}(v)\).</p>
-                <h4>Conditional on \(X=x\)</h4>
-                $$ f_{Y|X}(y|x) = \frac{f_Y(y)}{\phi(y')} \frac{1}{\sqrt{1-\rho^2}} \phi\left(\frac{y' - \rho x'}{\sqrt{1-\rho^2}}\right) $$
-                <h4>Conditional on \(X \ge x\)</h4>
-                $$ f_{Y|X \ge x}(y) = \frac{f_Y(y)}{1-u} \left[ 1 - \Phi\left(\frac{x' - \rho y'}{\sqrt{1-\rho^2}}\right) \right] $$
-                <h4>Conditional on \(X \le x\)</h4>
-                $$ f_{Y|X \le x}(y) = \frac{f_Y(y)}{u} \Phi\left(\frac{x' - \rho y'}{\sqrt{1-\rho^2}}\right) $$
-            </div>
+             <details id="gc-formulas-panel" class="panel">
+                <summary>Formulas</summary>
+                <div style="padding-top: 1rem;">
+                    <p>Let \(u = F_X(x)\), \(v = F_Y(y)\), \(x' = \Phi^{-1}(u)\), and \(y' = \Phi^{-1}(v)\).</p>
+                    <h4>Conditional on \(X=x\)</h4>
+                    $$ f_{Y|X}(y|x) = \frac{f_Y(y)}{\phi(y')} \frac{1}{\sqrt{1-\rho^2}} \phi\left(\frac{y' - \rho x'}{\sqrt{1-\rho^2}}\right) $$
+                    <h4>Conditional on \(X \ge x\)</h4>
+                    $$ f_{Y|X \ge x}(y) = \frac{f_Y(y)}{1-u} \left[ 1 - \Phi\left(\frac{x' - \rho y'}{\sqrt{1-\rho^2}}\right) \right] $$
+                    <h4>Conditional on \(X \le x\)</h4>
+                    $$ f_{Y|X \le x}(y) = \frac{f_Y(y)}{u} \Phi\left(\frac{x' - \rho y'}{\sqrt{1-\rho^2}}\right) $$
+                </div>
+            </details>
 
-            <div id="gc-plot-container" class="panel">
-                <svg id="gc-plot-svg"></svg>
+            <div id="gc-plots-panel">
+                <div id="gc-scatter-plot-container" class="panel gc-plot-container">
+                    <h4 style="text-align: center; margin-top: 0;">Samples from Joint Distribution</h4>
+                    <svg id="gc-scatter-plot-svg"></svg>
+                </div>
+                <div id="gc-density-plot-container" class="panel gc-plot-container">
+                    <h4 style="text-align: center; margin-top: 0;">Conditional Density</h4>
+                     <div style="display: flex; gap: 10px; justify-content: flex-end; padding: 0 20px;">
+                        <div class="control-group" style="margin-bottom: 0;">
+                            <label for="gc-interval-select">Shade Interval</label>
+                            <select id="gc-interval-select">
+                                <option value="0">None</option>
+                                <option value="p50">50%</option>
+                                <option value="p90">90%</option>
+                                <option value="p95" selected>95%</option>
+                                <option value="p99">99%</option>
+                            </select>
+                        </div>
+                    </div>
+                    <svg id="gc-density-plot-svg"></svg>
+                    <div id="gc-density-tooltip"></div>
+                </div>
             </div>
         </div>
     </main>
@@ -1337,13 +1364,25 @@ document.addEventListener('DOMContentLoaded', () => {
             rho: 0.5, samples: [], conditional: null,
         };
 
-        const svg = d3.select("#gc-plot-svg");
         const margin = { top: 20, right: 30, bottom: 40, left: 50 };
-        let width, height;
-        const xScale = d3.scaleLinear(), yScale = d3.scaleLinear();
-        const xAxis = svg.append("g").attr("class", "x-axis axis");
-        const yAxis = svg.append("g").attr("class", "y-axis axis");
-        const plotArea = svg.append("g").attr("class", "plot-area");
+
+        // Scatter plot elements
+        const scatterSvg = d3.select("#gc-scatter-plot-svg");
+        let scatterWidth, scatterHeight;
+        const scatterXScale = d3.scaleLinear(), scatterYScale = d3.scaleLinear();
+        const scatterXAxis = scatterSvg.append("g").attr("class", "x-axis axis");
+        const scatterYAxis = scatterSvg.append("g").attr("class", "y-axis axis");
+        const scatterPlotArea = scatterSvg.append("g").attr("class", "plot-area");
+
+        // Density plot elements
+        const densitySvg = d3.select("#gc-density-plot-svg");
+        const densityTooltip = d3.select("#gc-density-tooltip");
+        let densityWidth, densityHeight;
+        const densityXScale = d3.scaleLinear(), densityYScale = d3.scaleLinear();
+        const densityXAxis = densitySvg.append("g").attr("class", "x-axis axis");
+        const densityYAxis = densitySvg.append("g").attr("class", "y-axis axis");
+        const densityPlotArea = densitySvg.append("g").attr("class", "plot-area");
+        const densityDragLayer = densitySvg.append("g").attr("class", "drag-layer");
 
         function handleDistChange(varName) {
             const distSelect = document.getElementById(`gc-dist-select-${varName}`);
@@ -1387,7 +1426,8 @@ document.addEventListener('DOMContentLoaded', () => {
             currentState.jstatX = OS_DISTRIBUTIONS[currentState.distKeyX].jStat(currentState.paramsX);
             currentState.jstatY = OS_DISTRIBUTIONS[currentState.distKeyY].jStat(currentState.paramsY);
             
-            updatePlot();
+            updateScatterPlot();
+            updateDensityPlot();
             if (!options.fromURL) updateURL();
         }
 
@@ -1409,7 +1449,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     currentState.samples.push([x, y]);
                 }
             }
-            updatePlot();
+            updateScatterPlot();
         }
         
         function plotConditional() {
@@ -1461,57 +1501,203 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            currentState.conditional = { condPdf, condVar };
-            updatePlot();
+            currentState.conditional = { condPdf, condVar, condType, condValue };
+            updateDensityPlot();
         }
 
-        function updatePlot() {
-            const svgRect = svg.node().getBoundingClientRect();
-            width = svgRect.width - margin.left - margin.right;
-            height = svgRect.height - margin.top - margin.bottom;
-            plotArea.attr("transform", `translate(${margin.left},${margin.top})`);
+        function conditionalCdf(y, condInfo) {
+            const { condVar, condType, condValue } = condInfo;
+            let config1, params1, jstat1, config2, params2, jstat2;
+            if (condVar === 'X') {
+                [config1, params1, jstat1] = [OS_DISTRIBUTIONS[currentState.distKeyX], currentState.paramsX, currentState.jstatX];
+                [config2, params2, jstat2] = [OS_DISTRIBUTIONS[currentState.distKeyY], currentState.paramsY, currentState.jstatY];
+            } else { // condVar === 'Y'
+                [config1, params1, jstat1] = [OS_DISTRIBUTIONS[currentState.distKeyY], currentState.paramsY, currentState.jstatY];
+                [config2, params2, jstat2] = [OS_DISTRIBUTIONS[currentState.distKeyX], currentState.paramsX, currentState.jstatX];
+            }
+
+            const rho = currentState.rho;
+            const u = config1.cdf(condValue, jstat1, params1);
+            const x_prime = jStat.normal.inv(u, 0, 1);
+            const v = config2.cdf(y, jstat2, params2);
+            const y_prime = jStat.normal.inv(v, 0, 1);
+
+            if (!isFinite(x_prime) || !isFinite(y_prime)) return y_prime > 0 ? 1 : 0;
+
+            if (condType === 'eq') {
+                return jStat.normal.cdf((y_prime - rho * x_prime) / Math.sqrt(1 - rho * rho), 0, 1);
+            } else if (condType === 'ge') {
+                return (v - bivariateNormalCDF(x_prime, y_prime, rho)) / (1 - u);
+            } else { // le
+                return bivariateNormalCDF(x_prime, y_prime, rho) / u;
+            }
+        }
+
+        function inverseConditionalCdf(p, condInfo, domain) {
+            if (p <= 0) return domain[0];
+            if (p >= 1) return domain[1];
+
+            if (condInfo.condType === 'eq') {
+                let config2, jstat2, params2;
+                if (condInfo.condVar === 'X') {
+                    [config2, jstat2, params2] = [OS_DISTRIBUTIONS[currentState.distKeyY], currentState.jstatY, currentState.paramsY];
+                } else {
+                    [config2, jstat2, params2] = [OS_DISTRIBUTIONS[currentState.distKeyX], currentState.jstatX, currentState.paramsX];
+                }
+                const rho = currentState.rho;
+                const u = OS_DISTRIBUTIONS[condInfo.condVar === 'X' ? currentState.distKeyX : currentState.distKeyY].cdf(condInfo.condValue, condInfo.condVar === 'X' ? currentState.jstatX : currentState.jstatY, condInfo.condVar === 'X' ? currentState.paramsX : currentState.paramsY);
+                const x_prime = jStat.normal.inv(u, 0, 1);
+                const val = jStat.normal.inv(p, 0, 1) * Math.sqrt(1 - rho*rho) + rho * x_prime;
+                return config2.inv(jStat.normal.cdf(val, 0, 1), jstat2, params2);
+            }
+
+            // For ge and le conditions, use numerical inversion (binary search)
+            let low = domain[0], high = domain[1];
+            for (let i = 0; i < 50; i++) { // 50 iterations for precision
+                const mid = (low + high) / 2;
+                if (conditionalCdf(mid, condInfo) < p) {
+                    low = mid;
+                } else {
+                    high = mid;
+                }
+            }
+            return (low + high) / 2;
+        }
+
+        function updateScatterPlot() {
+            const svgRect = scatterSvg.node().getBoundingClientRect();
+            if (svgRect.width <= 0) return;
+            scatterWidth = svgRect.width - margin.left - margin.right;
+            scatterHeight = svgRect.height - margin.top - margin.bottom;
+            scatterPlotArea.attr("transform", `translate(${margin.left},${margin.top})`);
 
             const { distKeyX, paramsX, jstatX, distKeyY, paramsY, jstatY } = currentState;
+            if (!jstatX || !jstatY) return;
             const configX = OS_DISTRIBUTIONS[distKeyX];
             const configY = OS_DISTRIBUTIONS[distKeyY];
             
             const xDomain = configX.domain(paramsX, jstatX);
             const yDomain = configY.domain(paramsY, jstatY);
             
-            xScale.domain(xDomain).range([0, width]);
-            yScale.domain(yDomain).range([height, 0]);
+            scatterXScale.domain(xDomain).range([0, scatterWidth]);
+            scatterYScale.domain(yDomain).range([scatterHeight, 0]);
 
-            xAxis.attr("transform", `translate(${margin.left}, ${height + margin.top})`).call(d3.axisBottom(xScale));
-            yAxis.attr("transform", `translate(${margin.left}, ${margin.top})`).call(d3.axisLeft(yScale));
+            scatterXAxis.attr("transform", `translate(${margin.left}, ${scatterHeight + margin.top})`).call(d3.axisBottom(scatterXScale));
+            scatterYAxis.attr("transform", `translate(${margin.left}, ${margin.top})`).call(d3.axisLeft(scatterYScale));
 
-            svg.selectAll(".plot-label").remove();
-            svg.append("text").attr("class", "plot-label").attr("x", margin.left + width / 2).attr("y", height + margin.top + 35).style("text-anchor", "middle").text("X");
-            svg.append("text").attr("class", "plot-label").attr("transform", "rotate(-90)").attr("y", 0).attr("x", -(margin.top + height / 2)).attr("dy", "1em").style("text-anchor", "middle").text("Y");
+            scatterSvg.selectAll(".plot-label").remove();
+            scatterSvg.append("text").attr("class", "plot-label").attr("x", margin.left + scatterWidth / 2).attr("y", scatterHeight + margin.top + 35).style("text-anchor", "middle").text("X");
+            scatterSvg.append("text").attr("class", "plot-label").attr("transform", "rotate(-90)").attr("y", 0).attr("x", -(margin.top + scatterHeight / 2)).attr("dy", "1em").style("text-anchor", "middle").text("Y");
 
-            plotArea.selectAll("*").remove();
-
-            plotArea.selectAll(".scatter-dot")
+            scatterPlotArea.selectAll(".scatter-dot").remove();
+            scatterPlotArea.selectAll(".scatter-dot")
                 .data(currentState.samples)
                 .enter().append("circle")
                 .attr("class", "scatter-dot")
-                .attr("cx", d => xScale(d[0]))
-                .attr("cy", d => yScale(d[1]))
+                .attr("cx", d => scatterXScale(d[0]))
+                .attr("cy", d => scatterYScale(d[1]))
                 .attr("r", 3);
+        }
 
-            if (currentState.conditional) {
-                const { condPdf, condVar } = currentState.conditional;
-                if (condVar === 'X') { // Plotting f(y|X)
-                    const plotData = d3.range(yDomain[0], yDomain[1], (yDomain[1] - yDomain[0]) / 200).map(y => ({x: y, y: condPdf(y)}));
-                    const yPdfScale = d3.scaleLinear().domain([0, d3.max(plotData, d => d.y) * 1.1]).range([width, width-100]);
-                    const pdfLine = d3.line().x(d => yPdfScale(d.y)).y(d => yScale(d.x));
-                    plotArea.append("path").datum(plotData).attr("class", "line-path").attr("d", pdfLine);
-                } else { // Plotting f(x|Y)
-                    const plotData = d3.range(xDomain[0], xDomain[1], (xDomain[1] - xDomain[0]) / 200).map(x => ({x: x, y: condPdf(x)}));
-                    const xPdfScale = d3.scaleLinear().domain([0, d3.max(plotData, d => d.y) * 1.1]).range([0, 100]);
-                    const pdfLine = d3.line().y(d => xPdfScale(d.y)).x(d => xScale(d.x));
-                    plotArea.append("path").datum(plotData).attr("class", "line-path").attr("d", pdfLine);
+        function updateDensityPlot() {
+            if (!currentState.conditional) {
+                densitySvg.style("display", "none");
+                document.getElementById('gc-density-plot-container').querySelector('h4').style.display = 'none';
+                document.getElementById('gc-density-plot-container').querySelector('div').style.display = 'none';
+                return;
+            }
+            densitySvg.style("display", "block");
+            document.getElementById('gc-density-plot-container').querySelector('h4').style.display = 'block';
+            document.getElementById('gc-density-plot-container').querySelector('div').style.display = 'flex';
+            
+            const svgRect = densitySvg.node().getBoundingClientRect();
+             if (svgRect.width <= 0) return;
+            densityWidth = svgRect.width - margin.left - margin.right;
+            densityHeight = svgRect.height - margin.top - margin.bottom;
+            densityPlotArea.attr("transform", `translate(${margin.left},${margin.top})`);
+            densityDragLayer.attr("transform", `translate(${margin.left},${margin.top})`);
+            
+            const { condPdf, condVar } = currentState.conditional;
+            const { distKeyX, paramsX, jstatX, distKeyY, paramsY, jstatY } = currentState;
+            
+            const [domainConfig, domainParams, domainJstat] = (condVar === 'X') ?
+                [OS_DISTRIBUTIONS[distKeyY], paramsY, jstatY] :
+                [OS_DISTRIBUTIONS[distKeyX], paramsX, jstatX];
+
+            const plotDomain = domainConfig.domain(domainParams, domainJstat);
+            const plotData = d3.range(plotDomain[0], plotDomain[1], (plotDomain[1] - plotDomain[0]) / 200).map(v => ({x: v, y: condPdf(v)}));
+            const yMax = d3.max(plotData, d => d.y);
+
+            densityXScale.domain(plotDomain).range([0, densityWidth]);
+            densityYScale.domain([0, (isFinite(yMax) ? yMax : 1) * 1.1]).range([densityHeight, 0]);
+
+            densityXAxis.attr("transform", `translate(${margin.left}, ${densityHeight + margin.top})`).call(d3.axisBottom(densityXScale));
+            densityYAxis.attr("transform", `translate(${margin.left}, ${margin.top})`).call(d3.axisLeft(densityYScale));
+            
+            densityPlotArea.selectAll("*").remove();
+            densityDragLayer.selectAll("*").remove();
+
+            const intervalValue = document.getElementById('gc-interval-select').value;
+            if (intervalValue !== '0') {
+                const p = parseFloat(intervalValue.substring(1)) / 100;
+                const lower = inverseConditionalCdf((1 - p) / 2, currentState.conditional, plotDomain);
+                const upper = inverseConditionalCdf(1 - (1 - p) / 2, currentState.conditional, plotDomain);
+                if (lower !== undefined) {
+                    const area = d3.area().x(d => densityXScale(d.x)).y0(densityHeight).y1(d => densityYScale(d.y));
+                    densityPlotArea.append("path").datum(plotData.filter(d => d.x >= lower && d.x <= upper)).attr("class", "area-path").attr("d", area);
                 }
             }
+            
+            densityPlotArea.append("path").datum(plotData).attr("class", "line-path").attr("d", d3.line().x(d => densityXScale(d.x)).y(d => densityYScale(d.y)));
+            
+            setupDensityInteractionLayer();
+        }
+
+        function setupDensityInteractionLayer() {
+            const focus = densityPlotArea.append("circle").style("fill", "none").attr("stroke", "black").attr("r", 4).style("opacity", 0);
+            let dragState = { startX: null, isDragging: false };
+            const interactionRect = densitySvg.append("rect").attr("transform", `translate(${margin.left},${margin.top})`).style("fill", "none").style("pointer-events", "all").attr("width", densityWidth).attr("height", densityHeight);
+
+            function calculateAndDisplayArea(pixel1, pixel2) {
+                if (Math.abs(pixel1 - pixel2) < 5) { densityDragLayer.selectAll("*").remove(); return; }
+                const x0 = densityXScale.invert(pixel1), x1 = densityXScale.invert(pixel2);
+                const lower = Math.min(x0, x1), upper = Math.max(x0, x1);
+                const area = conditionalCdf(upper, currentState.conditional) - conditionalCdf(lower, currentState.conditional);
+                const text = `P(${lower.toFixed(2)} < X < ${upper.toFixed(2)}) = ${area.toFixed(4)}`;
+                densityDragLayer.append("text").attr("class", "drag-text").attr("x", (pixel1 + pixel2) / 2).attr("y", -5).text(text);
+            }
+
+            const drag = d3.drag().on("start", (event) => {
+                const [x_coord] = d3.pointer(event, interactionRect.node());
+                dragState = { isDragging: true, startX: x_coord };
+                densityDragLayer.selectAll("*").remove();
+                densityDragLayer.append("rect").attr("class", "drag-selection").attr("y", 0).attr("height", densityHeight);
+                densityTooltip.style("opacity", 0);
+            }).on("drag", (event) => {
+                const [currentX] = d3.pointer(event, interactionRect.node());
+                const x = Math.min(dragState.startX, currentX), w = Math.abs(currentX - dragState.startX);
+                densityDragLayer.select(".drag-selection").attr("x", x).attr("width", w);
+            }).on("end", (event) => {
+                dragState.isDragging = false;
+                const [endX] = d3.pointer(event, interactionRect.node());
+                calculateAndDisplayArea(dragState.startX, endX);
+            });
+
+            interactionRect.call(drag);
+            
+            function updateTooltip(event) {
+                const [tipX, tipY] = d3.pointer(event, document.getElementById('gc-density-plot-container'));
+                densityTooltip.style("left", tipX + "px").style("top", tipY + "px");
+                const [x_coord] = d3.pointer(event, interactionRect.node());
+                const x_val = densityXScale.invert(x_coord);
+                const y_val = currentState.conditional.condPdf(x_val);
+                focus.attr("cx", densityXScale(x_val)).attr("cy", densityYScale(y_val));
+                densityTooltip.html(`x: ${x_val.toFixed(3)}<br>y: ${y_val.toFixed(5)}`);
+            }
+
+            interactionRect.on("mouseover", () => { if (!dragState.isDragging) { focus.style("opacity", 1); densityTooltip.style("opacity", 1); }})
+                         .on("mouseout", () => { if (!dragState.isDragging) { focus.style("opacity", 0); densityTooltip.style("opacity", 0); }})
+                         .on("mousemove", (event) => { if (!dragState.isDragging) { updateTooltip(event); }});
         }
         
         function updateURL() {
@@ -1545,11 +1731,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('gc-sample-btn-10').addEventListener('click', () => generateSamples(10));
                 document.getElementById('gc-sample-btn-100').addEventListener('click', () => generateSamples(100));
                 document.getElementById('gc-sample-btn-1000').addEventListener('click', () => generateSamples(1000));
-                document.getElementById('gc-sample-clear-btn').addEventListener('click', () => { currentState.samples = []; updatePlot(); });
+                document.getElementById('gc-sample-clear-btn').addEventListener('click', () => {
+                    currentState.samples = [];
+                    currentState.conditional = null;
+                    updateScatterPlot();
+                    updateDensityPlot();
+                });
                 
                 document.getElementById('gc-plot-cond-btn').addEventListener('click', plotConditional);
+                document.getElementById('gc-interval-select').addEventListener('change', updateDensityPlot);
 
-                window.addEventListener('resize', updatePlot);
+                window.addEventListener('resize', () => { updateScatterPlot(); updateDensityPlot(); });
                 handleDistChange('x');
                 handleDistChange('y');
                 renderMathInElement(document.getElementById('gaussian-copula-app'), {
