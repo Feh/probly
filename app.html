@@ -1369,7 +1369,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const params = {};
                 config.params.forEach(p => {
                     const input = document.getElementById(`gc-param-${p.id}-${varName}`);
-                    if (input.checkValidity()) {
+                    if (input && input.checkValidity()) {
                         params[p.id] = parseFloat(input.value);
                     } else {
                         allValid = false;
