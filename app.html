@@ -875,7 +875,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const Fx = distConfig.cdf(x, j, params);
             if (fx <= 0 || Fx <= 0 || Fx >= 1) return 0;
             const logTerm = (k - 1) * Math.log(Fx) + (n - k) * Math.log(1 - Fx);
-            const logPDF = -jStat.logbeta(k, n - k + 1) + Math.log(fx) + logTerm;
+            const logBeta = jStat.gammaln(k) + jStat.gammaln(n - k + 1) - jStat.gammaln(n + 1);
+            const logPDF = -logBeta + Math.log(fx) + logTerm;
             return Math.exp(logPDF);
         }
 
