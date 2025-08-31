@@ -148,11 +148,42 @@
         #order-statistics-app details > summary { font-weight: bold; cursor: pointer; }
         #order-statistics-app details .formulas { padding-top: 1rem; }
 
+        /* Scoped styles for Gaussian Copula App */
+        #gaussian-copula-app {
+            --panel-bg: #f9f9f9; --border-color: #ccc; --accent-color: steelblue;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            grid-template-rows: auto auto auto 1fr;
+            grid-template-areas: "controls plot" "sampling plot" "conditionals plot" "formulas plot";
+            gap: 20px; padding: 20px; max-width: 1400px; margin: auto;
+        }
+        #gaussian-copula-app .panel { padding: 15px; border: 1px solid var(--border-color); border-radius: 5px; background-color: var(--panel-bg); }
+        #gaussian-copula-app #gc-controls-panel { grid-area: controls; }
+        #gaussian-copula-app #gc-sampling-panel { grid-area: sampling; }
+        #gaussian-copula-app #gc-conditionals-panel { grid-area: conditionals; }
+        #gaussian-copula-app #gc-formulas-panel { grid-area: formulas; }
+        #gaussian-copula-app #gc-plot-container { grid-area: plot; padding: 0; display: flex; flex-direction: column; min-height: 500px; position: relative; }
+        #gaussian-copula-app h3 { margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
+        #gaussian-copula-app h4 { margin-top: 0; }
+        #gaussian-copula-app .param-group, #gaussian-copula-app .control-group { margin-bottom: 15px; }
+        #gaussian-copula-app label { display: block; font-weight: bold; margin-bottom: 5px; }
+        #gaussian-copula-app input, #gaussian-copula-app select, #gaussian-copula-app button { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 3px; }
+        #gaussian-copula-app button { background-color: #007bff; color: white; border: none; cursor: pointer; }
+        #gaussian-copula-app button:hover { background-color: #0056b3; }
+        #gaussian-copula-app .sample-buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px; }
+        #gaussian-copula-app #gc-sample-clear-btn { grid-column: 1 / -1; background-color: #6c757d; }
+        #gaussian-copula-app #gc-sample-clear-btn:hover { background-color: #5a6268; }
+        #gaussian-copula-app #gc-plot-svg { flex-grow: 1; user-select: none; }
+        #gaussian-copula-app .axis path, #gaussian-copula-app .axis line { fill: none; stroke: #000; shape-rendering: crispEdges; }
+        #gaussian-copula-app .scatter-dot { fill: lightblue; stroke: steelblue; opacity: 0.6; }
+        #gaussian-copula-app .line-path { fill: none; stroke: #d9534f; stroke-width: 2px; }
+
         @media (max-width: 800px) {
             #distributions-app { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: "controls" "stats" "sampling" "plot"; }
             #distributions-app #stats-grid { grid-template-columns: 1fr; }
             #order-statistics-app { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: "controls" "stats" "plot"; }
             #order-statistics-app #os-stats-grid { grid-template-columns: 1fr; }
+            #gaussian-copula-app { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: "controls" "sampling" "conditionals" "plot" "formulas"; }
         }
     </style>
 </head>
@@ -166,6 +197,7 @@
         <ul>
             <li><a href="#distributions">Distributions</a></li>
             <li><a href="#order-statistics">Order Statistics</a></li>
+            <li><a href="#gaussian-copula">Gaussian Copula</a></li>
             <li><a href="#bernoulli">Correlated Bernoulli</a></li>
         </ul>
     </nav>
@@ -404,6 +436,80 @@
                     $$
                 </div>
             </details>
+        </div>
+        <div id="gaussian-copula-app" class="app-container">
+            <h2>Gaussian Copula</h2>
+            <div id="gc-controls-panel" class="panel">
+                <h3>Marginal Distributions</h3>
+                <h4>Marginal for X</h4>
+                <div class="control-group">
+                    <label for="gc-dist-select-x">Distribution</label>
+                    <select id="gc-dist-select-x"></select>
+                </div>
+                <div id="gc-param-inputs-x"></div>
+
+                <h4>Marginal for Y</h4>
+                <div class="control-group">
+                    <label for="gc-dist-select-y">Distribution</label>
+                    <select id="gc-dist-select-y"></select>
+                </div>
+                <div id="gc-param-inputs-y"></div>
+
+                <h3>Dependence Structure</h3>
+                <div class="control-group">
+                    <label for="gc-rho">Correlation ρ: <span id="gc-rho-value">0.5</span></label>
+                    <input type="range" id="gc-rho" min="-0.99" max="0.99" step="0.01" value="0.5">
+                </div>
+            </div>
+            <div id="gc-sampling-panel" class="panel">
+                <h3>Sampling</h3>
+                <div class="sample-buttons">
+                    <button id="gc-sample-btn-1">Sample 1</button>
+                    <button id="gc-sample-btn-10">Sample 10</button>
+                    <button id="gc-sample-btn-100">Sample 100</button>
+                    <button id="gc-sample-btn-1000">Sample 1000</button>
+                    <button id="gc-sample-clear-btn">Clear Samples</button>
+                </div>
+            </div>
+            <div id="gc-conditionals-panel" class="panel">
+                <h3>Conditional Densities</h3>
+                <div class="control-group">
+                    <label for="gc-cond-var">Condition on variable:</label>
+                    <select id="gc-cond-var">
+                        <option value="X">X</option>
+                        <option value="Y">Y</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="gc-cond-type">Condition type:</label>
+                    <select id="gc-cond-type">
+                        <option value="eq">equal to</option>
+                        <option value="ge">&ge; to</option>
+                        <option value="le">&le; to</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="gc-cond-value">Value:</label>
+                    <input type="number" id="gc-cond-value" value="0" step="0.1">
+                </div>
+                 <div class="control-group">
+                    <button id="gc-plot-cond-btn">Plot Conditional Density</button>
+                </div>
+            </div>
+             <div id="gc-formulas-panel" class="panel">
+                <h3>Formulas</h3>
+                <p>Let \(u = F_X(x)\), \(v = F_Y(y)\), \(x' = \Phi^{-1}(u)\), and \(y' = \Phi^{-1}(v)\).</p>
+                <h4>Conditional on \(X=x\)</h4>
+                $$ f_{Y|X}(y|x) = \frac{f_Y(y)}{\phi(y')} \frac{1}{\sqrt{1-\rho^2}} \phi\left(\frac{y' - \rho x'}{\sqrt{1-\rho^2}}\right) $$
+                <h4>Conditional on \(X \ge x\)</h4>
+                $$ f_{Y|X \ge x}(y) = \frac{f_Y(y)}{1-u} \left[ 1 - \Phi\left(\frac{x' - \rho y'}{\sqrt{1-\rho^2}}\right) \right] $$
+                <h4>Conditional on \(X \le x\)</h4>
+                $$ f_{Y|X \le x}(y) = \frac{f_Y(y)}{u} \Phi\left(\frac{x' - \rho y'}{\sqrt{1-\rho^2}}\right) $$
+            </div>
+
+            <div id="gc-plot-container" class="panel">
+                <svg id="gc-plot-svg"></svg>
+            </div>
         </div>
     </main>
 
@@ -879,17 +985,17 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     })();
 
-    const orderStatisticsApp = (() => {
-        const OS_DISTRIBUTIONS = {
-            uniform: DISTRIBUTIONS.uniform,
-            normal: DISTRIBUTIONS.normal,
-            exponential: DISTRIBUTIONS.exponential,
-            gamma: DISTRIBUTIONS.gamma,
-            pareto: DISTRIBUTIONS.pareto,
-            lognormal: DISTRIBUTIONS.lognormal,
-            weibull: DISTRIBUTIONS.weibull,
-        };
+    const OS_DISTRIBUTIONS = {
+        uniform: DISTRIBUTIONS.uniform,
+        normal: DISTRIBUTIONS.normal,
+        exponential: DISTRIBUTIONS.exponential,
+        gamma: DISTRIBUTIONS.gamma,
+        pareto: DISTRIBUTIONS.pareto,
+        lognormal: DISTRIBUTIONS.lognormal,
+        weibull: DISTRIBUTIONS.weibull,
+    };
 
+    const orderStatisticsApp = (() => {
         const distSelect = document.getElementById('os-dist-select');
         const paramInputs = document.getElementById('os-param-inputs');
         const intervalSelect = document.getElementById('os-interval-select');
@@ -1177,20 +1283,315 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     })();
 
+    const bivariateNormalCDF = (x, y, rho) => {
+        // Drezner-Wesolowsky approximation, adapted from various sources.
+        if (rho === 0) return jStat.normal.cdf(x, 0, 1) * jStat.normal.cdf(y, 0, 1);
+        if (rho === 1) return jStat.normal.cdf(Math.min(x, y), 0, 1);
+        if (rho === -1) return Math.max(0, jStat.normal.cdf(x, 0, 1) + jStat.normal.cdf(y, 0, 1) - 1);
+        if (Math.abs(rho) > 1) rho = Math.sign(rho);
+
+        const bivnor = (ah, ak, r) => {
+            const w = (z, r) => Math.exp((r * z + z) * (r * z - z) / -2.0);
+            let a = ah, b = ak, s = r;
+
+            if (a === Infinity || a === -Infinity || b === Infinity || b === -Infinity) {
+                if (a === Infinity && b === Infinity) return 1;
+                if (a === Infinity) return jStat.normal.cdf(b, 0, 1);
+                if (b === Infinity) return jStat.normal.cdf(a, 0, 1);
+                return 0;
+            }
+
+            if (a * b * s === 0) {
+                if (s === 0) return jStat.normal.cdf(a, 0, 1) * jStat.normal.cdf(b, 0, 1);
+                else if (a === 0) return jStat.normal.cdf(b, 0, 1) * 0.5;
+                else if (b === 0) return jStat.normal.cdf(a, 0, 1) * 0.5;
+            }
+
+            let hks = a * b * s;
+            if (hks < 0) {
+                if (s < 0) {
+                    return bivnor(a, -b, -s) + bivnor(-a, b, -s) - (a > 0 === b > 0 ? 1 : 0);
+                } else {
+                    return jStat.normal.cdf(a, 0, 1) - bivnor(a, -b, -s);
+                }
+            }
+            
+            let h = -a, k = -b;
+            let gh = Math.exp(-h * h / 2) / Math.sqrt(2 * Math.PI);
+            let gk = Math.exp(-k * k / 2) / Math.sqrt(2 * Math.PI);
+            let x = [0.24840615, 0.39233107, 0.21141819, 0.03324666, 0.00003805];
+            let y = [0.10000000, 0.32761671, 0.42112412, 0.13333442, 0.00637432];
+            let sum = 0;
+            for (let i = 0; i < 5; i++) {
+                sum += x[i] * (w(y[i] * h, s) + w(y[i] * k, s));
+            }
+            return gh * gk * sum + jStat.normal.cdf(h, 0, 1) * jStat.normal.cdf(k, 0, 1);
+        };
+        return bivnor(-x, -y, rho);
+    };
+
+    const gaussianCopulaApp = (() => {
+        let currentState = {
+            distKeyX: 'normal', paramsX: {}, jstatX: null,
+            distKeyY: 'normal', paramsY: {}, jstatY: null,
+            rho: 0.5, samples: [], conditional: null,
+        };
+
+        const svg = d3.select("#gc-plot-svg");
+        const margin = { top: 20, right: 30, bottom: 40, left: 50 };
+        let width, height;
+        const xScale = d3.scaleLinear(), yScale = d3.scaleLinear();
+        const xAxis = svg.append("g").attr("class", "x-axis axis");
+        const yAxis = svg.append("g").attr("class", "y-axis axis");
+        const plotArea = svg.append("g").attr("class", "plot-area");
+
+        function handleDistChange(varName) {
+            const distSelect = document.getElementById(`gc-dist-select-${varName}`);
+            const paramInputs = document.getElementById(`gc-param-inputs-${varName}`);
+            const distKey = distSelect.value;
+            currentState[`distKey${varName.toUpperCase()}`] = distKey;
+            const config = OS_DISTRIBUTIONS[distKey];
+            paramInputs.innerHTML = '';
+            config.params.forEach(p => {
+                const group = document.createElement('div');
+                group.className = 'param-group';
+                group.innerHTML = `<label for="gc-param-${p.id}-${varName}">${p.name}</label><input type="number" id="gc-param-${p.id}-${varName}" value="${p.default}" ${p.min === undefined ? '' : `min="${p.min}"`} ${p.max === undefined ? '' : `max="${p.max}"`} step="${p.step}">`;
+                paramInputs.appendChild(group);
+            });
+            update();
+        }
+
+        function update(options = {}) {
+            let allValid = true;
+            const readParams = (varName) => {
+                const distKey = currentState[`distKey${varName.toUpperCase()}`];
+                const config = OS_DISTRIBUTIONS[distKey];
+                const params = {};
+                config.params.forEach(p => {
+                    const input = document.getElementById(`gc-param-${p.id}-${varName}`);
+                    if (input.checkValidity()) {
+                        params[p.id] = parseFloat(input.value);
+                    } else {
+                        allValid = false;
+                    }
+                });
+                return params;
+            };
+
+            currentState.paramsX = readParams('x');
+            currentState.paramsY = readParams('y');
+            currentState.rho = parseFloat(document.getElementById('gc-rho').value);
+            document.getElementById('gc-rho-value').textContent = currentState.rho.toFixed(2);
+            if (!allValid) return;
+
+            currentState.jstatX = OS_DISTRIBUTIONS[currentState.distKeyX].jStat(currentState.paramsX);
+            currentState.jstatY = OS_DISTRIBUTIONS[currentState.distKeyY].jStat(currentState.paramsY);
+            
+            updatePlot();
+            if (!options.fromURL) updateURL();
+        }
+
+        function generateSamples(count) {
+            const { distKeyX, paramsX, jstatX, distKeyY, paramsY, jstatY, rho } = currentState;
+            const configX = OS_DISTRIBUTIONS[distKeyX];
+            const configY = OS_DISTRIBUTIONS[distKeyY];
+
+            for (let i = 0; i < count; i++) {
+                const z1 = jStat.normal.sample(0, 1);
+                const z2 = jStat.normal.sample(0, 1);
+                const x_prime = z1;
+                const y_prime = rho * z1 + Math.sqrt(1 - rho * rho) * z2;
+                const u = jStat.normal.cdf(x_prime, 0, 1);
+                const v = jStat.normal.cdf(y_prime, 0, 1);
+                const x = configX.inv(u, jstatX, paramsX);
+                const y = configY.inv(v, jstatY, paramsY);
+                if (isFinite(x) && isFinite(y)) {
+                    currentState.samples.push([x, y]);
+                }
+            }
+            updatePlot();
+        }
+        
+        function plotConditional() {
+            const condVar = document.getElementById('gc-cond-var').value;
+            const condType = document.getElementById('gc-cond-type').value;
+            const condValue = parseFloat(document.getElementById('gc-cond-value').value);
+
+            let config1, params1, jstat1, config2, params2, jstat2;
+            if (condVar === 'X') {
+                [config1, params1, jstat1] = [OS_DISTRIBUTIONS[currentState.distKeyX], currentState.paramsX, currentState.jstatX];
+                [config2, params2, jstat2] = [OS_DISTRIBUTIONS[currentState.distKeyY], currentState.paramsY, currentState.jstatY];
+            } else {
+                [config1, params1, jstat1] = [OS_DISTRIBUTIONS[currentState.distKeyY], currentState.paramsY, currentState.jstatY];
+                [config2, params2, jstat2] = [OS_DISTRIBUTIONS[currentState.distKeyX], currentState.paramsX, currentState.jstatX];
+            }
+
+            const rho = (condVar === 'X') ? currentState.rho : currentState.rho;
+            const u = config1.cdf(condValue, jstat1, params1);
+            const x_prime = jStat.normal.inv(u, 0, 1);
+
+            let condPdf;
+            if (condType === 'eq') {
+                condPdf = y => {
+                    const v = config2.cdf(y, jstat2, params2);
+                    const y_prime = jStat.normal.inv(v, 0, 1);
+                    if (!isFinite(y_prime)) return 0;
+                    const f_y = config2.pdfpmf(y, jstat2, params2);
+                    const phi_y_prime = jStat.normal.pdf(y_prime, 0, 1);
+                    const term = (y_prime - rho * x_prime) / Math.sqrt(1 - rho * rho);
+                    return (f_y / phi_y_prime) * (1 / Math.sqrt(1 - rho * rho)) * jStat.normal.pdf(term, 0, 1);
+                };
+            } else if (condType === 'ge') {
+                condPdf = y => {
+                    const v = config2.cdf(y, jstat2, params2);
+                    const y_prime = jStat.normal.inv(v, 0, 1);
+                    if (!isFinite(y_prime)) return 0;
+                    const f_y = config2.pdfpmf(y, jstat2, params2);
+                    const term = (x_prime - rho * y_prime) / Math.sqrt(1 - rho*rho);
+                    return (f_y / (1 - u)) * (1 - jStat.normal.cdf(term, 0, 1));
+                }
+            } else { // le
+                condPdf = y => {
+                    const v = config2.cdf(y, jstat2, params2);
+                    const y_prime = jStat.normal.inv(v, 0, 1);
+                    if (!isFinite(y_prime)) return 0;
+                    const f_y = config2.pdfpmf(y, jstat2, params2);
+                    const term = (x_prime - rho * y_prime) / Math.sqrt(1 - rho*rho);
+                    return (f_y / u) * jStat.normal.cdf(term, 0, 1);
+                }
+            }
+
+            currentState.conditional = { condPdf, condVar };
+            updatePlot();
+        }
+
+        function updatePlot() {
+            const svgRect = svg.node().getBoundingClientRect();
+            width = svgRect.width - margin.left - margin.right;
+            height = svgRect.height - margin.top - margin.bottom;
+            plotArea.attr("transform", `translate(${margin.left},${margin.top})`);
+
+            const { distKeyX, paramsX, jstatX, distKeyY, paramsY, jstatY } = currentState;
+            const configX = OS_DISTRIBUTIONS[distKeyX];
+            const configY = OS_DISTRIBUTIONS[distKeyY];
+            
+            const xDomain = configX.domain(paramsX, jstatX);
+            const yDomain = configY.domain(paramsY, jstatY);
+            
+            xScale.domain(xDomain).range([0, width]);
+            yScale.domain(yDomain).range([height, 0]);
+
+            xAxis.attr("transform", `translate(${margin.left}, ${height + margin.top})`).call(d3.axisBottom(xScale));
+            yAxis.attr("transform", `translate(${margin.left}, ${margin.top})`).call(d3.axisLeft(yScale));
+
+            svg.selectAll(".plot-label").remove();
+            svg.append("text").attr("class", "plot-label").attr("x", margin.left + width / 2).attr("y", height + margin.top + 35).style("text-anchor", "middle").text("X");
+            svg.append("text").attr("class", "plot-label").attr("transform", "rotate(-90)").attr("y", 0).attr("x", -(margin.top + height / 2)).attr("dy", "1em").style("text-anchor", "middle").text("Y");
+
+            plotArea.selectAll("*").remove();
+
+            plotArea.selectAll(".scatter-dot")
+                .data(currentState.samples)
+                .enter().append("circle")
+                .attr("class", "scatter-dot")
+                .attr("cx", d => xScale(d[0]))
+                .attr("cy", d => yScale(d[1]))
+                .attr("r", 3);
+
+            if (currentState.conditional) {
+                const { condPdf, condVar } = currentState.conditional;
+                if (condVar === 'X') { // Plotting f(y|X)
+                    const plotData = d3.range(yDomain[0], yDomain[1], (yDomain[1] - yDomain[0]) / 200).map(y => ({x: y, y: condPdf(y)}));
+                    const yPdfScale = d3.scaleLinear().domain([0, d3.max(plotData, d => d.y) * 1.1]).range([width, width-100]);
+                    const pdfLine = d3.line().x(d => yPdfScale(d.y)).y(d => yScale(d.x));
+                    plotArea.append("path").datum(plotData).attr("class", "line-path").attr("d", pdfLine);
+                } else { // Plotting f(x|Y)
+                    const plotData = d3.range(xDomain[0], xDomain[1], (xDomain[1] - xDomain[0]) / 200).map(x => ({x: x, y: condPdf(x)}));
+                    const xPdfScale = d3.scaleLinear().domain([0, d3.max(plotData, d => d.y) * 1.1]).range([0, 100]);
+                    const pdfLine = d3.line().y(d => xPdfScale(d.y)).x(d => xScale(d.x));
+                    plotArea.append("path").datum(plotData).attr("class", "line-path").attr("d", pdfLine);
+                }
+            }
+        }
+        
+        function updateURL() {
+            const params = new URLSearchParams();
+            params.set('distX', currentState.distKeyX);
+            OS_DISTRIBUTIONS[currentState.distKeyX].params.forEach(p => params.set(`${p.id}X`, currentState.paramsX[p.id]));
+            params.set('distY', currentState.distKeyY);
+            OS_DISTRIBUTIONS[currentState.distKeyY].params.forEach(p => params.set(`${p.id}Y`, currentState.paramsY[p.id]));
+            params.set('rho', currentState.rho);
+            history.replaceState(null, '', '#gaussian-copula?' + params.toString());
+        }
+
+        return {
+            init: () => {
+                const distSelectX = document.getElementById('gc-dist-select-x');
+                const distSelectY = document.getElementById('gc-dist-select-y');
+                Object.keys(OS_DISTRIBUTIONS).forEach(key => {
+                    distSelectX.appendChild(new Option(OS_DISTRIBUTIONS[key].name, key));
+                    distSelectY.appendChild(new Option(OS_DISTRIBUTIONS[key].name, key));
+                });
+                distSelectX.value = 'normal';
+                distSelectY.value = 'normal';
+
+                distSelectX.addEventListener('change', () => handleDistChange('x'));
+                distSelectY.addEventListener('change', () => handleDistChange('y'));
+                document.getElementById('gc-param-inputs-x').addEventListener('input', update);
+                document.getElementById('gc-param-inputs-y').addEventListener('input', update);
+                document.getElementById('gc-rho').addEventListener('input', update);
+                
+                document.getElementById('gc-sample-btn-1').addEventListener('click', () => generateSamples(1));
+                document.getElementById('gc-sample-btn-10').addEventListener('click', () => generateSamples(10));
+                document.getElementById('gc-sample-btn-100').addEventListener('click', () => generateSamples(100));
+                document.getElementById('gc-sample-btn-1000').addEventListener('click', () => generateSamples(1000));
+                document.getElementById('gc-sample-clear-btn').addEventListener('click', () => { currentState.samples = []; updatePlot(); });
+                
+                document.getElementById('gc-plot-cond-btn').addEventListener('click', plotConditional);
+
+                window.addEventListener('resize', updatePlot);
+                handleDistChange('x');
+                handleDistChange('y');
+                renderMathInElement(document.getElementById('gaussian-copula-app'), {
+                    delimiters: [{left: '$$', right: '$$', display: true}, {left: '\\[', right: '\\]', display: true}, {left: '\\(', right: '\\)', display: false}],
+                });
+            },
+            updateFromURL: (params) => {
+                const dists = { X: params.get('distX'), Y: params.get('distY') };
+                ['X', 'Y'].forEach(v => {
+                    if (dists[v] && OS_DISTRIBUTIONS[dists[v]]) {
+                        document.getElementById(`gc-dist-select-${v.toLowerCase()}`).value = dists[v];
+                        handleDistChange(v.toLowerCase());
+                        const config = OS_DISTRIBUTIONS[dists[v]];
+                        config.params.forEach(p => {
+                            if (params.has(`${p.id}${v}`)) {
+                                document.getElementById(`gc-param-${p.id}-${v.toLowerCase()}`).value = params.get(`${p.id}${v}`);
+                            }
+                        });
+                    }
+                });
+                if (params.has('rho')) document.getElementById('gc-rho').value = params.get('rho');
+                update({ fromURL: true });
+            }
+        };
+    })();
+
     // Main App Router and Controls
     const menuBtn = document.getElementById('menu-btn');
     const menu = document.getElementById('menu');
     const appContainers = {
         distributions: document.getElementById('distributions-app'),
         'order-statistics': document.getElementById('order-statistics-app'),
+        'gaussian-copula': document.getElementById('gaussian-copula-app'),
         bernoulli: document.getElementById('bernoulli-app')
     };
     const appModules = {
         distributions: distributionsApp,
         'order-statistics': orderStatisticsApp,
+        'gaussian-copula': gaussianCopulaApp,
         bernoulli: bernoulliApp
     };
-    const initializedApps = { distributions: false, 'order-statistics': false, bernoulli: false };
+    const initializedApps = { distributions: false, 'order-statistics': false, 'gaussian-copula': false, bernoulli: false };
 
     menuBtn.addEventListener('click', () => {
         menu.classList.toggle('visible');
