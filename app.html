@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Probly.app</title>
-    
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
@@ -137,7 +137,6 @@
         #order-statistics-app input, #order-statistics-app select { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 3px; }
         #order-statistics-app #os-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 0.9em; }
         #order-statistics-app #os-stats-grid span { font-weight: bold; color: #333; }
-        #order-statistics-app #os-formula-display { margin-top: 20px; padding: 10px; background: #eee; border-radius: 3px; text-align: center; min-height: 50px; display: flex; align-items: center; justify-content: center; overflow-x: auto;}
         #order-statistics-app #os-plot-svg { flex-grow: 1; user-select: none; }
         #order-statistics-app .axis path, #order-statistics-app .axis line { fill: none; stroke: #000; shape-rendering: crispEdges; }
         #order-statistics-app .line-path { fill: none; stroke: var(--accent-color); stroke-width: 2px; }
@@ -355,7 +354,6 @@
                 <div class="control-group">
                     <p>Drawing from <input type="number" id="os-n" value="10" min="1" step="1" style="width: 60px; display: inline-block;"> samples, the density of the <input type="number" id="os-k" value="5" min="1" step="1" style="width: 60px; display: inline-block;">-th order statistic is:</p>
                 </div>
-                <div id="os-formula-display"></div>
             </div>
 
             <div id="os-stats-panel" class="panel">
@@ -840,7 +838,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (event.touches.length === 0) { focus.style.opacity = 0; tooltip.style.opacity = 0; }
             });
         }
-        
+
         return {
             init: () => {
                 Object.keys(DISTRIBUTIONS).forEach(key => distSelect.appendChild(new Option(DISTRIBUTIONS[key].name, key)));
@@ -891,11 +889,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const distSelect = document.getElementById('os-dist-select');
         const paramInputs = document.getElementById('os-param-inputs');
-        const formulaDisplay = document.getElementById('os-formula-display');
         const intervalSelect = document.getElementById('os-interval-select');
         const nInput = document.getElementById('os-n');
         const kInput = document.getElementById('os-k');
-        
+
         let currentState = { distKey: 'uniform', params: {}, n: 10, k: 5, jstat: null, mean: null, variance: null };
         const svg = d3.select("#os-plot-svg");
         const margin = { top: 20, right: 30, bottom: 40, left: 50 };
@@ -922,7 +919,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const u = jStat.beta.inv(p, k, n - k + 1);
             return distConfig.inv(u, j, params);
         }
-        
+
         function integrate(f, a, b, n_steps) {
             if (a >= b) return 0;
             n_steps = n_steps % 2 === 0 ? n_steps : n_steps + 1;
@@ -953,17 +950,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const n = parseInt(nInput.value);
             const k = parseInt(kInput.value);
             if (!allValid || isNaN(n) || isNaN(k) || k > n || k < 1) return;
-            
+
             currentState = { distKey, params, n, k, jstat: config.jStat(params) };
-            updateFormula();
             updateStats();
             updatePlot();
             updateURL();
-        }
-        
-        function updateFormula() {
-            const { n, k } = currentState;
-            katex.render(`f_{X_{(${k})}}(x) = \\frac{${n}!}{(${k}-1)!(${n}-${k})!} F(x)^{${k}-1}(1-F(x))^{${n}-${k}} f(x)`, formulaDisplay, { throwOnError: false, displayMode: true });
         }
 
         function handleDistChange() {
@@ -984,13 +975,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const config = OS_DISTRIBUTIONS[distKey];
 
             const quantile = (p) => orderStatInv(p, config, params, n, k, jstat);
-            
+
             document.getElementById('os-stat-q1').textContent = quantile(0.25).toFixed(4);
             document.getElementById('os-stat-median').textContent = quantile(0.5).toFixed(4);
             document.getElementById('os-stat-q3').textContent = quantile(0.75).toFixed(4);
             const int95 = [quantile(0.025), quantile(0.975)];
             document.getElementById('os-stat-int95').textContent = `[${int95[0].toFixed(2)}, ${int95[1].toFixed(2)}]`;
-            
+
             const meanIntegrand = u => config.inv(u, jstat, params) * jStat.beta.pdf(u, k, n - k + 1);
             const mean = integrate(meanIntegrand, 1e-6, 1-1e-6, 1000);
             currentState.mean = mean;
@@ -1008,7 +999,7 @@ document.addEventListener('DOMContentLoaded', () => {
                  document.getElementById('os-stat-stddev').textContent = 'N/A';
             }
         }
-        
+
         function updatePlot() {
             const { distKey, params, n, k, jstat } = currentState;
             const config = OS_DISTRIBUTIONS[distKey];
@@ -1022,7 +1013,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const lowerBound = orderStatInv(0.001, config, params, n, k, jstat);
             const upperBound = orderStatInv(0.999, config, params, n, k, jstat);
-            
+
             if (!isFinite(lowerBound) || !isFinite(upperBound) || lowerBound >= upperBound) {
                 plotArea.selectAll("*").remove();
                 return;
@@ -1031,7 +1022,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const xDomain = [lowerBound, upperBound];
             xScale.domain(xDomain).range([0, width]);
             xAxis.attr("transform", `translate(${margin.left}, ${height + margin.top})`).call(d3.axisBottom(xScale));
-            
+
             const plotData = d3.range(xDomain[0], xDomain[1], (xDomain[1] - xDomain[0]) / 500).map(x => ({ x: x, y: orderStatPDF(x, config, params, n, k, jstat) }));
             const yMax = d3.max(plotData, d => d.y);
             yScale.domain([0, (isFinite(yMax) ? yMax : 1) * 1.1]).range([height, 0]);
@@ -1039,7 +1030,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             plotArea.selectAll("*").remove();
             dragLayer.selectAll("*").remove();
-            
+
             const intervalValue = intervalSelect.value;
             if (intervalValue !== '0') {
                 const quantile = (p) => orderStatInv(p, config, params, n, k, jstat);
@@ -1070,7 +1061,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             plotArea.append("path").datum(plotData).attr("class", "line-path").attr("d", d3.line().x(d => xScale(d.x)).y(d => yScale(d.y)));
-            
+
             setupInteractionLayer();
         }
 
