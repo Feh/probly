@@ -1146,6 +1146,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 kInput.addEventListener('input', update);
                 window.addEventListener('resize', () => { if (currentState.jstat) updatePlot(); });
                 handleDistChange();
+                renderMathInElement(document.getElementById('order-statistics-app'), {
+                    delimiters: [{left: '$$', right: '$$', display: true}, {left: '\\[', right: '\\]', display: true}, {left: '\\(', right: '\\)', display: false}],
+                });
             },
             updateFromURL: (params) => {
                 const dist = params.get('dist');
