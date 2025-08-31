@@ -1421,7 +1421,11 @@ document.addEventListener('DOMContentLoaded', () => {
             currentState.jstatY = OS_DISTRIBUTIONS[currentState.distKeyY].jStat(currentState.paramsY);
             
             updateScatterPlot();
-            updateDensityPlot();
+            if (currentState.conditional) {
+                plotConditional();
+            } else {
+                updateDensityPlot();
+            }
             if (!options.fromURL) updateURL();
         }
 
