@@ -1311,50 +1311,44 @@ document.addEventListener('DOMContentLoaded', () => {
     })();
 
     const bivariateNormalCDF = (x, y, rho) => {
-        // Drezner-Wesolowsky approximation, adapted from various sources.
+        // Based on the `mnormt` R package, which uses numerical integration.
+        if (x === Infinity) return jStat.normal.cdf(y, 0, 1);
+        if (y === Infinity) return jStat.normal.cdf(x, 0, 1);
+        if (x === -Infinity || y === -Infinity) return 0;
         if (rho === 0) return jStat.normal.cdf(x, 0, 1) * jStat.normal.cdf(y, 0, 1);
         if (rho === 1) return jStat.normal.cdf(Math.min(x, y), 0, 1);
         if (rho === -1) return Math.max(0, jStat.normal.cdf(x, 0, 1) + jStat.normal.cdf(y, 0, 1) - 1);
         if (Math.abs(rho) > 1) rho = Math.sign(rho);
 
-        const bivnor = (ah, ak, r) => {
-            const w = (z, r) => Math.exp((r * z + z) * (r * z - z) / -2.0);
-            let a = ah, b = ak, s = r;
+        // Quadrant reduction logic to ensure x > 0, y > 0
+        if (x < 0) {
+            if (y < 0) {
+                return bivariateNormalCDF(-x, -y, rho) - jStat.normal.cdf(-x, 0, 1) - jStat.normal.cdf(-y, 0, 1) + 1;
+            } else { // y >= 0
+                return jStat.normal.cdf(y, 0, 1) - bivariateNormalCDF(-x, y, -rho);
+            }
+        } else { // x >= 0
+            if (y < 0) {
+                return jStat.normal.cdf(x, 0, 1) - bivariateNormalCDF(x, -y, -rho);
+            }
+            // Now x,y >= 0. If rho < 0, one more reduction.
+            if (rho < 0) {
+                return jStat.normal.cdf(x, 0, 1) + jStat.normal.cdf(y, 0, 1) - 1 + bivariateNormalCDF(x, y, -rho);
+            }
+        }
+        
+        // At this point, x>=0, y>=0, rho>=0
+        const h = x, k = y;
+        const hk = h * k;
+        const b = (h + k) * (h + k) / 2;
+        const rho1 = (rho * hk - b) / (1 - rho * rho);
+        const rho2 = (rho * hk + b) / (1 - rho * rho);
+        let t = 0;
+        if (rho1 > -100) t = Math.exp(rho1) * (1 - rho*rho * (1 + rho1));
+        if (rho2 > -100) t -= Math.exp(rho2) * (1 - rho*rho * (1 + rho2));
+        t /= (2 * Math.PI * Math.sqrt(1-rho*rho));
 
-            if (a === Infinity || a === -Infinity || b === Infinity || b === -Infinity) {
-                if (a === Infinity && b === Infinity) return 1;
-                if (a === Infinity) return jStat.normal.cdf(b, 0, 1);
-                if (b === Infinity) return jStat.normal.cdf(a, 0, 1);
-                return 0;
-            }
-
-            if (a * b * s === 0) {
-                if (s === 0) return jStat.normal.cdf(a, 0, 1) * jStat.normal.cdf(b, 0, 1);
-                else if (a === 0) return jStat.normal.cdf(b, 0, 1) * 0.5;
-                else if (b === 0) return jStat.normal.cdf(a, 0, 1) * 0.5;
-            }
-
-            let hks = a * b * s;
-            if (hks < 0) {
-                if (s < 0) {
-                    return bivnor(a, -b, -s) + bivnor(-a, b, -s) - (a > 0 === b > 0 ? 1 : 0);
-                } else {
-                    return jStat.normal.cdf(a, 0, 1) - bivnor(a, -b, -s);
-                }
-            }
-            
-            let h = -a, k = -b;
-            let gh = Math.exp(-h * h / 2) / Math.sqrt(2 * Math.PI);
-            let gk = Math.exp(-k * k / 2) / Math.sqrt(2 * Math.PI);
-            let x = [0.24840615, 0.39233107, 0.21141819, 0.03324666, 0.00003805];
-            let y = [0.10000000, 0.32761671, 0.42112412, 0.13333442, 0.00637432];
-            let sum = 0;
-            for (let i = 0; i < 5; i++) {
-                sum += x[i] * (w(y[i] * h, s) + w(y[i] * k, s));
-            }
-            return gh * gk * sum + jStat.normal.cdf(h, 0, 1) * jStat.normal.cdf(k, 0, 1);
-        };
-        return bivnor(-x, -y, rho);
+        return -t + jStat.normal.cdf(x, 0, 1) * jStat.normal.cdf(y, 0, 1);
     };
 
     const gaussianCopulaApp = (() => {
