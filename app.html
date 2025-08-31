@@ -174,7 +174,7 @@
         #gaussian-copula-app .sample-buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px; }
         #gaussian-copula-app #gc-sample-clear-btn { grid-column: 1 / -1; background-color: #6c757d; }
         #gaussian-copula-app #gc-sample-clear-btn:hover { background-color: #5a6268; }
-        #gaussian-copula-app #gc-plot-svg { flex-grow: 1; user-select: none; }
+        #gaussian-copula-app #gc-scatter-plot-svg, #gaussian-copula-app #gc-density-plot-svg { flex-grow: 1; user-select: none; }
         #gaussian-copula-app .axis path, #gaussian-copula-app .axis line { fill: none; stroke: #000; shape-rendering: crispEdges; }
         #gaussian-copula-app .scatter-dot { fill: lightblue; stroke: steelblue; opacity: 0.6; }
         #gaussian-copula-app .line-path { fill: none; stroke: #d9534f; stroke-width: 2px; }
@@ -1478,26 +1478,35 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!isFinite(y_prime)) return 0;
                     const f_y = config2.pdfpmf(y, jstat2, params2);
                     const phi_y_prime = jStat.normal.pdf(y_prime, 0, 1);
+                    if (phi_y_prime < 1e-9) return 0;
                     const term = (y_prime - rho * x_prime) / Math.sqrt(1 - rho * rho);
                     return (f_y / phi_y_prime) * (1 / Math.sqrt(1 - rho * rho)) * jStat.normal.pdf(term, 0, 1);
                 };
             } else if (condType === 'ge') {
-                condPdf = y => {
-                    const v = config2.cdf(y, jstat2, params2);
-                    const y_prime = jStat.normal.inv(v, 0, 1);
-                    if (!isFinite(y_prime)) return 0;
-                    const f_y = config2.pdfpmf(y, jstat2, params2);
-                    const term = (x_prime - rho * y_prime) / Math.sqrt(1 - rho*rho);
-                    return (f_y / (1 - u)) * (1 - jStat.normal.cdf(term, 0, 1));
+                if (1 - u < 1e-9) {
+                    condPdf = y => 0;
+                } else {
+                    condPdf = y => {
+                        const v = config2.cdf(y, jstat2, params2);
+                        const y_prime = jStat.normal.inv(v, 0, 1);
+                        if (!isFinite(y_prime)) return 0;
+                        const f_y = config2.pdfpmf(y, jstat2, params2);
+                        const term = (x_prime - rho * y_prime) / Math.sqrt(1 - rho*rho);
+                        return (f_y / (1 - u)) * (1 - jStat.normal.cdf(term, 0, 1));
+                    };
                 }
             } else { // le
-                condPdf = y => {
-                    const v = config2.cdf(y, jstat2, params2);
-                    const y_prime = jStat.normal.inv(v, 0, 1);
-                    if (!isFinite(y_prime)) return 0;
-                    const f_y = config2.pdfpmf(y, jstat2, params2);
-                    const term = (x_prime - rho * y_prime) / Math.sqrt(1 - rho*rho);
-                    return (f_y / u) * jStat.normal.cdf(term, 0, 1);
+                if (u < 1e-9) {
+                    condPdf = y => 0;
+                } else {
+                    condPdf = y => {
+                        const v = config2.cdf(y, jstat2, params2);
+                        const y_prime = jStat.normal.inv(v, 0, 1);
+                        if (!isFinite(y_prime)) return 0;
+                        const f_y = config2.pdfpmf(y, jstat2, params2);
+                        const term = (x_prime - rho * y_prime) / Math.sqrt(1 - rho*rho);
+                        return (f_y / u) * jStat.normal.cdf(term, 0, 1);
+                    };
                 }
             }
 
@@ -1625,7 +1634,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 [OS_DISTRIBUTIONS[distKeyX], paramsX, jstatX];
 
             const plotDomain = domainConfig.domain(domainParams, domainJstat);
-            const plotData = d3.range(plotDomain[0], plotDomain[1], (plotDomain[1] - plotDomain[0]) / 200).map(v => ({x: v, y: condPdf(v)}));
+            const plotData = d3.range(plotDomain[0], plotDomain[1], (plotDomain[1] - plotDomain[0]) / 200).map(v => ({x: v, y: condPdf(v)})).filter(d => isFinite(d.y));
             const yMax = d3.max(plotData, d => d.y);
 
             densityXScale.domain(plotDomain).range([0, densityWidth]);
