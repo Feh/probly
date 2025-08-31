@@ -141,7 +141,10 @@
         #order-statistics-app #os-plot-svg { flex-grow: 1; user-select: none; }
         #order-statistics-app .axis path, #order-statistics-app .axis line { fill: none; stroke: #000; shape-rendering: crispEdges; }
         #order-statistics-app .line-path { fill: none; stroke: var(--accent-color); stroke-width: 2px; }
+        #order-statistics-app .area-path { fill: var(--accent-color); opacity: 0.3; }
         #order-statistics-app #os-tooltip { position: absolute; background-color: rgba(0, 0, 0, 0.75); color: white; padding: 5px 10px; border-radius: 3px; pointer-events: none; opacity: 0; font-size: 0.9em; z-index: 10; transform: translate(10px, -25px); }
+        #order-statistics-app .drag-selection { fill: rgba(255, 165, 0, 0.4); stroke: rgba(255, 165, 0, 1); stroke-width: 1px; }
+        #order-statistics-app .drag-text { font-size: 12px; font-weight: bold; fill: #d9534f; text-anchor: middle; }
 
         @media (max-width: 800px) {
             #distributions-app { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: "controls" "stats" "sampling" "plot"; }
@@ -366,6 +369,21 @@
             </div>
 
             <div id="os-plot-container" class="panel">
+                <div id="os-shading-controls" style="display: flex; gap: 10px; justify-content: flex-end; padding: 0 20px;">
+                    <div class="control-group">
+                        <label for="os-interval-select">Shade Interval</label>
+                        <select id="os-interval-select">
+                            <option value="0">None</option>
+                            <option value="p50">50%</option>
+                            <option value="p90">90%</option>
+                            <option value="p95" selected>95%</option>
+                            <option value="p99">99%</option>
+                            <option value="s1">+/- 1σ</option>
+                            <option value="s2">+/- 2σ</option>
+                            <option value="s3">+/- 3σ</option>
+                        </select>
+                    </div>
+                </div>
                 <svg id="os-plot-svg"></svg>
                 <div id="os-tooltip"></div>
             </div>
@@ -856,10 +874,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const distSelect = document.getElementById('os-dist-select');
         const paramInputs = document.getElementById('os-param-inputs');
         const formulaDisplay = document.getElementById('os-formula-display');
+        const intervalSelect = document.getElementById('os-interval-select');
         const nInput = document.getElementById('os-n');
         const kInput = document.getElementById('os-k');
         
-        let currentState = { distKey: 'uniform', params: {}, n: 10, k: 5, jstat: null };
+        let currentState = { distKey: 'uniform', params: {}, n: 10, k: 5, jstat: null, mean: null, variance: null };
         const svg = d3.select("#os-plot-svg");
         const margin = { top: 20, right: 30, bottom: 40, left: 50 };
         let width, height;
@@ -867,6 +886,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const xAxis = svg.append("g").attr("class", "x-axis axis");
         const yAxis = svg.append("g").attr("class", "y-axis axis");
         const plotArea = svg.append("g").attr("class", "plot-area");
+        const dragLayer = svg.append("g").attr("class", "drag-layer");
         const tooltip = document.getElementById('os-tooltip');
 
         function orderStatPDF(x, distConfig, params, n, k, j) {
@@ -955,14 +975,17 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const meanIntegrand = u => config.inv(u, jstat, params) * jStat.beta.pdf(u, k, n - k + 1);
             const mean = integrate(meanIntegrand, 1e-6, 1-1e-6, 1000);
+            currentState.mean = mean;
             document.getElementById('os-stat-mean').textContent = isFinite(mean) ? mean.toFixed(4) : 'N/A';
 
             if (isFinite(mean)) {
                 const varianceIntegrand = u => Math.pow(config.inv(u, jstat, params) - mean, 2) * jStat.beta.pdf(u, k, n - k + 1);
                 const variance = integrate(varianceIntegrand, 1e-6, 1 - 1e-6, 1000);
+                currentState.variance = variance;
                 document.getElementById('os-stat-variance').textContent = isFinite(variance) ? variance.toFixed(4) : 'N/A';
                 document.getElementById('os-stat-stddev').textContent = isFinite(variance) ? Math.sqrt(variance).toFixed(4) : 'N/A';
             } else {
+                 currentState.variance = null;
                  document.getElementById('os-stat-variance').textContent = 'N/A';
                  document.getElementById('os-stat-stddev').textContent = 'N/A';
             }
@@ -977,6 +1000,7 @@ document.addEventListener('DOMContentLoaded', () => {
             width = svgRect.width - margin.left - margin.right;
             height = svgRect.height - margin.top - margin.bottom;
             plotArea.attr("transform", `translate(${margin.left},${margin.top})`);
+            dragLayer.attr("transform", `translate(${margin.left},${margin.top})`);
 
             const lowerBound = orderStatInv(0.001, config, params, n, k, jstat);
             const upperBound = orderStatInv(0.999, config, params, n, k, jstat);
@@ -996,6 +1020,37 @@ document.addEventListener('DOMContentLoaded', () => {
             yAxis.attr("transform", `translate(${margin.left}, ${margin.top})`).call(d3.axisLeft(yScale).ticks(5));
 
             plotArea.selectAll("*").remove();
+            dragLayer.selectAll("*").remove();
+            
+            const intervalValue = intervalSelect.value;
+            if (intervalValue !== '0') {
+                const quantile = (p) => orderStatInv(p, config, params, n, k, jstat);
+                let lower, upper;
+                if (intervalValue.startsWith('p')) {
+                    const p = parseFloat(intervalValue.substring(1)) / 100;
+                    lower = quantile((1 - p) / 2);
+                    upper = quantile(1 - (1 - p) / 2);
+                } else {
+                    const numSigmas = parseInt(intervalValue.substring(1));
+                    const mean = currentState.mean;
+                    const stddev = Math.sqrt(currentState.variance);
+                    if(isFinite(stddev)) {
+                        lower = mean - numSigmas * stddev;
+                        upper = mean + numSigmas * stddev;
+                    }
+                }
+                if (lower !== undefined) {
+                    const area = d3.area()
+                        .x(d => xScale(d.x))
+                        .y0(height)
+                        .y1(d => yScale(d.y));
+                    plotArea.append("path")
+                        .datum(plotData.filter(d => d.x >= lower && d.x <= upper))
+                        .attr("class", "area-path")
+                        .attr("d", area);
+                }
+            }
+
             plotArea.append("path").datum(plotData).attr("class", "line-path").attr("d", d3.line().x(d => xScale(d.x)).y(d => yScale(d.y)));
             
             setupInteractionLayer();
@@ -1003,8 +1058,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function setupInteractionLayer() {
             const focus = plotArea.append("circle").style("fill", "none").attr("stroke", "black").attr("r", 4).style("opacity", 0);
-            const interactionRect = svg.append("rect").attr("transform", `translate(${margin.left},${margin.top})`).style("fill", "none").style("pointer-events", "all").attr("width", width).attr("height", height);
-            
+            let dragState = { startX: null, isDragging: false }; let touchDragState = {};
+            const interactionRect = svg.append("rect").attr("transform", `translate(${margin.left},${margin.top})`).style("fill", "none").style("pointer-events", "all").style("touch-action", "none").attr("width", width).attr("height", height);
+
+            function getOrderStatCDF(x) {
+                const { distKey, params, n, k, jstat } = currentState;
+                const config = OS_DISTRIBUTIONS[distKey];
+                const Fx = config.cdf(x, jstat, params);
+                return jStat.beta.cdf(Fx, k, n - k + 1);
+            }
+
+            function calculateAndDisplayArea(pixel1, pixel2) {
+                if (Math.abs(pixel1 - pixel2) < 5) { dragLayer.selectAll("*").remove(); return; }
+                const x0 = xScale.invert(pixel1), x1 = xScale.invert(pixel2);
+                const lower = Math.min(x0, x1), upper = Math.max(x0, x1);
+                const area = getOrderStatCDF(upper) - getOrderStatCDF(lower);
+                const text = `P(${lower.toFixed(2)} < X < ${upper.toFixed(2)}) = ${area.toFixed(4)}`;
+                dragLayer.append("text").attr("class", "drag-text").attr("x", (pixel1 + pixel2) / 2).attr("y", -5).text(text);
+            }
+
+            const drag = d3.drag().filter(event => !event.touches).on("start", (event) => { const [x_coord] = d3.pointer(event, interactionRect.node()); dragState.isDragging = true; dragState.startX = x_coord; dragLayer.selectAll("*").remove(); dragLayer.append("rect").attr("class", "drag-selection").attr("y", 0).attr("height", height); tooltip.style.opacity = 0; }).on("drag", (event) => { const [currentX] = d3.pointer(event, interactionRect.node()); const x = Math.min(dragState.startX, currentX), w = Math.abs(currentX - dragState.startX); dragLayer.select(".drag-selection").attr("x", x).attr("width", w); }).on("end", (event) => { dragState.isDragging = false; const [endX, endY] = d3.pointer(event, interactionRect.node()); if (endX >= 0 && endX <= width && endY >= 0 && endY <= height) { tooltip.style.opacity = 1; } calculateAndDisplayArea(dragState.startX, endX); });
+            interactionRect.call(drag);
+
             function updateTooltip(event) {
                 const [tipX, tipY] = d3.pointer(event, document.getElementById('os-plot-container'));
                 tooltip.style.left = tipX + "px";
@@ -1016,10 +1091,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 tooltip.innerHTML = `x: ${x_val.toFixed(3)}<br>y: ${y_val.toFixed(5)}`;
             }
 
-            interactionRect
-                .on("mouseover", () => { focus.style("opacity", 1); tooltip.style.opacity = 1; })
-                .on("mouseout", () => { focus.style("opacity", 0); tooltip.style.opacity = 0; })
-                .on("mousemove", updateTooltip);
+            interactionRect.on("mouseover", () => { if (!dragState.isDragging) { focus.style("opacity", 1); tooltip.style.opacity = 1; }}).on("mouseout", () => { if (!dragState.isDragging) { focus.style("opacity", 0); tooltip.style.opacity = 0; }}).on("mousemove", (event) => { if (dragState.isDragging) return; updateTooltip(event); });
+            const node = interactionRect.node();
+            node.addEventListener('touchstart', (event) => {
+                if (event.touches.length === 2) { event.preventDefault(); touchDragState.isDragging = true; const pointers = d3.pointers(event, node); touchDragState.x1 = pointers[0][0]; touchDragState.x2 = pointers[1][0]; dragLayer.selectAll("*").remove(); dragLayer.append("rect").attr("class", "drag-selection").attr("y", 0).attr("height", height); tooltip.style.opacity = 0; focus.style.opacity = 0; const x = Math.min(touchDragState.x1, touchDragState.x2), w = Math.abs(touchDragState.x1 - touchDragState.x2); dragLayer.select(".drag-selection").attr("x", x).attr("width", w); }
+                else if (event.touches.length === 1) { event.preventDefault(); dragLayer.selectAll("*").remove(); updateTooltip(event.touches[0]); focus.style.opacity = 1; tooltip.style.opacity = 1; }
+            });
+            node.addEventListener('touchmove', (event) => {
+                if (event.touches.length === 2 && touchDragState.isDragging) { event.preventDefault(); const pointers = d3.pointers(event, node); touchDragState.x1 = pointers[0][0]; touchDragState.x2 = pointers[1][0]; const x = Math.min(touchDragState.x1, touchDragState.x2), w = Math.abs(touchDragState.x1 - touchDragState.x2); dragLayer.select(".drag-selection").attr("x", x).attr("width", w); }
+                else if (event.touches.length === 1 && !touchDragState.isDragging) { event.preventDefault(); updateTooltip(event.touches[0]); }
+            });
+            node.addEventListener('touchend', (event) => {
+                if (touchDragState.isDragging) { event.preventDefault(); calculateAndDisplayArea(touchDragState.x1, touchDragState.x2); touchDragState = {}; }
+                if (event.touches.length === 0) { focus.style.opacity = 0; tooltip.style.opacity = 0; }
+            });
         }
 
         function updateURL() {
@@ -1037,6 +1122,7 @@ document.addEventListener('DOMContentLoaded', () => {
             init: () => {
                 Object.keys(OS_DISTRIBUTIONS).forEach(key => distSelect.appendChild(new Option(OS_DISTRIBUTIONS[key].name, key)));
                 distSelect.addEventListener('change', handleDistChange);
+                intervalSelect.addEventListener('change', update);
                 paramInputs.addEventListener('input', update);
                 nInput.addEventListener('input', update);
                 kInput.addEventListener('input', update);
