@@ -121,7 +121,7 @@
 
         /* Scoped styles for Order Statistics App */
         #order-statistics-app {
-            --panel-bg: #f9f9f9; --border-color: #ccc; --accent-color: #28a745;
+            --panel-bg: #f9f9f9; --border-color: #ccc; --accent-color: steelblue;
             grid-template-columns: 320px 1fr;
             grid-template-rows: auto 1fr;
             grid-template-areas: "controls plot" "stats plot";
@@ -365,7 +365,10 @@
                     <div>25th %ile: <span id="os-stat-q1"></span></div>
                     <div>Median: <span id="os-stat-median"></span></div>
                     <div>75th %ile: <span id="os-stat-q3"></span></div>
+                    <div>50% Interval: <span id="os-stat-int50"></span></div>
+                    <div>90% Interval: <span id="os-stat-int90"></span></div>
                     <div>95% Interval: <span id="os-stat-int95"></span></div>
+                    <div>99% Interval: <span id="os-stat-int99"></span></div>
                 </div>
             </div>
 
@@ -979,8 +982,10 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('os-stat-q1').textContent = quantile(0.25).toFixed(4);
             document.getElementById('os-stat-median').textContent = quantile(0.5).toFixed(4);
             document.getElementById('os-stat-q3').textContent = quantile(0.75).toFixed(4);
-            const int95 = [quantile(0.025), quantile(0.975)];
-            document.getElementById('os-stat-int95').textContent = `[${int95[0].toFixed(2)}, ${int95[1].toFixed(2)}]`;
+            const intervals = { '50': [quantile(0.25), quantile(0.75)], '90': [quantile(0.05), quantile(0.95)], '95': [quantile(0.025), quantile(0.975)], '99': [quantile(0.005), quantile(0.995)] };
+            Object.entries(intervals).forEach(([key, val]) => {
+                document.getElementById(`os-stat-int${key}`).textContent = `[${val[0].toFixed(2)}, ${val[1].toFixed(2)}]`;
+            });
 
             const meanIntegrand = u => config.inv(u, jstat, params) * jStat.beta.pdf(u, k, n - k + 1);
             const mean = integrate(meanIntegrand, 1e-6, 1-1e-6, 1000);
@@ -1133,7 +1138,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 distSelect.addEventListener('change', handleDistChange);
                 intervalSelect.addEventListener('change', update);
                 paramInputs.addEventListener('input', update);
-                nInput.addEventListener('input', update);
+                nInput.addEventListener('input', () => {
+                    const old_n = currentState.n;
+                    const old_k = currentState.k;
+                    const new_n = parseInt(nInput.value);
+                    if (old_k === old_n && new_n > old_n) {
+                        kInput.value = new_n;
+                    }
+                    update();
+                });
                 kInput.addEventListener('input', update);
                 window.addEventListener('resize', () => { if (currentState.jstat) updatePlot(); });
                 handleDistChange();
