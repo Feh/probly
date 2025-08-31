@@ -744,7 +744,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (params.has(p.id)) {
                             const val = params.get(p.id);
                             const inputEl = document.getElementById(`param-${p.id}`);
-                            if (inputEl) inputEl.value = val;
+                            if (inputEl) {
+                                inputEl.value = val;
+                                inputEl.dispatchEvent(new Event('change'));
+                                inputEl.dispatchEvent(new Event('input'));
+                            }
                         }
                     });
                     update({ fromURL: true });
