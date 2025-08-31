@@ -164,9 +164,9 @@
     <nav id="menu">
         <div class="menu-header">Probly.app</div>
         <ul>
-            <li><a href="#bernoulli">Correlated Bernoulli</a></li>
             <li><a href="#distributions">Distributions</a></li>
             <li><a href="#order-statistics">Order Statistics</a></li>
+            <li><a href="#bernoulli">Correlated Bernoulli</a></li>
         </ul>
     </nav>
     <main>
@@ -1168,16 +1168,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const menuBtn = document.getElementById('menu-btn');
     const menu = document.getElementById('menu');
     const appContainers = {
-        bernoulli: document.getElementById('bernoulli-app'),
         distributions: document.getElementById('distributions-app'),
-        'order-statistics': document.getElementById('order-statistics-app')
+        'order-statistics': document.getElementById('order-statistics-app'),
+        bernoulli: document.getElementById('bernoulli-app')
     };
     const appModules = {
-        bernoulli: bernoulliApp,
         distributions: distributionsApp,
-        'order-statistics': orderStatisticsApp
+        'order-statistics': orderStatisticsApp,
+        bernoulli: bernoulliApp
     };
-    const initializedApps = { bernoulli: false, distributions: false, 'order-statistics': false };
+    const initializedApps = { distributions: false, 'order-statistics': false, bernoulli: false };
 
     menuBtn.addEventListener('click', () => {
         menu.classList.toggle('visible');
