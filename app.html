@@ -1672,8 +1672,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function setupDensityInteractionLayer() {
             const focus = densityPlotArea.append("circle").style("fill", "none").attr("stroke", "black").attr("r", 4).style("opacity", 0);
-            let dragState = { startX: null, isDragging: false };
-            const interactionRect = densitySvg.append("rect").attr("transform", `translate(${margin.left},${margin.top})`).style("fill", "none").style("pointer-events", "all").attr("width", densityWidth).attr("height", densityHeight);
+            let dragState = { startX: null, isDragging: false }; let touchDragState = {};
+            const interactionRect = densitySvg.append("rect").attr("transform", `translate(${margin.left},${margin.top})`).style("fill", "none").style("pointer-events", "all").style("touch-action", "none").attr("width", densityWidth).attr("height", densityHeight);
 
             function calculateAndDisplayArea(pixel1, pixel2) {
                 if (Math.abs(pixel1 - pixel2) < 5) { densityDragLayer.selectAll("*").remove(); return; }
@@ -1684,7 +1684,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 densityDragLayer.append("text").attr("class", "drag-text").attr("x", (pixel1 + pixel2) / 2).attr("y", -5).text(text);
             }
 
-            const drag = d3.drag().on("start", (event) => {
+            const drag = d3.drag().filter(event => !event.touches).on("start", (event) => {
                 const [x_coord] = d3.pointer(event, interactionRect.node());
                 dragState = { isDragging: true, startX: x_coord };
                 densityDragLayer.selectAll("*").remove();
@@ -1715,6 +1715,53 @@ document.addEventListener('DOMContentLoaded', () => {
             interactionRect.on("mouseover", () => { if (!dragState.isDragging) { focus.style("opacity", 1); densityTooltip.style("opacity", 1); }})
                          .on("mouseout", () => { if (!dragState.isDragging) { focus.style("opacity", 0); densityTooltip.style("opacity", 0); }})
                          .on("mousemove", (event) => { if (!dragState.isDragging) { updateTooltip(event); }});
+
+            const node = interactionRect.node();
+            node.addEventListener('touchstart', (event) => {
+                if (event.touches.length === 2) {
+                    event.preventDefault();
+                    touchDragState.isDragging = true;
+                    const pointers = d3.pointers(event, node);
+                    touchDragState.x1 = pointers[0][0];
+                    touchDragState.x2 = pointers[1][0];
+                    densityDragLayer.selectAll("*").remove();
+                    densityDragLayer.append("rect").attr("class", "drag-selection").attr("y", 0).attr("height", densityHeight);
+                    densityTooltip.style("opacity", 0);
+                    focus.style("opacity", 0);
+                    const x = Math.min(touchDragState.x1, touchDragState.x2), w = Math.abs(touchDragState.x1 - touchDragState.x2);
+                    densityDragLayer.select(".drag-selection").attr("x", x).attr("width", w);
+                } else if (event.touches.length === 1) {
+                    event.preventDefault();
+                    densityDragLayer.selectAll("*").remove();
+                    updateTooltip(event.touches[0]);
+                    focus.style("opacity", 1);
+                    densityTooltip.style("opacity", 1);
+                }
+            });
+            node.addEventListener('touchmove', (event) => {
+                if (event.touches.length === 2 && touchDragState.isDragging) {
+                    event.preventDefault();
+                    const pointers = d3.pointers(event, node);
+                    touchDragState.x1 = pointers[0][0];
+                    touchDragState.x2 = pointers[1][0];
+                    const x = Math.min(touchDragState.x1, touchDragState.x2), w = Math.abs(touchDragState.x1 - touchDragState.x2);
+                    densityDragLayer.select(".drag-selection").attr("x", x).attr("width", w);
+                } else if (event.touches.length === 1 && !touchDragState.isDragging) {
+                    event.preventDefault();
+                    updateTooltip(event.touches[0]);
+                }
+            });
+            node.addEventListener('touchend', (event) => {
+                if (touchDragState.isDragging) {
+                    event.preventDefault();
+                    calculateAndDisplayArea(touchDragState.x1, touchDragState.x2);
+                    touchDragState = {};
+                }
+                if (event.touches.length === 0) {
+                    focus.style("opacity", 0);
+                    densityTooltip.style("opacity", 0);
+                }
+            });
         }
         
         function updateURL() {
