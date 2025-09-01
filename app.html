@@ -194,7 +194,7 @@
 <body>
     <header>
         <button id="menu-btn">☰</button>
-        <h1>Probly.app</h1>
+        <h1 id="app-title-bar">Probly.app</h1>
     </header>
     <nav id="menu">
         <div class="menu-header">Probly.app</div>
@@ -519,8 +519,8 @@
                     <svg id="gc-scatter-plot-svg"></svg>
                 </div>
                 <div id="gc-density-plot-container" class="panel gc-plot-container">
-                    <h4 style="text-align: center; margin-top: 0;">Conditional Density</h4>
-                     <div style="display: flex; gap: 10px; justify-content: flex-end; padding: 0 20px;">
+                    <h4 id="gc-density-plot-title" style="text-align: center; margin-top: 0;">Conditional Density</h4>
+                     <div id="gc-density-controls" style="display: flex; gap: 10px; justify-content: flex-end; padding: 0 20px;">
                         <div class="control-group" style="margin-bottom: 0;">
                             <label for="gc-interval-select">Shade Interval</label>
                             <select id="gc-interval-select">
@@ -533,6 +533,7 @@
                         </div>
                     </div>
                     <svg id="gc-density-plot-svg"></svg>
+                    <div id="gc-conditional-mean-display" style="text-align: center; padding: 5px;"></div>
                     <div id="gc-density-tooltip"></div>
                 </div>
             </div>
@@ -1597,15 +1598,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         function updateDensityPlot() {
+            const titleEl = document.getElementById('gc-density-plot-title');
+            const controlsEl = document.getElementById('gc-density-controls');
+            const meanEl = document.getElementById('gc-conditional-mean-display');
+
             if (!currentState.conditional) {
                 densitySvg.style("display", "none");
-                document.getElementById('gc-density-plot-container').querySelector('h4').style.display = 'none';
-                document.getElementById('gc-density-plot-container').querySelector('div').style.display = 'none';
+                titleEl.style.display = 'none';
+                controlsEl.style.display = 'none';
+                meanEl.style.display = 'none';
                 return;
             }
             densitySvg.style("display", "block");
-            document.getElementById('gc-density-plot-container').querySelector('h4').style.display = 'block';
-            document.getElementById('gc-density-plot-container').querySelector('div').style.display = 'flex';
+            titleEl.style.display = 'block';
+            controlsEl.style.display = 'flex';
+            meanEl.style.display = 'block';
+
+            const { condPdf, condVar, condType, condValue } = currentState.conditional;
+            const otherVar = condVar === 'X' ? 'Y' : 'X';
+            const typeSymbol = { eq: '=', ge: '≥', le: '≤' }[condType];
+            titleEl.textContent = `Density of ${otherVar} | ${condVar} ${typeSymbol} ${condValue}`;
             
             const svgRect = densitySvg.node().getBoundingClientRect();
              if (svgRect.width <= 0) return;
@@ -1614,7 +1626,6 @@ document.addEventListener('DOMContentLoaded', () => {
             densityPlotArea.attr("transform", `translate(${margin.left},${margin.top})`);
             densityDragLayer.attr("transform", `translate(${margin.left},${margin.top})`);
             
-            const { condPdf, condVar } = currentState.conditional;
             const { distKeyX, paramsX, jstatX, distKeyY, paramsY, jstatY } = currentState;
             
             const [domainConfig, domainParams, domainJstat] = (condVar === 'X') ?
@@ -1623,6 +1634,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const plotDomain = domainConfig.domain(domainParams, domainJstat);
             const plotData = d3.range(plotDomain[0], plotDomain[1], (plotDomain[1] - plotDomain[0]) / 200).map(v => ({x: v, y: condPdf(v)})).filter(d => isFinite(d.y));
+            
+            const totalIntegral = integrate(condPdf, plotDomain[0], plotDomain[1], 400);
+            const meanIntegrand = x => x * condPdf(x);
+            const mean = integrate(meanIntegrand, plotDomain[0], plotDomain[1], 400) / totalIntegral;
+            if (isFinite(mean)) {
+                meanEl.textContent = `Mean: ${mean.toFixed(4)}`;
+            } else {
+                meanEl.textContent = 'Mean: N/A';
+            }
+            
             const yMax = d3.max(plotData, d => d.y);
 
             densityXScale.domain(plotDomain).range([0, densityWidth]);
@@ -1807,7 +1828,9 @@ document.addEventListener('DOMContentLoaded', () => {
         Object.values(appContainers).forEach(c => c.classList.remove('active'));
 
         if (appContainers[appName]) {
-            document.title = `Probly.app: ${appTitles[appName]}`;
+            const title = `Probly.app: ${appTitles[appName]}`;
+            document.title = title;
+            document.getElementById('app-title-bar').textContent = title;
             appContainers[appName].classList.add('active');
             if (!initializedApps[appName]) {
                 appModules[appName].init();
@@ -1815,7 +1838,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             appModules[appName].updateFromURL(params);
         } else {
-            document.title = `Probly.app: ${appTitles.bernoulli}`;
+            const title = `Probly.app: ${appTitles.bernoulli}`;
+            document.title = title;
+            document.getElementById('app-title-bar').textContent = title;
             appContainers.bernoulli.classList.add('active');
             if (!initializedApps.bernoulli) {
                 appModules.bernoulli.init();
