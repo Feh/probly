@@ -55,7 +55,7 @@
         #menu a:hover { background-color: #f0f0f0; }
         .app-container { display: none; }
         .app-container.active { display: block; }
-        #distributions-app.active, #order-statistics-app.active { display: grid; }
+        #distributions-app.active, #order-statistics-app.active, #gaussian-copula-app.active { display: grid; }
 
         /* Scoped styles for Correlated Bernoulli App */
         #bernoulli-app { max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
@@ -151,7 +151,6 @@
         /* Scoped styles for Gaussian Copula App */
         #gaussian-copula-app {
             --panel-bg: #f9f9f9; --border-color: #ccc; --accent-color: steelblue;
-            display: grid;
             grid-template-columns: 320px 1fr;
             grid-template-rows: auto auto auto 1fr;
             grid-template-areas: "controls plots" "sampling plots" "conditionals plots" "formulas plots";
@@ -1731,9 +1730,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('gc-sample-btn-1000').addEventListener('click', () => generateSamples(1000));
                 document.getElementById('gc-sample-clear-btn').addEventListener('click', () => {
                     currentState.samples = [];
-                    currentState.conditional = null;
                     updateScatterPlot();
-                    updateDensityPlot();
                 });
                 
                 document.getElementById('gc-plot-cond-btn').addEventListener('click', plotConditional);
@@ -1782,6 +1779,12 @@ document.addEventListener('DOMContentLoaded', () => {
         bernoulli: bernoulliApp
     };
     const initializedApps = { distributions: false, 'order-statistics': false, 'gaussian-copula': false, bernoulli: false };
+    const appTitles = {
+        distributions: 'Distributions',
+        'order-statistics': 'Order Statistics',
+        'gaussian-copula': 'Gaussian Copula',
+        bernoulli: 'Correlated Bernoulli'
+    };
 
     menuBtn.addEventListener('click', () => {
         menu.classList.toggle('visible');
@@ -1804,6 +1807,7 @@ document.addEventListener('DOMContentLoaded', () => {
         Object.values(appContainers).forEach(c => c.classList.remove('active'));
 
         if (appContainers[appName]) {
+            document.title = `Probly.app: ${appTitles[appName]}`;
             appContainers[appName].classList.add('active');
             if (!initializedApps[appName]) {
                 appModules[appName].init();
@@ -1811,6 +1815,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             appModules[appName].updateFromURL(params);
         } else {
+            document.title = `Probly.app: ${appTitles.bernoulli}`;
             appContainers.bernoulli.classList.add('active');
             if (!initializedApps.bernoulli) {
                 appModules.bernoulli.init();
