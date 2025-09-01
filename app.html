@@ -1358,6 +1358,20 @@ document.addEventListener('DOMContentLoaded', () => {
             rho: 0.5, samples: [], conditional: null,
         };
 
+        function integrate(f, a, b, n_steps = 200) {
+            if (a >= b) return 0;
+            n_steps = n_steps % 2 === 0 ? n_steps : n_steps + 1;
+            let h = (b - a) / n_steps;
+            let sum = f(a) + f(b);
+            for (let i = 1; i < n_steps; i += 2) {
+                sum += 4 * f(a + i * h);
+            }
+            for (let i = 2; i < n_steps - 1; i += 2) {
+                sum += 2 * f(a + i * h);
+            }
+            return sum * h / 3;
+        }
+
         const margin = { top: 20, right: 30, bottom: 40, left: 50 };
 
         // Scatter plot elements
@@ -1512,33 +1526,6 @@ document.addEventListener('DOMContentLoaded', () => {
             updateDensityPlot();
         }
 
-        function conditionalCdf(y, condInfo) {
-            const { condVar, condType, condValue } = condInfo;
-            let config1, params1, jstat1, config2, params2, jstat2;
-            if (condVar === 'X') {
-                [config1, params1, jstat1] = [OS_DISTRIBUTIONS[currentState.distKeyX], currentState.paramsX, currentState.jstatX];
-                [config2, params2, jstat2] = [OS_DISTRIBUTIONS[currentState.distKeyY], currentState.paramsY, currentState.jstatY];
-            } else { // condVar === 'Y'
-                [config1, params1, jstat1] = [OS_DISTRIBUTIONS[currentState.distKeyY], currentState.paramsY, currentState.jstatY];
-                [config2, params2, jstat2] = [OS_DISTRIBUTIONS[currentState.distKeyX], currentState.paramsX, currentState.jstatX];
-            }
-
-            const rho = currentState.rho;
-            const u = config1.cdf(condValue, jstat1, params1);
-            const x_prime = jStat.normal.inv(u, 0, 1);
-            const v = config2.cdf(y, jstat2, params2);
-            const y_prime = jStat.normal.inv(v, 0, 1);
-
-            if (!isFinite(x_prime) || !isFinite(y_prime)) return y_prime > 0 ? 1 : 0;
-
-            if (condType === 'eq') {
-                return jStat.normal.cdf((y_prime - rho * x_prime) / Math.sqrt(1 - rho * rho), 0, 1);
-            } else if (condType === 'ge') {
-                return (v - bivariateNormalCDF(x_prime, y_prime, rho)) / (1 - u);
-            } else { // le
-                return bivariateNormalCDF(x_prime, y_prime, rho) / u;
-            }
-        }
 
         function inverseConditionalCdf(p, condInfo, domain) {
             if (p <= 0) return domain[0];
@@ -1558,11 +1545,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 return config2.inv(jStat.normal.cdf(val, 0, 1), jstat2, params2);
             }
 
-            // For ge and le conditions, use numerical inversion (binary search)
+            // For ge and le conditions, use numerical inversion (binary search) on integrated PDF
             let low = domain[0], high = domain[1];
+            // Normalize total integral to 1 for robustness
+            const total_integral = integrate(condInfo.condPdf, domain[0], domain[1], 400);
+
             for (let i = 0; i < 50; i++) { // 50 iterations for precision
                 const mid = (low + high) / 2;
-                if (conditionalCdf(mid, condInfo) < p) {
+                const candidate = integrate(condInfo.condPdf, domain[0], mid, 200) / total_integral;
+                if (candidate < p) {
                     low = mid;
                 } else {
                     high = mid;
@@ -1669,7 +1660,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (Math.abs(pixel1 - pixel2) < 5) { densityDragLayer.selectAll("*").remove(); return; }
                 const x0 = densityXScale.invert(pixel1), x1 = densityXScale.invert(pixel2);
                 const lower = Math.min(x0, x1), upper = Math.max(x0, x1);
-                const area = conditionalCdf(upper, currentState.conditional) - conditionalCdf(lower, currentState.conditional);
+                const area = integrate(currentState.conditional.condPdf, lower, upper);
                 const text = `P(${lower.toFixed(2)} < X < ${upper.toFixed(2)}) = ${area.toFixed(4)}`;
                 densityDragLayer.append("text").attr("class", "drag-text").attr("x", (pixel1 + pixel2) / 2).attr("y", -5).text(text);
             }
