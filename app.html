@@ -152,15 +152,15 @@
         #gaussian-copula-app {
             --panel-bg: #f9f9f9; --border-color: #ccc; --accent-color: steelblue;
             grid-template-columns: 320px 1fr;
-            grid-template-rows: auto auto auto 1fr;
-            grid-template-areas: "controls plots" "sampling plots" "conditionals plots" "formulas plots";
+            grid-template-rows: auto auto 1fr;
+            grid-template-areas: "controls plots" "sampling plots" "conditionals plots";
             gap: 20px; padding: 20px; max-width: 1400px; margin: auto;
         }
         #gaussian-copula-app .panel { padding: 15px; border: 1px solid var(--border-color); border-radius: 5px; background-color: var(--panel-bg); }
         #gaussian-copula-app #gc-controls-panel { grid-area: controls; }
         #gaussian-copula-app #gc-sampling-panel { grid-area: sampling; }
         #gaussian-copula-app #gc-conditionals-panel { grid-area: conditionals; }
-        #gaussian-copula-app #gc-formulas-panel { grid-area: formulas; }
+        #gaussian-copula-app #gc-formulas-panel { grid-column: 1 / -1; }
         #gaussian-copula-app #gc-plots-panel { grid-area: plots; display: flex; flex-direction: column; gap: 20px; padding: 0; border: none; background: transparent; }
         #gaussian-copula-app .gc-plot-container { padding: 0; display: flex; flex-direction: column; min-height: 400px; position: relative; }
         #gaussian-copula-app h3 { margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
@@ -442,7 +442,6 @@
             </details>
         </div>
         <div id="gaussian-copula-app" class="app-container">
-            <h2>Gaussian Copula</h2>
             <div id="gc-controls-panel" class="panel">
                 <h3>Marginal Distributions</h3>
                 <h4>Marginal for X</h4>
@@ -500,18 +499,6 @@
                     <button id="gc-plot-cond-btn">Plot Conditional Density</button>
                 </div>
             </div>
-             <details id="gc-formulas-panel" class="panel">
-                <summary>Formulas</summary>
-                <div style="padding-top: 1rem;">
-                    <p>Let \(u = F_X(x)\), \(v = F_Y(y)\), \(x' = \Phi^{-1}(u)\), and \(y' = \Phi^{-1}(v)\).</p>
-                    <h4>Conditional on \(X=x\)</h4>
-                    $$ f_{Y|X}(y|x) = \frac{f_Y(y)}{\phi(y')} \frac{1}{\sqrt{1-\rho^2}} \phi\left(\frac{y' - \rho x'}{\sqrt{1-\rho^2}}\right) $$
-                    <h4>Conditional on \(X \ge x\)</h4>
-                    $$ f_{Y|X \ge x}(y) = \frac{f_Y(y)}{1-u} \left[ 1 - \Phi\left(\frac{x' - \rho y'}{\sqrt{1-\rho^2}}\right) \right] $$
-                    <h4>Conditional on \(X \le x\)</h4>
-                    $$ f_{Y|X \le x}(y) = \frac{f_Y(y)}{u} \Phi\left(\frac{x' - \rho y'}{\sqrt{1-\rho^2}}\right) $$
-                </div>
-            </details>
 
             <div id="gc-plots-panel">
                 <div id="gc-scatter-plot-container" class="panel gc-plot-container">
@@ -537,6 +524,18 @@
                     <div id="gc-density-tooltip"></div>
                 </div>
             </div>
+             <details id="gc-formulas-panel" class="panel">
+                <summary>Formulas</summary>
+                <div style="padding-top: 1rem;">
+                    <p>Let \(u = F_X(x)\), \(v = F_Y(y)\), \(x' = \Phi^{-1}(u)\), and \(y' = \Phi^{-1}(v)\).</p>
+                    <h4>Conditional on \(X=x\)</h4>
+                    $$ f_{Y|X}(y|x) = \frac{f_Y(y)}{\phi(y')} \frac{1}{\sqrt{1-\rho^2}} \phi\left(\frac{y' - \rho x'}{\sqrt{1-\rho^2}}\right) $$
+                    <h4>Conditional on \(X \ge x\)</h4>
+                    $$ f_{Y|X \ge x}(y) = \frac{f_Y(y)}{1-u} \left[ 1 - \Phi\left(\frac{x' - \rho y'}{\sqrt{1-\rho^2}}\right) \right] $$
+                    <h4>Conditional on \(X \le x\)</h4>
+                    $$ f_{Y|X \le x}(y) = \frac{f_Y(y)}{u} \Phi\left(\frac{x' - \rho y'}{\sqrt{1-\rho^2}}\right) $$
+                </div>
+            </details>
         </div>
     </main>
 
