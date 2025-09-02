@@ -193,9 +193,12 @@
         /* Scoped styles for Wiener Process App */
         #wiener-process-app {
             --panel-bg: #f9f9f9; --border-color: #ccc; --accent-color: steelblue;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            grid-template-columns: 320px 1fr;
+            grid-template-areas: "params plots";
             gap: 20px; padding: 20px; max-width: 1400px; margin: auto;
         }
+        #wp-params-panel { grid-area: params; }
+        #wp-plots-wrapper { grid-area: plots; display: flex; flex-direction: column; gap: 20px; }
         #wiener-process-app .panel { padding: 15px; border: 1px solid var(--border-color); border-radius: 5px; background-color: var(--panel-bg); display: flex; flex-direction: column; }
         #wiener-process-app h3, #wiener-process-app h4 { margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
         #wiener-process-app .control-group { margin-bottom: 15px; }
@@ -220,7 +223,7 @@
             #order-statistics-app { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: "controls" "stats" "plot"; }
             #order-statistics-app #os-stats-grid { grid-template-columns: 1fr; }
             #gaussian-copula-app { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: "controls" "plots" "formulas"; }
-            #wiener-process-app { grid-template-columns: 1fr; }
+            #wiener-process-app { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: "params" "plots"; }
         }
     </style>
 </head>
@@ -574,60 +577,63 @@
         <div id="wiener-process-app" class="app-container">
             <div id="wp-params-panel" class="panel">
                 <h3>Process Parameters</h3>
+                <p>\( dX_t = m dt + \sigma dW_t \)</p>
                 <div class="control-grid">
                     <div class="control-group">
-                        <label for="wp-x0">Start Value X₀</label>
+                        <label for="wp-x0">Start Value \( X_0 \)</label>
                         <input type="number" id="wp-x0" value="0" step="0.1">
                     </div>
                     <div class="control-group">
-                        <label for="wp-drift">Drift m</label>
+                        <label for="wp-drift">Drift \( m \)</label>
                         <input type="number" id="wp-drift" value="0" step="0.1">
                     </div>
                     <div class="control-group">
-                        <label for="wp-volatility">Volatility σ</label>
+                        <label for="wp-volatility">Volatility \( \sigma \)</label>
                         <input type="number" id="wp-volatility" value="1" min="0.01" step="0.01">
                     </div>
                     <div class="control-group">
-                        <label for="wp-terminal-time">Terminal Time T</label>
+                        <label for="wp-terminal-time">Terminal Time \( T \)</label>
                         <input type="number" id="wp-terminal-time" value="1" min="0.01" step="0.1">
                     </div>
                 </div>
             </div>
-            <div id="wp-paths-panel" class="panel">
-                <h3>Sample Paths</h3>
-                <div class="control-group">
-                    <label for="wp-cone-select">Percentile Cone</label>
-                    <select id="wp-cone-select">
-                        <option value="0">None</option>
-                        <option value="p50">50%</option>
-                        <option value="p90">90%</option>
-                        <option value="p95" selected>95%</option>
-                        <option value="p99">99%</option>
-                    </select>
+            <div id="wp-plots-wrapper">
+                <div id="wp-paths-panel" class="panel">
+                    <h3>Sample Paths of \( X_t \)</h3>
+                    <div class="control-group">
+                        <label for="wp-cone-select">Percentile Cone</label>
+                        <select id="wp-cone-select">
+                            <option value="0">None</option>
+                            <option value="p50">50%</option>
+                            <option value="p90">90%</option>
+                            <option value="p95" selected>95%</option>
+                            <option value="p99">99%</option>
+                        </select>
+                    </div>
+                    <div class="button-grid">
+                        <button id="wp-clear-paths-btn">Clear</button>
+                        <button id="wp-draw1-btn">Draw 1</button>
+                        <button id="wp-draw10-btn">Draw 10</button>
+                        <button id="wp-draw100-btn">Draw 100</button>
+                    </div>
+                    <div class="wp-plot-container">
+                        <svg id="wp-paths-svg"></svg>
+                    </div>
                 </div>
-                <div class="button-grid">
-                    <button id="wp-clear-paths-btn">Clear</button>
-                    <button id="wp-draw1-btn">Draw 1</button>
-                    <button id="wp-draw10-btn">Draw 10</button>
-                    <button id="wp-draw100-btn">Draw 100</button>
-                </div>
-                <div class="wp-plot-container">
-                    <svg id="wp-paths-svg"></svg>
-                </div>
-            </div>
-            <div id="wp-hitting-time-panel" class="panel">
-                <h3>First Hitting Time</h3>
-                <div class="control-group">
-                    <label for="wp-barrier">Barrier b</label>
-                    <input type="number" id="wp-barrier" value="2" step="0.1">
-                </div>
-                <h4>Hitting Time Density</h4>
-                <div class="wp-plot-container">
-                    <svg id="wp-ht-density-svg"></svg>
-                </div>
-                <h4>Hitting Probability P(T<sub>b</sub> ≤ t)</h4>
-                <div class="wp-plot-container">
-                    <svg id="wp-ht-prob-svg"></svg>
+                <div id="wp-hitting-time-panel" class="panel">
+                    <h3>First Hitting Time \( T_b \)</h3>
+                    <div class="control-group">
+                        <label for="wp-barrier">Barrier \( b \)</label>
+                        <input type="number" id="wp-barrier" value="2" step="0.1">
+                    </div>
+                    <h4>Density of \( T_b = \inf\{t \ge 0 \mid X_t = b\} \)</h4>
+                    <div class="wp-plot-container">
+                        <svg id="wp-ht-density-svg"></svg>
+                    </div>
+                    <h4>Hitting Probability \( \mathbb{P}(T_b \le t) \)</h4>
+                    <div class="wp-plot-container">
+                        <svg id="wp-ht-prob-svg"></svg>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2066,6 +2072,9 @@ document.addEventListener('DOMContentLoaded', () => {
             resizeObserver.observe(document.getElementById('wp-hitting-time-panel'));
 
             update();
+            renderMathInElement(document.getElementById('wiener-process-app'), {
+                delimiters: [{left: '$$', right: '$$', display: true}, {left: '\\[', right: '\\]', display: true}, {left: '\\(', right: '\\)', display: false}],
+            });
         }
 
         function update() {
