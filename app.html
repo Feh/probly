@@ -190,12 +190,38 @@
         #gaussian-copula-app .gc-conditional-controls-row { display: flex; flex-wrap: wrap; gap: 15px; align-items: center; justify-content: center; padding: 10px 0; }
         #gaussian-copula-app .gc-conditional-controls-row .control-group { flex: 1 1 150px; margin: 10px; }
 
+        /* Scoped styles for Wiener Process App */
+        #wiener-process-app {
+            --panel-bg: #f9f9f9; --border-color: #ccc; --accent-color: steelblue;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px; padding: 20px; max-width: 1400px; margin: auto;
+        }
+        #wiener-process-app .panel { padding: 15px; border: 1px solid var(--border-color); border-radius: 5px; background-color: var(--panel-bg); display: flex; flex-direction: column; }
+        #wiener-process-app h3, #wiener-process-app h4 { margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
+        #wiener-process-app .control-group { margin-bottom: 15px; }
+        #wiener-process-app label { display: block; font-weight: bold; margin-bottom: 5px; }
+        #wiener-process-app input, #wiener-process-app select, #wiener-process-app button { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 3px; }
+        #wiener-process-app .control-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        #wiener-process-app .button-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; margin-top: 10px; }
+        #wiener-process-app button { background-color: #007bff; color: white; border: none; cursor: pointer; }
+        #wiener-process-app button:hover { background-color: #0056b3; }
+        #wiener-process-app #wp-clear-paths-btn { background-color: #6c757d; }
+        #wiener-process-app #wp-clear-paths-btn:hover { background-color: #5a6268; }
+        #wiener-process-app .wp-plot-container { min-height: 300px; position: relative; flex-grow: 1; }
+        #wiener-process-app svg { width: 100%; height: 100%; }
+        #wiener-process-app .axis path, #wiener-process-app .axis line { fill: none; stroke: #000; shape-rendering: crispEdges; }
+        #wiener-process-app .line-path { fill: none; stroke-width: 1.5px; }
+        #wiener-process-app .cone-area { fill: var(--accent-color); opacity: 0.3; }
+        #wiener-process-app .sample-path { fill: none; stroke: grey; stroke-width: 0.5px; opacity: 0.7; }
+
         @media (max-width: 800px) {
             #distributions-app { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: "controls" "stats" "sampling" "plot"; }
             #distributions-app #stats-grid { grid-template-columns: 1fr; }
             #order-statistics-app { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: "controls" "stats" "plot"; }
             #order-statistics-app #os-stats-grid { grid-template-columns: 1fr; }
             #gaussian-copula-app { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: "controls" "plots" "formulas"; }
+            #wiener-process-app { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -210,6 +236,7 @@
             <li><a href="#distributions">Distributions</a></li>
             <li><a href="#order-statistics">Order Statistics</a></li>
             <li><a href="#gaussian-copula">Gaussian Copula</a></li>
+            <li><a href="#wiener-process">Wiener Process</a></li>
             <li><a href="#bernoulli">Correlated Bernoulli</a></li>
         </ul>
     </nav>
@@ -544,6 +571,63 @@
                     $$ f_{Y|X \le x}(y) = \frac{f_Y(y)}{u} \Phi\left(\frac{x' - \rho y'}{\sqrt{1-\rho^2}}\right) $$
                 </div>
             </details>
+        </div>
+        <div id="wiener-process-app" class="app-container">
+            <div id="wp-paths-panel" class="panel">
+                <h3>Wiener Process Paths</h3>
+                <div class="control-grid">
+                    <div class="control-group">
+                        <label for="wp-x0">Start Value X₀</label>
+                        <input type="number" id="wp-x0" value="0" step="0.1">
+                    </div>
+                    <div class="control-group">
+                        <label for="wp-drift">Drift m</label>
+                        <input type="number" id="wp-drift" value="0" step="0.1">
+                    </div>
+                    <div class="control-group">
+                        <label for="wp-volatility">Volatility σ</label>
+                        <input type="number" id="wp-volatility" value="1" min="0.01" step="0.01">
+                    </div>
+                    <div class="control-group">
+                        <label for="wp-terminal-time">Terminal Time T</label>
+                        <input type="number" id="wp-terminal-time" value="1" min="0.01" step="0.1">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label for="wp-cone-select">Percentile Cone</label>
+                    <select id="wp-cone-select">
+                        <option value="0">None</option>
+                        <option value="p50">50%</option>
+                        <option value="p90">90%</option>
+                        <option value="p95" selected>95%</option>
+                        <option value="p99">99%</option>
+                    </select>
+                </div>
+                <div class="button-grid">
+                    <button id="wp-clear-paths-btn">Clear</button>
+                    <button id="wp-draw1-btn">Draw 1</button>
+                    <button id="wp-draw10-btn">Draw 10</button>
+                    <button id="wp-draw100-btn">Draw 100</button>
+                </div>
+                <div class="wp-plot-container">
+                    <svg id="wp-paths-svg"></svg>
+                </div>
+            </div>
+            <div id="wp-hitting-time-panel" class="panel">
+                <h3>First Hitting Time</h3>
+                <div class="control-group">
+                    <label for="wp-barrier">Barrier b</label>
+                    <input type="number" id="wp-barrier" value="2" step="0.1">
+                </div>
+                <h4>Hitting Time Density</h4>
+                <div class="wp-plot-container">
+                    <svg id="wp-ht-density-svg"></svg>
+                </div>
+                <h4>Hitting Probability P(τ ≤ t)</h4>
+                <div class="wp-plot-container">
+                    <svg id="wp-ht-prob-svg"></svg>
+                </div>
+            </div>
         </div>
     </main>
 
@@ -1946,6 +2030,205 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     })();
 
+    const wienerProcessApp = (() => {
+        let state = {
+            x0: 0, m: 0, sigma: 1, T: 1,
+            barrier: 2,
+            paths: []
+        };
+        const pathsSvg = d3.select("#wp-paths-svg");
+        const htDensitySvg = d3.select("#wp-ht-density-svg");
+        const htProbSvg = d3.select("#wp-ht-prob-svg");
+        const margin = { top: 20, right: 20, bottom: 40, left: 50 };
+
+        function init() {
+            document.getElementById('wp-x0').addEventListener('input', update);
+            document.getElementById('wp-drift').addEventListener('input', update);
+            document.getElementById('wp-volatility').addEventListener('input', update);
+            document.getElementById('wp-terminal-time').addEventListener('input', update);
+            document.getElementById('wp-barrier').addEventListener('input', update);
+            document.getElementById('wp-cone-select').addEventListener('change', update);
+
+            document.getElementById('wp-clear-paths-btn').addEventListener('click', () => {
+                state.paths = [];
+                updatePathsPlot();
+            });
+            document.getElementById('wp-draw1-btn').addEventListener('click', () => drawSamplePaths(1));
+            document.getElementById('wp-draw10-btn').addEventListener('click', () => drawSamplePaths(10));
+            document.getElementById('wp-draw100-btn').addEventListener('click', () => drawSamplePaths(100));
+            
+            new ResizeObserver(update).observe(document.getElementById('wp-paths-panel'));
+            new ResizeObserver(update).observe(document.getElementById('wp-hitting-time-panel'));
+
+            update();
+        }
+
+        function update() {
+            state.x0 = parseFloat(document.getElementById('wp-x0').value);
+            state.m = parseFloat(document.getElementById('wp-drift').value);
+            state.sigma = parseFloat(document.getElementById('wp-volatility').value);
+            state.T = parseFloat(document.getElementById('wp-terminal-time').value);
+            state.barrier = parseFloat(document.getElementById('wp-barrier').value);
+            
+            if (isNaN(state.x0) || isNaN(state.m) || isNaN(state.sigma) || isNaN(state.T) || state.sigma <= 0 || state.T <= 0) {
+                return;
+            }
+
+            updatePathsPlot();
+            updateHittingTimePlots();
+        }
+        
+        function drawSamplePaths(count) {
+            const dt = state.T / 100;
+            const drift_term = state.m * dt;
+            const vol_term = state.sigma * Math.sqrt(dt);
+
+            for (let i = 0; i < count; i++) {
+                const path = [{t: 0, x: state.x0}];
+                let current_x = state.x0;
+                for (let j = 1; j <= 100; j++) {
+                    const Z = jStat.normal.sample(0, 1);
+                    current_x += drift_term + vol_term * Z;
+                    path.push({ t: j * dt, x: current_x });
+                }
+                state.paths.push(path);
+            }
+            updatePathsPlot();
+        }
+
+        function updatePathsPlot() {
+            const { x0, m, sigma, T } = state;
+            const container = d3.select('#wp-paths-svg').node().parentNode;
+            const rect = container.getBoundingClientRect();
+            const width = rect.width - margin.left - margin.right;
+            const height = rect.height - margin.top - margin.bottom;
+            if (width <= 0 || height <= 0) return;
+
+            pathsSvg.selectAll("*").remove();
+            const g = pathsSvg.attr("width", width + margin.left + margin.right)
+                               .attr("height", height + margin.top + margin.bottom)
+                               .append("g")
+                               .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            const timePoints = d3.range(0, T, T/100).concat(T);
+            const meanPath = timePoints.map(t => x0 + m * t);
+            const stdDevs = timePoints.map(t => sigma * Math.sqrt(t));
+            
+            const coneValue = document.getElementById('wp-cone-select').value;
+            let z_score = 0;
+            if (coneValue !== '0') {
+                const p = parseFloat(coneValue.substring(1)) / 100;
+                z_score = jStat.normal.inv(1 - (1-p)/2, 0, 1);
+            }
+            
+            const lowerBound = meanPath.map((mean, i) => mean - z_score * stdDevs[i]);
+            const upperBound = meanPath.map((mean, i) => mean + z_score * stdDevs[i]);
+
+            const yDomain = d3.extent([
+                ...lowerBound, ...upperBound,
+                ...(state.paths.length > 0 ? state.paths.flatMap(path => path.map(p => p.x)) : [x0])
+            ]);
+            
+            if (yDomain[0] === yDomain[1]) {
+                 yDomain[0] -= 1; yDomain[1] += 1;
+            }
+
+            const xScale = d3.scaleLinear().domain([0, T]).range([0, width]);
+            const yScale = d3.scaleLinear().domain(yDomain).range([height, 0]);
+
+            g.append("g").attr("class", "x-axis axis").attr("transform", `translate(0, ${height})`).call(d3.axisBottom(xScale));
+            g.append("g").attr("class", "y-axis axis").call(d3.axisLeft(yScale));
+
+            if (z_score > 0) {
+                const coneData = timePoints.map((t, i) => ({ t, lower: lowerBound[i], upper: upperBound[i] }));
+                const area = d3.area()
+                    .x(d => xScale(d.t))
+                    .y0(d => yScale(d.lower))
+                    .y1(d => yScale(d.upper));
+                g.append("path").datum(coneData).attr("class", "cone-area").attr("d", area);
+            }
+            
+            g.append("path").datum(timePoints.map((t, i) => ({t, x: meanPath[i]})))
+             .attr("class", "line-path").style("stroke", "black").style("stroke-dasharray", "4")
+             .attr("d", d3.line().x(d => xScale(d.t)).y(d => yScale(d.x)));
+
+            const line = d3.line().x(d => xScale(d.t)).y(d => yScale(d.x));
+            g.selectAll(".sample-path").data(state.paths).enter()
+             .append("path").attr("class", "sample-path").attr("d", line);
+        }
+
+        function updateHittingTimePlots() {
+            const { x0, m, sigma, T, barrier } = state;
+            
+            const a = barrier - x0;
+
+            if (Math.abs(a) < 1e-9) { 
+                htDensitySvg.selectAll("*").remove();
+                htProbSvg.selectAll("*").remove();
+                return;
+            }
+
+            const htDensityPdf = t => {
+                if (t <= 0) return 0;
+                return (Math.abs(a) / (sigma * Math.sqrt(2 * Math.PI * t * t * t))) * Math.exp(-Math.pow(a - m * t, 2) / (2 * sigma * sigma * t));
+            };
+            
+            const htProbCdf = t => {
+                if (t <= 0) return 0;
+                const term1 = jStat.normal.cdf((m * t - a) / (sigma * Math.sqrt(t)), 0, 1);
+                const expTerm = Math.exp(2 * m * a / (sigma * sigma));
+                if (!isFinite(expTerm)) return term1;
+                const term2 = expTerm * jStat.normal.cdf((-m * t - a) / (sigma * Math.sqrt(t)), 0, 1);
+                return term1 + term2;
+            };
+
+            const plotTimePoints = d3.range(T/200, T, T/200);
+
+            const densityData = plotTimePoints.map(t => ({t, p: htDensityPdf(t)}));
+            plotOnSvg(htDensitySvg, densityData, [0, T], "Time (t)", "Density");
+            
+            const probData = plotTimePoints.map(t => ({t, p: htProbCdf(t)}));
+            plotOnSvg(htProbSvg, probData, [0, T], "Time (t)", "Probability", [0, 1]);
+        }
+        
+        function plotOnSvg(svg, data, xDomain, xLabel, yLabel, yDomain = null) {
+            const container = svg.node().parentNode;
+            const rect = container.getBoundingClientRect();
+            const width = rect.width - margin.left - margin.right;
+            const height = rect.height - margin.top - margin.bottom;
+            if (width <= 0 || height <= 0) return;
+
+            svg.selectAll("*").remove();
+            const g = svg.attr("width", width + margin.left + margin.right)
+                         .attr("height", height + margin.top + margin.bottom)
+                         .append("g")
+                         .attr("transform", `translate(${margin.left},${margin.top})`);
+            
+            const xScale = d3.scaleLinear().domain(xDomain).range([0, width]);
+            
+            if (!yDomain) {
+                const yMax = d3.max(data, d => d.p);
+                yDomain = [0, isFinite(yMax) && yMax > 0 ? yMax * 1.1 : 1];
+            }
+            const yScale = d3.scaleLinear().domain(yDomain).range([height, 0]);
+
+            g.append("g").attr("class", "x-axis axis").attr("transform", `translate(0, ${height})`).call(d3.axisBottom(xScale));
+            g.append("g").attr("class", "y-axis axis").call(d3.axisLeft(yScale).ticks(5));
+            
+            g.append("text").attr("x", width/2).attr("y", height + 35).style("text-anchor", "middle").text(xLabel);
+            g.append("text").attr("transform", "rotate(-90)").attr("y", -margin.left+15).attr("x", -height/2).style("text-anchor", "middle").text(yLabel);
+
+            g.append("path").datum(data)
+             .attr("class", "line-path").style("stroke", "steelblue")
+             .attr("d", d3.line().x(d => xScale(d.t)).y(d => yScale(d.p)));
+        }
+
+        return {
+            init: init,
+            updateFromURL: () => {}
+        };
+    })();
+
     // Main App Router and Controls
     const menuBtn = document.getElementById('menu-btn');
     const menu = document.getElementById('menu');
@@ -1953,19 +2236,22 @@ document.addEventListener('DOMContentLoaded', () => {
         distributions: document.getElementById('distributions-app'),
         'order-statistics': document.getElementById('order-statistics-app'),
         'gaussian-copula': document.getElementById('gaussian-copula-app'),
+        'wiener-process': document.getElementById('wiener-process-app'),
         bernoulli: document.getElementById('bernoulli-app')
     };
     const appModules = {
         distributions: distributionsApp,
         'order-statistics': orderStatisticsApp,
         'gaussian-copula': gaussianCopulaApp,
+        'wiener-process': wienerProcessApp,
         bernoulli: bernoulliApp
     };
-    const initializedApps = { distributions: false, 'order-statistics': false, 'gaussian-copula': false, bernoulli: false };
+    const initializedApps = { distributions: false, 'order-statistics': false, 'gaussian-copula': false, 'wiener-process': false, bernoulli: false };
     const appTitles = {
         distributions: 'Distributions',
         'order-statistics': 'Order Statistics',
         'gaussian-copula': 'Gaussian Copula',
+        'wiener-process': 'Wiener Process',
         bernoulli: 'Correlated Bernoulli'
     };
 
