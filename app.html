@@ -55,7 +55,7 @@
         #menu a:hover { background-color: #f0f0f0; }
         .app-container { display: none; }
         .app-container.active { display: block; }
-        #distributions-app.active, #order-statistics-app.active, #gaussian-copula-app.active { display: grid; }
+        #distributions-app.active, #order-statistics-app.active, #gaussian-copula-app.active, #wiener-process-app.active { display: grid; }
 
         /* Scoped styles for Correlated Bernoulli App */
         #bernoulli-app { max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
@@ -193,7 +193,6 @@
         /* Scoped styles for Wiener Process App */
         #wiener-process-app {
             --panel-bg: #f9f9f9; --border-color: #ccc; --accent-color: steelblue;
-            display: grid;
             grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
             gap: 20px; padding: 20px; max-width: 1400px; margin: auto;
         }
