@@ -161,7 +161,7 @@
         #gaussian-copula-app #gc-formulas-panel { grid-column: 1 / -1; }
         #gaussian-copula-app #gc-plots-panel { grid-area: plots; display: flex; flex-direction: column; gap: 20px; padding: 0; border: none; background: transparent; }
         #gaussian-copula-app .gc-plot-container { padding: 0; display: flex; flex-direction: column; min-height: 600px; position: relative; }
-        #gaussian-copula-app #gc-joint-plot-grid { flex-grow: 1; display: grid; grid-template-areas: "marg-x corner" "scatter marg-y"; grid-template-columns: 1fr 100px; grid-template-rows: 100px 1fr; gap: 5px; padding: 0 10px 10px 0; }
+        #gaussian-copula-app #gc-joint-plot-grid { flex-grow: 1; display: grid; grid-template-areas: "marg-x corner" "scatter marg-y"; grid-template-columns: 1fr 80px; grid-template-rows: 80px 1fr; row-gap: 10px; column-gap: 2px; padding: 0 10px 10px 0; }
         #gaussian-copula-app #gc-marginal-x-svg { grid-area: marg-x; }
         #gaussian-copula-app #gc-joint-plot-svg { grid-area: scatter; }
         #gaussian-copula-app #gc-marginal-y-svg { grid-area: marg-y; }
@@ -1377,7 +1377,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return sum * h / 3;
         }
 
-        const margin = { joint: { top: 10, right: 10, bottom: 40, left: 50 }, marginalX: { top: 10, right: 10, bottom: 5, left: 50 }, marginalY: { top: 10, right: 30, bottom: 40, left: 5 } };
+        const margin = { joint: { top: 10, right: 2, bottom: 40, left: 50 }, marginalX: { top: 10, right: 10, bottom: 5, left: 50 }, marginalY: { top: 10, right: 30, bottom: 40, left: 2 } };
 
         // Scatter plot elements
         const jointSvg = d3.select("#gc-joint-plot-svg");
