@@ -638,6 +638,14 @@
                         <div id="wp-ht-prob-tooltip" class="wp-tooltip"></div>
                     </div>
                 </div>
+                <div id="wp-hitting-prob-by-barrier-panel" class="panel">
+                    <h3>Hitting Probability by Barrier</h3>
+                    <h4>\( \mathbb{P}(\text{hit } b \text{ by } T) \) as a function of barrier \(b\)</h4>
+                    <div class="wp-plot-container">
+                        <svg id="wp-hp-by-barrier-svg"></svg>
+                        <div id="wp-hp-by-barrier-tooltip" class="wp-tooltip"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
@@ -2050,6 +2058,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const pathsSvg = d3.select("#wp-paths-svg");
         const htDensitySvg = d3.select("#wp-ht-density-svg");
         const htProbSvg = d3.select("#wp-ht-prob-svg");
+        const hpByBarrierSvg = d3.select("#wp-hp-by-barrier-svg");
         const margin = { top: 20, right: 20, bottom: 40, left: 50 };
 
         function init() {
@@ -2102,6 +2111,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             updatePathsPlot();
             updateHittingTimePlots();
+            updateHittingProbByBarrierPlot();
             if (!options.fromURL) {
                 updateURL();
             }
@@ -2221,6 +2231,41 @@ document.addEventListener('DOMContentLoaded', () => {
             const probData = plotTimePoints.map(t => ({t, p: htProbCdf(t)}));
             plotOnSvg(htProbSvg, probData, [0, T], "Time (t)", "Probability", [0, 1], document.getElementById('wp-ht-prob-tooltip'), htProbCdf);
         }
+
+        function updateHittingProbByBarrierPlot() {
+            const { x0, m, sigma, T } = state;
+            
+            if (sigma <= 0 || T <= 0) {
+                hpByBarrierSvg.selectAll("*").remove();
+                return;
+            }
+
+            const hittingProbByBarrier = b => {
+                const a = b - x0;
+                if (Math.abs(a) < 1e-9) return 1.0;
+                const t = T;
+                
+                let eff_m = m, eff_a = a;
+                if (eff_a < 0) {
+                    eff_m = -m;
+                    eff_a = -a;
+                }
+                const term1 = jStat.normal.cdf((eff_m * t - eff_a) / (sigma * Math.sqrt(t)), 0, 1);
+                const expTerm = Math.exp(2 * eff_m * eff_a / (sigma * sigma));
+                if (!isFinite(expTerm)) return term1;
+                const term2 = expTerm * jStat.normal.cdf((-eff_m * t - eff_a) / (sigma * Math.sqrt(t)), 0, 1);
+                return term1 + term2;
+            };
+
+            const range_dev = 4 * sigma * Math.sqrt(T);
+            const barrierDomain = [x0 - range_dev, x0 + range_dev];
+            
+            const plotBarrierPoints = d3.range(barrierDomain[0], barrierDomain[1], (barrierDomain[1] - barrierDomain[0])/200);
+
+            const plotData = plotBarrierPoints.map(b => ({b, p: hittingProbByBarrier(b)}));
+            
+            plotBarrierProbOnSvg(hpByBarrierSvg, plotData, barrierDomain, "Barrier (b)", "Hitting Probability", [0, 1], document.getElementById('wp-hp-by-barrier-tooltip'), hittingProbByBarrier);
+        }
         
         function plotOnSvg(svg, data, xDomain, xLabel, yLabel, yDomain = null, tooltipEl = null, yFunc = null) {
             const rect = svg.node().getBoundingClientRect();
@@ -2273,6 +2318,68 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 focus.attr("cx", xScale(x_val)).attr("cy", yScale(y_val));
                 tooltipEl.innerHTML = `t: ${x_val.toFixed(3)}<br>y: ${y_val.toFixed(5)}`;
+            }
+            
+            interactionRect.on("mouseover", () => {
+                focus.style("opacity", 1);
+                tooltipEl.style.opacity = 1;
+            }).on("mouseout", () => {
+                focus.style("opacity", 0);
+                tooltipEl.style.opacity = 0;
+            }).on("mousemove", updateTooltip);
+        }
+        
+        function plotBarrierProbOnSvg(svg, data, xDomain, xLabel, yLabel, yDomain = null, tooltipEl = null, yFunc = null) {
+            const rect = svg.node().getBoundingClientRect();
+            const width = rect.width - margin.left - margin.right;
+            const height = rect.height - margin.top - margin.bottom;
+            if (width <= 0 || height <= 0) return;
+
+            svg.selectAll("*").remove();
+            const g = svg.append("g")
+                            .attr("transform", `translate(${margin.left},${margin.top})`);
+            
+            const xScale = d3.scaleLinear().domain(xDomain).range([0, width]);
+            
+            if (!yDomain) {
+                const yMax = d3.max(data, d => d.p);
+                yDomain = [0, isFinite(yMax) && yMax > 0 ? yMax * 1.1 : 1];
+            }
+            const yScale = d3.scaleLinear().domain(yDomain).range([height, 0]);
+
+            g.append("g").attr("class", "x-axis axis").attr("transform", `translate(0, ${height})`).call(d3.axisBottom(xScale));
+            g.append("g").attr("class", "y-axis axis").call(d3.axisLeft(yScale).ticks(5));
+            
+            g.append("text").attr("x", width/2).attr("y", height + 35).style("text-anchor", "middle").text(xLabel);
+            g.append("text").attr("transform", "rotate(-90)").attr("y", -margin.left+15).attr("x", -height/2).style("text-anchor", "middle").text(yLabel);
+
+            g.append("path").datum(data)
+             .attr("class", "line-path").style("stroke", "steelblue")
+             .attr("d", d3.line().x(d => xScale(d.b)).y(d => yScale(d.p)));
+
+            if (!tooltipEl || !yFunc) return;
+
+            const focus = g.append("circle").style("fill", "none").attr("stroke", "black").attr("r", 4).style("opacity", 0);
+            
+            const interactionRect = svg.append("rect")
+                .attr("transform", `translate(${margin.left},${margin.top})`)
+                .style("fill", "none")
+                .style("pointer-events", "all")
+                .attr("width", width)
+                .attr("height", height);
+
+            function updateTooltip(event) {
+                const [tipX, tipY] = d3.pointer(event, svg.node().parentNode);
+                tooltipEl.style.left = tipX + "px";
+                tooltipEl.style.top = tipY + "px";
+                
+                const [x_coord] = d3.pointer(event, interactionRect.node());
+                const x_val = xScale.invert(x_coord);
+                if (x_val < xDomain[0] || x_val > xDomain[1]) return;
+                const y_val = yFunc(x_val);
+                
+                focus.attr("cx", xScale(x_val)).attr("cy", yScale(y_val));
+                tooltipEl.innerHTML = `b: ${x_val.toFixed(3)}<br>y: ${y_val.toFixed(5)}`;
             }
             
             interactionRect.on("mouseover", () => {
