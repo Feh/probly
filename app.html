@@ -94,7 +94,7 @@
         #distributions-app #controls-panel { grid-area: controls; }
         #distributions-app #stats-panel { grid-area: stats; }
         #distributions-app #sampling-panel { grid-area: sampling; }
-        #distributions-app #plot-container { grid-area: plot; padding: 0; display: flex; flex-direction: column; min-height: 400px; position: relative; }
+        #distributions-app #plot-container { grid-area: plot; padding: 0; display: flex; flex-direction: column; min-height: 400px; position: relative; resize: both; overflow: auto; }
         #distributions-app h3 { margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
         #distributions-app .param-group, #distributions-app .control-group { margin-bottom: 15px; }
         #distributions-app label { display: block; font-weight: bold; margin-bottom: 5px; }
@@ -130,7 +130,7 @@
         #order-statistics-app .panel { padding: 15px; border: 1px solid var(--border-color); border-radius: 5px; background-color: var(--panel-bg); }
         #order-statistics-app #os-controls-panel { grid-area: controls; }
         #order-statistics-app #os-stats-panel { grid-area: stats; }
-        #order-statistics-app #os-plot-container { grid-area: plot; padding: 0; display: flex; flex-direction: column; min-height: 400px; position: relative; }
+        #order-statistics-app #os-plot-container { grid-area: plot; padding: 0; display: flex; flex-direction: column; min-height: 400px; position: relative; resize: both; overflow: auto; }
         #order-statistics-app h3 { margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
         #order-statistics-app .param-group, #order-statistics-app .control-group { margin-bottom: 15px; }
         #order-statistics-app label { display: block; font-weight: bold; margin-bottom: 5px; }
@@ -160,7 +160,7 @@
         #gaussian-copula-app #gc-controls-panel { grid-area: controls; }
         #gaussian-copula-app #gc-formulas-panel { grid-column: 1 / -1; }
         #gaussian-copula-app #gc-plots-panel { grid-area: plots; display: flex; flex-direction: column; gap: 20px; padding: 0; border: none; background: transparent; }
-        #gaussian-copula-app .gc-plot-container { padding: 0; display: flex; flex-direction: column; min-height: 400px; position: relative; }
+        #gaussian-copula-app .gc-plot-container { padding: 0; display: flex; flex-direction: column; min-height: 400px; position: relative; resize: both; overflow: auto; }
         #gaussian-copula-app #gc-scatter-plot-container { min-height: 530px; }
         #gaussian-copula-app #gc-joint-plot-grid { flex-grow: 1; display: grid; grid-template-areas: "marg-x corner" "scatter marg-y"; grid-template-columns: 1fr 80px; grid-template-rows: 80px 1fr; gap: 5px; }
         #gaussian-copula-app #gc-marginal-x-svg { grid-area: marg-x; }
@@ -992,6 +992,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 sampleBtn10.addEventListener('click', () => generateSamples(10));
                 document.getElementById('sample-clear-btn').addEventListener('click', () => { samplesOutput.innerHTML = ''; currentState.samples = []; if (currentState.jstat) updatePlot(); });
                 window.addEventListener('resize', () => { if (currentState.jstat) updatePlot(); });
+                const resizeObserver = new ResizeObserver(() => {
+                    if (currentState.jstat) setTimeout(updatePlot, 0);
+                });
+                resizeObserver.observe(document.getElementById('plot-container'));
                 handleDistChange();
             },
             updateFromURL: (params) => {
@@ -1290,6 +1294,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 kInput.addEventListener('input', update);
                 window.addEventListener('resize', () => { if (currentState.jstat) updatePlot(); });
+                const resizeObserver = new ResizeObserver(() => {
+                    if (currentState.jstat) setTimeout(updatePlot, 0);
+                });
+                resizeObserver.observe(document.getElementById('os-plot-container'));
                 handleDistChange();
                 renderMathInElement(document.getElementById('order-statistics-app'), {
                     delimiters: [{left: '$$', right: '$$', display: true}, {left: '\\[', right: '\\]', display: true}, {left: '\\(', right: '\\)', display: false}],
@@ -1901,6 +1909,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('gc-interval-select').addEventListener('change', updateDensityPlot);
 
                 window.addEventListener('resize', () => { updateJointAndMarginalPlots(); updateDensityPlot(); });
+                
+                const scatterResizeObserver = new ResizeObserver(() => setTimeout(updateJointAndMarginalPlots, 0));
+                scatterResizeObserver.observe(document.getElementById('gc-scatter-plot-container'));
+
+                const densityResizeObserver = new ResizeObserver(() => setTimeout(updateDensityPlot, 0));
+                densityResizeObserver.observe(document.getElementById('gc-density-plot-container'));
+
                 handleDistChange('x');
                 handleDistChange('y');
                 renderMathInElement(document.getElementById('gaussian-copula-app'), {
