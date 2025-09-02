@@ -110,7 +110,7 @@
         #distributions-app .line-path { fill: none; stroke: var(--accent-color); stroke-width: 2px; }
         #distributions-app .area-path { fill: var(--accent-color); opacity: 0.3; }
         #distributions-app .bar { fill: var(--accent-color); }
-        #distributions-app #tooltip { position: absolute; background-color: rgba(0, 0, 0, 0.75); color: white; padding: 5px 10px; border-radius: 3px; pointer-events: none; opacity: 0; font-size: 0.9em; z-index: 10; transform: translate(10px, -25px); }
+        #distributions-app #tooltip { position: absolute; background-color: rgba(0, 0, 0, 0.75); color: white; padding: 5px 10px; border-radius: 3px; pointer-events: none; opacity: 0; font-size: 0.9em; z-index: 10; transform: translate(-9em, -25px); }
         #distributions-app .sample-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
         #distributions-app #sample-clear-btn { grid-column: 1 / -1; background-color: #6c757d; }
         #distributions-app #sample-clear-btn:hover { background-color: #5a6268; }
@@ -141,7 +141,7 @@
         #order-statistics-app .axis path, #order-statistics-app .axis line { fill: none; stroke: #000; shape-rendering: crispEdges; }
         #order-statistics-app .line-path { fill: none; stroke: var(--accent-color); stroke-width: 2px; }
         #order-statistics-app .area-path { fill: var(--accent-color); opacity: 0.3; }
-        #order-statistics-app #os-tooltip { position: absolute; background-color: rgba(0, 0, 0, 0.75); color: white; padding: 5px 10px; border-radius: 3px; pointer-events: none; opacity: 0; font-size: 0.9em; z-index: 10; transform: translate(10px, -25px); }
+        #order-statistics-app #os-tooltip { position: absolute; background-color: rgba(0, 0, 0, 0.75); color: white; padding: 5px 10px; border-radius: 3px; pointer-events: none; opacity: 0; font-size: 0.9em; z-index: 10; transform: translate(-9em, -25px); }
         #order-statistics-app .drag-selection { fill: rgba(255, 165, 0, 0.4); stroke: rgba(255, 165, 0, 1); stroke-width: 1px; }
         #order-statistics-app .drag-text { font-size: 12px; font-weight: bold; fill: #d9534f; text-anchor: middle; }
         #order-statistics-app details.panel { grid-column: 1 / -1; }
@@ -184,7 +184,7 @@
         #gaussian-copula-app .scatter-dot { fill: lightblue; stroke: steelblue; opacity: 0.6; }
         #gaussian-copula-app .line-path { fill: none; stroke: #d9534f; stroke-width: 2px; }
         #gaussian-copula-app .area-path { fill: steelblue; opacity: 0.3; }
-        #gaussian-copula-app #gc-density-tooltip { position: absolute; background-color: rgba(0, 0, 0, 0.75); color: white; padding: 5px 10px; border-radius: 3px; pointer-events: none; opacity: 0; font-size: 0.9em; z-index: 10; transform: translate(10px, -25px); }
+        #gaussian-copula-app #gc-density-tooltip { position: absolute; background-color: rgba(0, 0, 0, 0.75); color: white; padding: 5px 10px; border-radius: 3px; pointer-events: none; opacity: 0; font-size: 0.9em; z-index: 10; transform: translate(-9em, -25px); }
         #gaussian-copula-app .drag-selection { fill: rgba(255, 165, 0, 0.4); stroke: rgba(255, 165, 0, 1); stroke-width: 1px; }
         #gaussian-copula-app .drag-text { font-size: 12px; font-weight: bold; fill: #d9534f; text-anchor: middle; }
         #gaussian-copula-app .gc-conditional-controls-row { display: flex; flex-wrap: wrap; gap: 15px; align-items: center; justify-content: center; padding: 10px 0; }
@@ -216,7 +216,7 @@
         #wiener-process-app .line-path { fill: none; stroke-width: 1.5px; }
         #wiener-process-app .cone-area { fill: var(--accent-color); opacity: 0.3; }
         #wiener-process-app .sample-path { fill: none; stroke: #555; stroke-width: 1px; opacity: 0.6; }
-        #wiener-process-app .wp-tooltip { position: absolute; background-color: rgba(0, 0, 0, 0.75); color: white; padding: 5px 10px; border-radius: 3px; pointer-events: none; opacity: 0; font-size: 0.9em; z-index: 10; transform: translate(10px, -25px); }
+        #wiener-process-app .wp-tooltip { position: absolute; background-color: rgba(0, 0, 0, 0.75); color: white; padding: 5px 10px; border-radius: 3px; pointer-events: none; opacity: 0; font-size: 0.9em; z-index: 10; transform: translate(-9em, -25px); }
 
         @media (max-width: 800px) {
             #distributions-app { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: "controls" "stats" "sampling" "plot"; }
@@ -2328,28 +2328,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 focus.style("opacity", 0);
                 tooltipEl.style.opacity = 0;
             }).on("mousemove", updateTooltip);
-
-            const node = interactionRect.node();
-            node.addEventListener('touchstart', (event) => {
-                if (event.touches.length === 1) {
-                    event.preventDefault();
-                    updateTooltip(event.touches[0]);
-                    focus.style("opacity", 1);
-                    tooltipEl.style.opacity = 1;
-                }
-            });
-            node.addEventListener('touchmove', (event) => {
-                if (event.touches.length === 1) {
-                    event.preventDefault();
-                    updateTooltip(event.touches[0]);
-                }
-            });
-            node.addEventListener('touchend', (event) => {
-                if (event.touches.length === 0) {
-                    focus.style("opacity", 0);
-                    tooltipEl.style.opacity = 0;
-                }
-            });
 
             const node = interactionRect.node();
             node.addEventListener('touchstart', (event) => {
