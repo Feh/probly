@@ -2079,7 +2079,17 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        function update() {
+        function updateURL() {
+            const params = new URLSearchParams();
+            params.set('x0', state.x0);
+            params.set('m', state.m);
+            params.set('sigma', state.sigma);
+            params.set('T', state.T);
+            params.set('barrier', state.barrier);
+            history.replaceState(null, '', '#wiener-process?' + params.toString());
+        }
+
+        function update(options = {}) {
             state.x0 = parseFloat(document.getElementById('wp-x0').value);
             state.m = parseFloat(document.getElementById('wp-drift').value);
             state.sigma = parseFloat(document.getElementById('wp-volatility').value);
@@ -2092,6 +2102,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             updatePathsPlot();
             updateHittingTimePlots();
+            if (!options.fromURL) {
+                updateURL();
+            }
         }
         
         function drawSamplePaths(count) {
@@ -2273,7 +2286,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
         return {
             init: init,
-            updateFromURL: () => {}
+            updateFromURL: (params) => {
+                const paramMap = {
+                    'x0': 'wp-x0',
+                    'm': 'wp-drift',
+                    'sigma': 'wp-volatility',
+                    'T': 'wp-terminal-time',
+                    'barrier': 'wp-barrier'
+                };
+                let needsUpdate = false;
+                for (const [key, id] of Object.entries(paramMap)) {
+                    if (params.has(key)) {
+                        const input = document.getElementById(id);
+                        if (input) {
+                            input.value = params.get(key);
+                            needsUpdate = true;
+                        }
+                    }
+                }
+                if (needsUpdate) {
+                    update({ fromURL: true });
+                }
+            }
         };
     })();
 
