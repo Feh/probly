@@ -2071,8 +2071,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const resizeObserver = new ResizeObserver(() => {
                 setTimeout(update, 0);
             });
-            resizeObserver.observe(document.getElementById('wp-paths-panel'));
-            resizeObserver.observe(document.getElementById('wp-hitting-time-panel'));
+            document.querySelectorAll('#wiener-process-app .wp-plot-container').forEach(el => resizeObserver.observe(el));
 
             update();
             renderMathInElement(document.getElementById('wiener-process-app'), {
