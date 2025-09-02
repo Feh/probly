@@ -216,6 +216,7 @@
         #wiener-process-app .line-path { fill: none; stroke-width: 1.5px; }
         #wiener-process-app .cone-area { fill: var(--accent-color); opacity: 0.3; }
         #wiener-process-app .sample-path { fill: none; stroke: #555; stroke-width: 1px; opacity: 0.6; }
+        #wiener-process-app .wp-tooltip { position: absolute; background-color: rgba(0, 0, 0, 0.75); color: white; padding: 5px 10px; border-radius: 3px; pointer-events: none; opacity: 0; font-size: 0.9em; z-index: 10; transform: translate(10px, -25px); }
 
         @media (max-width: 800px) {
             #distributions-app { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: "controls" "stats" "sampling" "plot"; }
@@ -629,10 +630,12 @@
                     <h4>Density of \( T_b = \inf\{t \ge 0 \mid X_t = b\} \)</h4>
                     <div class="wp-plot-container">
                         <svg id="wp-ht-density-svg"></svg>
+                        <div id="wp-ht-density-tooltip" class="wp-tooltip"></div>
                     </div>
                     <h4>Hitting Probability \( \mathbb{P}(T_b \le t) \)</h4>
                     <div class="wp-plot-container">
                         <svg id="wp-ht-prob-svg"></svg>
+                        <div id="wp-ht-prob-tooltip" class="wp-tooltip"></div>
                     </div>
                 </div>
             </div>
@@ -2201,13 +2204,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const plotTimePoints = d3.range(T/200, T, T/200);
 
             const densityData = plotTimePoints.map(t => ({t, p: htDensityPdf(t)}));
-            plotOnSvg(htDensitySvg, densityData, [0, T], "Time (t)", "Density");
+            plotOnSvg(htDensitySvg, densityData, [0, T], "Time (t)", "Density", null, document.getElementById('wp-ht-density-tooltip'), htDensityPdf);
             
             const probData = plotTimePoints.map(t => ({t, p: htProbCdf(t)}));
-            plotOnSvg(htProbSvg, probData, [0, T], "Time (t)", "Probability", [0, 1]);
+            plotOnSvg(htProbSvg, probData, [0, T], "Time (t)", "Probability", [0, 1], document.getElementById('wp-ht-prob-tooltip'), htProbCdf);
         }
         
-        function plotOnSvg(svg, data, xDomain, xLabel, yLabel, yDomain = null) {
+        function plotOnSvg(svg, data, xDomain, xLabel, yLabel, yDomain = null, tooltipEl = null, yFunc = null) {
             const rect = svg.node().getBoundingClientRect();
             const width = rect.width - margin.left - margin.right;
             const height = rect.height - margin.top - margin.bottom;
@@ -2234,6 +2237,39 @@ document.addEventListener('DOMContentLoaded', () => {
             g.append("path").datum(data)
              .attr("class", "line-path").style("stroke", "steelblue")
              .attr("d", d3.line().x(d => xScale(d.t)).y(d => yScale(d.p)));
+
+            if (!tooltipEl || !yFunc) return;
+
+            const focus = g.append("circle").style("fill", "none").attr("stroke", "black").attr("r", 4).style("opacity", 0);
+            
+            const interactionRect = svg.append("rect")
+                .attr("transform", `translate(${margin.left},${margin.top})`)
+                .style("fill", "none")
+                .style("pointer-events", "all")
+                .attr("width", width)
+                .attr("height", height);
+
+            function updateTooltip(event) {
+                const [tipX, tipY] = d3.pointer(event, svg.node().parentNode);
+                tooltipEl.style.left = tipX + "px";
+                tooltipEl.style.top = tipY + "px";
+                
+                const [x_coord] = d3.pointer(event, interactionRect.node());
+                const x_val = xScale.invert(x_coord);
+                if (x_val < xDomain[0] || x_val > xDomain[1]) return;
+                const y_val = yFunc(x_val);
+                
+                focus.attr("cx", xScale(x_val)).attr("cy", yScale(y_val));
+                tooltipEl.innerHTML = `t: ${x_val.toFixed(3)}<br>y: ${y_val.toFixed(5)}`;
+            }
+            
+            interactionRect.on("mouseover", () => {
+                focus.style("opacity", 1);
+                tooltipEl.style.opacity = 1;
+            }).on("mouseout", () => {
+                focus.style("opacity", 0);
+                tooltipEl.style.opacity = 0;
+            }).on("mousemove", updateTooltip);
         }
 
         return {
