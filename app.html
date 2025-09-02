@@ -2413,6 +2413,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 focus.style("opacity", 0);
                 tooltipEl.style.opacity = 0;
             }).on("mousemove", updateTooltip);
+
+            const node = interactionRect.node();
+            node.addEventListener('touchstart', (event) => {
+                if (event.touches.length === 1) {
+                    event.preventDefault();
+                    updateTooltip(event.touches[0]);
+                    focus.style("opacity", 1);
+                    tooltipEl.style.opacity = 1;
+                }
+            });
+            node.addEventListener('touchmove', (event) => {
+                if (event.touches.length === 1) {
+                    event.preventDefault();
+                    updateTooltip(event.touches[0]);
+                }
+            });
+            node.addEventListener('touchend', (event) => {
+                if (event.touches.length === 0) {
+                    focus.style("opacity", 0);
+                    tooltipEl.style.opacity = 0;
+                }
+            });
         }
 
         return {
