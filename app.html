@@ -207,12 +207,12 @@
         #wiener-process-app button:hover { background-color: #0056b3; }
         #wiener-process-app #wp-clear-paths-btn { background-color: #6c757d; }
         #wiener-process-app #wp-clear-paths-btn:hover { background-color: #5a6268; }
-        #wiener-process-app .wp-plot-container { min-height: 300px; position: relative; flex-grow: 1; resize: both; overflow: auto; }
+        #wiener-process-app .wp-plot-container { min-height: 300px; position: relative; flex-grow: 1; resize: both; overflow: hidden; }
         #wiener-process-app svg { width: 100%; height: 100%; }
         #wiener-process-app .axis path, #wiener-process-app .axis line { fill: none; stroke: #000; shape-rendering: crispEdges; }
         #wiener-process-app .line-path { fill: none; stroke-width: 1.5px; }
         #wiener-process-app .cone-area { fill: var(--accent-color); opacity: 0.3; }
-        #wiener-process-app .sample-path { fill: none; stroke: grey; stroke-width: 0.5px; opacity: 0.7; }
+        #wiener-process-app .sample-path { fill: none; stroke: #555; stroke-width: 1px; opacity: 0.6; }
 
         @media (max-width: 800px) {
             #distributions-app { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: "controls" "stats" "sampling" "plot"; }
@@ -572,8 +572,8 @@
             </details>
         </div>
         <div id="wiener-process-app" class="app-container">
-            <div id="wp-paths-panel" class="panel">
-                <h3>Wiener Process Paths</h3>
+            <div id="wp-params-panel" class="panel">
+                <h3>Process Parameters</h3>
                 <div class="control-grid">
                     <div class="control-group">
                         <label for="wp-x0">Start Value X₀</label>
@@ -592,6 +592,9 @@
                         <input type="number" id="wp-terminal-time" value="1" min="0.01" step="0.1">
                     </div>
                 </div>
+            </div>
+            <div id="wp-paths-panel" class="panel">
+                <h3>Sample Paths</h3>
                 <div class="control-group">
                     <label for="wp-cone-select">Percentile Cone</label>
                     <select id="wp-cone-select">
@@ -622,7 +625,7 @@
                 <div class="wp-plot-container">
                     <svg id="wp-ht-density-svg"></svg>
                 </div>
-                <h4>Hitting Probability P(τ ≤ t)</h4>
+                <h4>Hitting Probability P(T<sub>b</sub> ≤ t)</h4>
                 <div class="wp-plot-container">
                     <svg id="wp-ht-prob-svg"></svg>
                 </div>
