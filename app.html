@@ -1102,7 +1102,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 group.innerHTML = `<label for="os-param-${p.id}">${p.name}</label><input type="number" id="os-param-${p.id}" data-param="${p.id}" value="${p.default}" ${p.min === undefined ? '' : `min="${p.min}"`} ${p.max === undefined ? '' : `max="${p.max}"`} step="${p.step}">`;
                 paramInputs.appendChild(group);
             });
-            update();
+            update({ distChangedFor: varName });
         }
 
         function updateStats() {
@@ -1391,6 +1391,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const densityPlotArea = densitySvg.append("g").attr("class", "plot-area");
         const densityDragLayer = densitySvg.append("g").attr("class", "drag-layer");
 
+        let condVarSelect, condValueInput;
+
+        const updateCondValueToMean = () => {
+            const condVar = condVarSelect.value;
+            const distKey = (condVar === 'X') ? currentState.distKeyX : currentState.distKeyY;
+            const params = (condVar === 'X') ? currentState.paramsX : currentState.paramsY;
+            const config = OS_DISTRIBUTIONS[distKey];
+            const mean = config.mean(params);
+            if (isFinite(mean)) {
+                condValueInput.value = mean.toFixed(4);
+            }
+        };
+
         function handleDistChange(varName) {
             const distSelect = document.getElementById(`gc-dist-select-${varName}`);
             const paramInputs = document.getElementById(`gc-param-inputs-${varName}`);
@@ -1426,6 +1439,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             currentState.paramsX = readParams('x');
             currentState.paramsY = readParams('y');
+            
+            if (options.distChangedFor && condVarSelect) {
+                const currentCondVar = condVarSelect.value.toLowerCase();
+                if (options.distChangedFor === currentCondVar) {
+                    updateCondValueToMean();
+                }
+            }
+            
             currentState.rho = parseFloat(document.getElementById('gc-rho-input').value);
             document.getElementById('gc-rho-value').textContent = currentState.rho.toFixed(2);
             if (!allValid) return;
@@ -1807,20 +1828,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     updateScatterPlot();
                 });
                 
-                const condVarSelect = document.getElementById('gc-cond-var');
+                condVarSelect = document.getElementById('gc-cond-var');
                 const condTypeSelect = document.getElementById('gc-cond-type');
-                const condValueInput = document.getElementById('gc-cond-value');
-
-                const updateCondValueToMean = () => {
-                    const condVar = condVarSelect.value;
-                    const distKey = (condVar === 'X') ? currentState.distKeyX : currentState.distKeyY;
-                    const params = (condVar === 'X') ? currentState.paramsX : currentState.paramsY;
-                    const config = OS_DISTRIBUTIONS[distKey];
-                    const mean = config.mean(params);
-                    if (isFinite(mean)) {
-                        condValueInput.value = mean.toFixed(4);
-                    }
-                };
+                condValueInput = document.getElementById('gc-cond-value');
                 
                 condVarSelect.addEventListener('input', () => {
                     updateCondValueToMean();
