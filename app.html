@@ -1417,7 +1417,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 group.innerHTML = `<label for="gc-param-${p.id}-${varName}">${p.name}</label><input type="number" id="gc-param-${p.id}-${varName}" value="${p.default}" ${p.min === undefined ? '' : `min="${p.min}"`} ${p.max === undefined ? '' : `max="${p.max}"`} step="${p.step}">`;
                 paramInputs.appendChild(group);
             });
-            update();
+            update({ distChangedFor: varName });
         }
 
         function update(options = {}) {
