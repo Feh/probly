@@ -460,8 +460,11 @@
 
                 <h3>Dependence Structure</h3>
                 <div class="control-group">
-                    <label for="gc-rho">Correlation ρ: <span id="gc-rho-value">0.5</span></label>
-                    <input type="range" id="gc-rho" min="-0.99" max="0.99" step="0.01" value="0.5">
+                    <label for="gc-rho-input">Correlation ρ: <span id="gc-rho-value">0.5</span></label>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="range" id="gc-rho-slider" min="-0.99" max="0.99" step="0.01" value="0.5" style="flex-grow: 1;">
+                        <input type="number" id="gc-rho-input" min="-0.99" max="0.99" step="0.01" value="0.5" style="width: 80px;">
+                    </div>
                 </div>
             </div>
             <div id="gc-sampling-panel" class="panel">
@@ -494,9 +497,6 @@
                 <div class="control-group">
                     <label for="gc-cond-value">Value:</label>
                     <input type="number" id="gc-cond-value" value="0" step="0.1">
-                </div>
-                 <div class="control-group">
-                    <button id="gc-plot-cond-btn">Plot Conditional Density</button>
                 </div>
             </div>
 
@@ -1426,7 +1426,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             currentState.paramsX = readParams('x');
             currentState.paramsY = readParams('y');
-            currentState.rho = parseFloat(document.getElementById('gc-rho').value);
+            currentState.rho = parseFloat(document.getElementById('gc-rho-input').value);
             document.getElementById('gc-rho-value').textContent = currentState.rho.toFixed(2);
             if (!allValid) return;
 
@@ -1434,11 +1434,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentState.jstatY = OS_DISTRIBUTIONS[currentState.distKeyY].jStat(currentState.paramsY);
             
             updateScatterPlot();
-            if (currentState.conditional) {
-                plotConditional();
-            } else {
-                updateDensityPlot();
-            }
+            plotConditional();
             if (!options.fromURL) updateURL();
         }
 
@@ -1789,7 +1785,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 distSelectY.addEventListener('change', () => handleDistChange('y'));
                 document.getElementById('gc-param-inputs-x').addEventListener('input', update);
                 document.getElementById('gc-param-inputs-y').addEventListener('input', update);
-                document.getElementById('gc-rho').addEventListener('input', update);
+                const rhoSlider = document.getElementById('gc-rho-slider');
+                const rhoInput = document.getElementById('gc-rho-input');
+                rhoSlider.addEventListener('input', () => {
+                    rhoInput.value = rhoSlider.value;
+                    update();
+                });
+                rhoInput.addEventListener('input', () => {
+                    if (rhoInput.checkValidity()) {
+                        rhoSlider.value = rhoInput.value;
+                        update();
+                    }
+                });
                 
                 document.getElementById('gc-sample-btn-1').addEventListener('click', () => generateSamples(1));
                 document.getElementById('gc-sample-btn-10').addEventListener('click', () => generateSamples(10));
@@ -1800,12 +1807,34 @@ document.addEventListener('DOMContentLoaded', () => {
                     updateScatterPlot();
                 });
                 
-                document.getElementById('gc-plot-cond-btn').addEventListener('click', plotConditional);
+                const condVarSelect = document.getElementById('gc-cond-var');
+                const condTypeSelect = document.getElementById('gc-cond-type');
+                const condValueInput = document.getElementById('gc-cond-value');
+
+                const updateCondValueToMean = () => {
+                    const condVar = condVarSelect.value;
+                    const distKey = (condVar === 'X') ? currentState.distKeyX : currentState.distKeyY;
+                    const params = (condVar === 'X') ? currentState.paramsX : currentState.paramsY;
+                    const config = OS_DISTRIBUTIONS[distKey];
+                    const mean = config.mean(params);
+                    if (isFinite(mean)) {
+                        condValueInput.value = mean.toFixed(4);
+                    }
+                };
+                
+                condVarSelect.addEventListener('input', () => {
+                    updateCondValueToMean();
+                    plotConditional();
+                });
+                condTypeSelect.addEventListener('input', plotConditional);
+                condValueInput.addEventListener('input', plotConditional);
                 document.getElementById('gc-interval-select').addEventListener('change', updateDensityPlot);
 
                 window.addEventListener('resize', () => { updateScatterPlot(); updateDensityPlot(); });
                 handleDistChange('x');
                 handleDistChange('y');
+                updateCondValueToMean();
+                plotConditional();
                 renderMathInElement(document.getElementById('gaussian-copula-app'), {
                     delimiters: [{left: '$$', right: '$$', display: true}, {left: '\\[', right: '\\]', display: true}, {left: '\\(', right: '\\)', display: false}],
                 });
@@ -1824,7 +1853,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         });
                     }
                 });
-                if (params.has('rho')) document.getElementById('gc-rho').value = params.get('rho');
+                if (params.has('rho')) {
+                    const rhoVal = params.get('rho');
+                    document.getElementById('gc-rho-slider').value = rhoVal;
+                    document.getElementById('gc-rho-input').value = rhoVal;
+                }
                 update({ fromURL: true });
             }
         };
