@@ -2186,10 +2186,15 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const htProbCdf = t => {
                 if (t <= 0) return 0;
-                const term1 = jStat.normal.cdf((m * t - a) / (sigma * Math.sqrt(t)), 0, 1);
-                const expTerm = Math.exp(2 * m * a / (sigma * sigma));
+                let eff_m = m, eff_a = a;
+                if (eff_a < 0) {
+                    eff_m = -m;
+                    eff_a = -a;
+                }
+                const term1 = jStat.normal.cdf((eff_m * t - eff_a) / (sigma * Math.sqrt(t)), 0, 1);
+                const expTerm = Math.exp(2 * eff_m * eff_a / (sigma * sigma));
                 if (!isFinite(expTerm)) return term1;
-                const term2 = expTerm * jStat.normal.cdf((-m * t - a) / (sigma * Math.sqrt(t)), 0, 1);
+                const term2 = expTerm * jStat.normal.cdf((-eff_m * t - eff_a) / (sigma * Math.sqrt(t)), 0, 1);
                 return term1 + term2;
             };
 
