@@ -1378,7 +1378,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return sum * h / 3;
         }
 
-        const margin = { joint: { top: 10, right: 10, bottom: 40, left: 50 }, marginalX: { top: 10, right: 10, bottom: 5, left: 50 }, marginalY: { top: 10, right: 30, bottom: 40, left: 5 } };
+        const margin = { joint: { top: 10, right: 10, bottom: 40, left: 50 }, marginalX: { top: 10, right: 10, bottom: 5, left: 50 }, marginalY: { top: 10, right: 30, bottom: 40, left: 5 }, density: { top: 20, right: 30, bottom: 40, left: 50 } };
 
         // Scatter plot elements
         const jointSvg = d3.select("#gc-joint-plot-svg");
@@ -1688,10 +1688,10 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const svgRect = densitySvg.node().getBoundingClientRect();
              if (svgRect.width <= 0) return;
-            densityWidth = svgRect.width - margin.left - margin.right;
-            densityHeight = svgRect.height - margin.top - margin.bottom;
-            densityPlotArea.attr("transform", `translate(${margin.left},${margin.top})`);
-            densityDragLayer.attr("transform", `translate(${margin.left},${margin.top})`);
+            densityWidth = svgRect.width - margin.density.left - margin.density.right;
+            densityHeight = svgRect.height - margin.density.top - margin.density.bottom;
+            densityPlotArea.attr("transform", `translate(${margin.density.left},${margin.density.top})`);
+            densityDragLayer.attr("transform", `translate(${margin.density.left},${margin.density.top})`);
             
             const { distKeyX, paramsX, jstatX, distKeyY, paramsY, jstatY } = currentState;
             
@@ -1723,8 +1723,8 @@ document.addEventListener('DOMContentLoaded', () => {
             densityXScale.domain(plotDomain).range([0, densityWidth]);
             densityYScale.domain([0, (isFinite(yMax) ? yMax : 1) * 1.1]).range([densityHeight, 0]);
 
-            densityXAxis.attr("transform", `translate(${margin.left}, ${densityHeight + margin.top})`).call(d3.axisBottom(densityXScale));
-            densityYAxis.attr("transform", `translate(${margin.left}, ${margin.top})`).call(d3.axisLeft(densityYScale));
+            densityXAxis.attr("transform", `translate(${margin.density.left}, ${densityHeight + margin.density.top})`).call(d3.axisBottom(densityXScale));
+            densityYAxis.attr("transform", `translate(${margin.density.left}, ${margin.density.top})`).call(d3.axisLeft(densityYScale));
             
             densityPlotArea.selectAll("*").remove();
             densityDragLayer.selectAll("*").remove();
@@ -1748,7 +1748,7 @@ document.addEventListener('DOMContentLoaded', () => {
         function setupDensityInteractionLayer() {
             const focus = densityPlotArea.append("circle").style("fill", "none").attr("stroke", "black").attr("r", 4).style("opacity", 0);
             let dragState = { startX: null, isDragging: false }; let touchDragState = {};
-            const interactionRect = densitySvg.append("rect").attr("transform", `translate(${margin.left},${margin.top})`).style("fill", "none").style("pointer-events", "all").style("touch-action", "none").attr("width", densityWidth).attr("height", densityHeight);
+            const interactionRect = densitySvg.append("rect").attr("transform", `translate(${margin.density.left},${margin.density.top})`).style("fill", "none").style("pointer-events", "all").style("touch-action", "none").attr("width", densityWidth).attr("height", densityHeight);
 
             function calculateAndDisplayArea(pixel1, pixel2) {
                 if (Math.abs(pixel1 - pixel2) < 5) { densityDragLayer.selectAll("*").remove(); return; }
