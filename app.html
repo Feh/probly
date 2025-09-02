@@ -2057,8 +2057,11 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('wp-draw10-btn').addEventListener('click', () => drawSamplePaths(10));
             document.getElementById('wp-draw100-btn').addEventListener('click', () => drawSamplePaths(100));
             
-            new ResizeObserver(update).observe(document.getElementById('wp-paths-panel'));
-            new ResizeObserver(update).observe(document.getElementById('wp-hitting-time-panel'));
+            const resizeObserver = new ResizeObserver(() => {
+                setTimeout(update, 0);
+            });
+            resizeObserver.observe(document.getElementById('wp-paths-panel'));
+            resizeObserver.observe(document.getElementById('wp-hitting-time-panel'));
 
             update();
         }
