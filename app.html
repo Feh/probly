@@ -1019,11 +1019,12 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     })();
 
-    const OS_DISTRIBUTIONS = {
+    const CONTINUOUS_DISTRIBUTIONS = {
         uniform: DISTRIBUTIONS.uniform,
         normal: DISTRIBUTIONS.normal,
         exponential: DISTRIBUTIONS.exponential,
         gamma: DISTRIBUTIONS.gamma,
+        beta: DISTRIBUTIONS.beta,
         pareto: DISTRIBUTIONS.pareto,
         lognormal: DISTRIBUTIONS.lognormal,
         weibull: DISTRIBUTIONS.weibull,
@@ -1079,7 +1080,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function update() {
             const distKey = distSelect.value;
-            const config = OS_DISTRIBUTIONS[distKey];
+            const config = CONTINUOUS_DISTRIBUTIONS[distKey];
             const params = {};
             let allValid = true;
             config.params.forEach(p => {
@@ -1102,7 +1103,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function handleDistChange() {
             currentState.distKey = distSelect.value;
-            const config = OS_DISTRIBUTIONS[currentState.distKey];
+            const config = CONTINUOUS_DISTRIBUTIONS[currentState.distKey];
             paramInputs.innerHTML = '';
             config.params.forEach(p => {
                 const group = document.createElement('div');
@@ -1115,7 +1116,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function updateStats() {
             const { distKey, params, n, k, jstat } = currentState;
-            const config = OS_DISTRIBUTIONS[distKey];
+            const config = CONTINUOUS_DISTRIBUTIONS[distKey];
 
             const quantile = (p) => orderStatInv(p, config, params, n, k, jstat);
 
@@ -1147,7 +1148,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function updatePlot() {
             const { distKey, params, n, k, jstat } = currentState;
-            const config = OS_DISTRIBUTIONS[distKey];
+            const config = CONTINUOUS_DISTRIBUTIONS[distKey];
             if (!jstat) return;
 
             const svgRect = svg.node().getBoundingClientRect();
@@ -1217,7 +1218,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             function getOrderStatCDF(x) {
                 const { distKey, params, n, k, jstat } = currentState;
-                const config = OS_DISTRIBUTIONS[distKey];
+                const config = CONTINUOUS_DISTRIBUTIONS[distKey];
                 const Fx = config.cdf(x, jstat, params);
                 return jStat.beta.cdf(Fx, k, n - k + 1);
             }
@@ -1240,7 +1241,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 tooltip.style.top = tipY + "px";
                 const [x_coord] = d3.pointer(event, interactionRect.node());
                 const x_val = xScale.invert(x_coord);
-                const y_val = orderStatPDF(x_val, OS_DISTRIBUTIONS[currentState.distKey], currentState.params, currentState.n, currentState.k, currentState.jstat);
+                const y_val = orderStatPDF(x_val, CONTINUOUS_DISTRIBUTIONS[currentState.distKey], currentState.params, currentState.n, currentState.k, currentState.jstat);
                 focus.attr("cx", xScale(x_val)).attr("cy", yScale(y_val));
                 tooltip.innerHTML = `x: ${x_val.toFixed(3)}<br>y: ${y_val.toFixed(5)}`;
             }
@@ -1264,7 +1265,7 @@ document.addEventListener('DOMContentLoaded', () => {
         function updateURL() {
             const params = new URLSearchParams();
             params.set('dist', currentState.distKey);
-            for(const p of OS_DISTRIBUTIONS[currentState.distKey].params) {
+            for(const p of CONTINUOUS_DISTRIBUTIONS[currentState.distKey].params) {
                 params.set(p.id, currentState.params[p.id]);
             }
             params.set('n', currentState.n);
@@ -1274,7 +1275,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         return {
             init: () => {
-                Object.keys(OS_DISTRIBUTIONS).forEach(key => distSelect.appendChild(new Option(OS_DISTRIBUTIONS[key].name, key)));
+                Object.keys(CONTINUOUS_DISTRIBUTIONS).forEach(key => distSelect.appendChild(new Option(CONTINUOUS_DISTRIBUTIONS[key].name, key)));
                 distSelect.addEventListener('change', handleDistChange);
                 intervalSelect.addEventListener('change', update);
                 paramInputs.addEventListener('input', update);
@@ -1296,9 +1297,9 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             updateFromURL: (params) => {
                 const dist = params.get('dist');
-                if (dist && OS_DISTRIBUTIONS[dist]) {
+                if (dist && CONTINUOUS_DISTRIBUTIONS[dist]) {
                     distSelect.value = dist;
-                    const config = OS_DISTRIBUTIONS[dist];
+                    const config = CONTINUOUS_DISTRIBUTIONS[dist];
                     paramInputs.innerHTML = '';
                     config.params.forEach(p => {
                         const group = document.createElement('div');
@@ -1413,7 +1414,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const condVar = condVarSelect.value;
             const distKey = (condVar === 'X') ? currentState.distKeyX : currentState.distKeyY;
             const params = (condVar === 'X') ? currentState.paramsX : currentState.paramsY;
-            const config = OS_DISTRIBUTIONS[distKey];
+            const config = CONTINUOUS_DISTRIBUTIONS[distKey];
             const mean = config.mean(params);
             if (isFinite(mean)) {
                 condValueInput.value = mean.toFixed(4);
@@ -1425,7 +1426,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const paramInputs = document.getElementById(`gc-param-inputs-${varName}`);
             const distKey = distSelect.value;
             currentState[`distKey${varName.toUpperCase()}`] = distKey;
-            const config = OS_DISTRIBUTIONS[distKey];
+            const config = CONTINUOUS_DISTRIBUTIONS[distKey];
             paramInputs.innerHTML = '';
             config.params.forEach(p => {
                 const group = document.createElement('div');
@@ -1440,7 +1441,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let allValid = true;
             const readParams = (varName) => {
                 const distKey = currentState[`distKey${varName.toUpperCase()}`];
-                const config = OS_DISTRIBUTIONS[distKey];
+                const config = CONTINUOUS_DISTRIBUTIONS[distKey];
                 const params = {};
                 config.params.forEach(p => {
                     const input = document.getElementById(`gc-param-${p.id}-${varName}`);
@@ -1467,8 +1468,8 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('gc-rho-value').textContent = currentState.rho.toFixed(2);
             if (!allValid) return;
 
-            currentState.jstatX = OS_DISTRIBUTIONS[currentState.distKeyX].jStat(currentState.paramsX);
-            currentState.jstatY = OS_DISTRIBUTIONS[currentState.distKeyY].jStat(currentState.paramsY);
+            currentState.jstatX = CONTINUOUS_DISTRIBUTIONS[currentState.distKeyX].jStat(currentState.paramsX);
+            currentState.jstatY = CONTINUOUS_DISTRIBUTIONS[currentState.distKeyY].jStat(currentState.paramsY);
             
             updateJointAndMarginalPlots();
             plotConditional();
@@ -1477,8 +1478,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function generateSamples(count) {
             const { distKeyX, paramsX, jstatX, distKeyY, paramsY, jstatY, rho } = currentState;
-            const configX = OS_DISTRIBUTIONS[distKeyX];
-            const configY = OS_DISTRIBUTIONS[distKeyY];
+            const configX = CONTINUOUS_DISTRIBUTIONS[distKeyX];
+            const configY = CONTINUOUS_DISTRIBUTIONS[distKeyY];
 
             for (let i = 0; i < count; i++) {
                 const z1 = jStat.normal.sample(0, 1);
@@ -1503,11 +1504,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let config1, params1, jstat1, config2, params2, jstat2;
             if (condVar === 'X') {
-                [config1, params1, jstat1] = [OS_DISTRIBUTIONS[currentState.distKeyX], currentState.paramsX, currentState.jstatX];
-                [config2, params2, jstat2] = [OS_DISTRIBUTIONS[currentState.distKeyY], currentState.paramsY, currentState.jstatY];
+                [config1, params1, jstat1] = [CONTINUOUS_DISTRIBUTIONS[currentState.distKeyX], currentState.paramsX, currentState.jstatX];
+                [config2, params2, jstat2] = [CONTINUOUS_DISTRIBUTIONS[currentState.distKeyY], currentState.paramsY, currentState.jstatY];
             } else {
-                [config1, params1, jstat1] = [OS_DISTRIBUTIONS[currentState.distKeyY], currentState.paramsY, currentState.jstatY];
-                [config2, params2, jstat2] = [OS_DISTRIBUTIONS[currentState.distKeyX], currentState.paramsX, currentState.jstatX];
+                [config1, params1, jstat1] = [CONTINUOUS_DISTRIBUTIONS[currentState.distKeyY], currentState.paramsY, currentState.jstatY];
+                [config2, params2, jstat2] = [CONTINUOUS_DISTRIBUTIONS[currentState.distKeyX], currentState.paramsX, currentState.jstatX];
             }
 
             const rho = (condVar === 'X') ? currentState.rho : currentState.rho;
@@ -1566,12 +1567,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (condInfo.condType === 'eq') {
                 let config2, jstat2, params2;
                 if (condInfo.condVar === 'X') {
-                    [config2, jstat2, params2] = [OS_DISTRIBUTIONS[currentState.distKeyY], currentState.jstatY, currentState.paramsY];
+                    [config2, jstat2, params2] = [CONTINUOUS_DISTRIBUTIONS[currentState.distKeyY], currentState.jstatY, currentState.paramsY];
                 } else {
-                    [config2, jstat2, params2] = [OS_DISTRIBUTIONS[currentState.distKeyX], currentState.jstatX, currentState.paramsX];
+                    [config2, jstat2, params2] = [CONTINUOUS_DISTRIBUTIONS[currentState.distKeyX], currentState.jstatX, currentState.paramsX];
                 }
                 const rho = currentState.rho;
-                const u = OS_DISTRIBUTIONS[condInfo.condVar === 'X' ? currentState.distKeyX : currentState.distKeyY].cdf(condInfo.condValue, condInfo.condVar === 'X' ? currentState.jstatX : currentState.jstatY, condInfo.condVar === 'X' ? currentState.paramsX : currentState.paramsY);
+                const u = CONTINUOUS_DISTRIBUTIONS[condInfo.condVar === 'X' ? currentState.distKeyX : currentState.distKeyY].cdf(condInfo.condValue, condInfo.condVar === 'X' ? currentState.jstatX : currentState.jstatY, condInfo.condVar === 'X' ? currentState.paramsX : currentState.paramsY);
                 const x_prime = jStat.normal.inv(u, 0, 1);
                 const val = jStat.normal.inv(p, 0, 1) * Math.sqrt(1 - rho*rho) + rho * x_prime;
                 return config2.inv(jStat.normal.cdf(val, 0, 1), jstat2, params2);
@@ -1611,8 +1612,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const { distKeyX, paramsX, jstatX, distKeyY, paramsY, jstatY, samples } = currentState;
             if (!jstatX || !jstatY) return;
-            const configX = OS_DISTRIBUTIONS[distKeyX];
-            const configY = OS_DISTRIBUTIONS[distKeyY];
+            const configX = CONTINUOUS_DISTRIBUTIONS[distKeyX];
+            const configY = CONTINUOUS_DISTRIBUTIONS[distKeyY];
             
             const xDomain = configX.domain(paramsX, jstatX);
             const yDomain = configY.domain(paramsY, jstatY);
@@ -1697,8 +1698,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const { distKeyX, paramsX, jstatX, distKeyY, paramsY, jstatY } = currentState;
             
             const [domainConfig, domainParams, domainJstat] = (condVar === 'X') ?
-                [OS_DISTRIBUTIONS[distKeyY], paramsY, jstatY] :
-                [OS_DISTRIBUTIONS[distKeyX], paramsX, jstatX];
+                [CONTINUOUS_DISTRIBUTIONS[distKeyY], paramsY, jstatY] :
+                [CONTINUOUS_DISTRIBUTIONS[distKeyX], paramsX, jstatX];
 
             const marginalDomain = domainConfig.domain(domainParams, domainJstat);
             const lowerBound = inverseConditionalCdf(0.001, currentState.conditional, marginalDomain);
@@ -1843,9 +1844,9 @@ document.addEventListener('DOMContentLoaded', () => {
         function updateURL() {
             const params = new URLSearchParams();
             params.set('distX', currentState.distKeyX);
-            OS_DISTRIBUTIONS[currentState.distKeyX].params.forEach(p => params.set(`${p.id}X`, currentState.paramsX[p.id]));
+            CONTINUOUS_DISTRIBUTIONS[currentState.distKeyX].params.forEach(p => params.set(`${p.id}X`, currentState.paramsX[p.id]));
             params.set('distY', currentState.distKeyY);
-            OS_DISTRIBUTIONS[currentState.distKeyY].params.forEach(p => params.set(`${p.id}Y`, currentState.paramsY[p.id]));
+            CONTINUOUS_DISTRIBUTIONS[currentState.distKeyY].params.forEach(p => params.set(`${p.id}Y`, currentState.paramsY[p.id]));
             params.set('rho', currentState.rho);
             history.replaceState(null, '', '#gaussian-copula?' + params.toString());
         }
@@ -1854,9 +1855,9 @@ document.addEventListener('DOMContentLoaded', () => {
             init: () => {
                 const distSelectX = document.getElementById('gc-dist-select-x');
                 const distSelectY = document.getElementById('gc-dist-select-y');
-                Object.keys(OS_DISTRIBUTIONS).forEach(key => {
-                    distSelectX.appendChild(new Option(OS_DISTRIBUTIONS[key].name, key));
-                    distSelectY.appendChild(new Option(OS_DISTRIBUTIONS[key].name, key));
+                Object.keys(CONTINUOUS_DISTRIBUTIONS).forEach(key => {
+                    distSelectX.appendChild(new Option(CONTINUOUS_DISTRIBUTIONS[key].name, key));
+                    distSelectY.appendChild(new Option(CONTINUOUS_DISTRIBUTIONS[key].name, key));
                 });
                 distSelectX.value = 'normal';
                 distSelectY.value = 'normal';
@@ -1909,10 +1910,10 @@ document.addEventListener('DOMContentLoaded', () => {
             updateFromURL: (params) => {
                 const dists = { X: params.get('distX'), Y: params.get('distY') };
                 ['X', 'Y'].forEach(v => {
-                    if (dists[v] && OS_DISTRIBUTIONS[dists[v]]) {
+                    if (dists[v] && CONTINUOUS_DISTRIBUTIONS[dists[v]]) {
                         document.getElementById(`gc-dist-select-${v.toLowerCase()}`).value = dists[v];
                         handleDistChange(v.toLowerCase());
-                        const config = OS_DISTRIBUTIONS[dists[v]];
+                        const config = CONTINUOUS_DISTRIBUTIONS[dists[v]];
                         config.params.forEach(p => {
                             if (params.has(`${p.id}${v}`)) {
                                 document.getElementById(`gc-param-${p.id}-${v.toLowerCase()}`).value = params.get(`${p.id}${v}`);
