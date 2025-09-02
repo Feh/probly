@@ -2303,6 +2303,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 .attr("transform", `translate(${margin.left},${margin.top})`)
                 .style("fill", "none")
                 .style("pointer-events", "all")
+                .style("touch-action", "none")
                 .attr("width", width)
                 .attr("height", height);
 
@@ -2327,6 +2328,50 @@ document.addEventListener('DOMContentLoaded', () => {
                 focus.style("opacity", 0);
                 tooltipEl.style.opacity = 0;
             }).on("mousemove", updateTooltip);
+
+            const node = interactionRect.node();
+            node.addEventListener('touchstart', (event) => {
+                if (event.touches.length === 1) {
+                    event.preventDefault();
+                    updateTooltip(event.touches[0]);
+                    focus.style("opacity", 1);
+                    tooltipEl.style.opacity = 1;
+                }
+            });
+            node.addEventListener('touchmove', (event) => {
+                if (event.touches.length === 1) {
+                    event.preventDefault();
+                    updateTooltip(event.touches[0]);
+                }
+            });
+            node.addEventListener('touchend', (event) => {
+                if (event.touches.length === 0) {
+                    focus.style("opacity", 0);
+                    tooltipEl.style.opacity = 0;
+                }
+            });
+
+            const node = interactionRect.node();
+            node.addEventListener('touchstart', (event) => {
+                if (event.touches.length === 1) {
+                    event.preventDefault();
+                    updateTooltip(event.touches[0]);
+                    focus.style("opacity", 1);
+                    tooltipEl.style.opacity = 1;
+                }
+            });
+            node.addEventListener('touchmove', (event) => {
+                if (event.touches.length === 1) {
+                    event.preventDefault();
+                    updateTooltip(event.touches[0]);
+                }
+            });
+            node.addEventListener('touchend', (event) => {
+                if (event.touches.length === 0) {
+                    focus.style("opacity", 0);
+                    tooltipEl.style.opacity = 0;
+                }
+            });
         }
         
         function plotBarrierProbOnSvg(svg, data, xDomain, xLabel, yLabel, yDomain = null, tooltipEl = null, yFunc = null) {
@@ -2365,6 +2410,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 .attr("transform", `translate(${margin.left},${margin.top})`)
                 .style("fill", "none")
                 .style("pointer-events", "all")
+                .style("touch-action", "none")
                 .attr("width", width)
                 .attr("height", height);
 
