@@ -161,6 +161,11 @@
         #gaussian-copula-app #gc-formulas-panel { grid-column: 1 / -1; }
         #gaussian-copula-app #gc-plots-panel { grid-area: plots; display: flex; flex-direction: column; gap: 20px; padding: 0; border: none; background: transparent; }
         #gaussian-copula-app .gc-plot-container { padding: 0; display: flex; flex-direction: column; min-height: 600px; position: relative; }
+        #gaussian-copula-app #gc-joint-plot-grid { flex-grow: 1; display: grid; grid-template-areas: "marg-x corner" "scatter marg-y"; grid-template-columns: 1fr 100px; grid-template-rows: 100px 1fr; gap: 5px; padding: 0 10px 10px 0; }
+        #gaussian-copula-app #gc-marginal-x-svg { grid-area: marg-x; }
+        #gaussian-copula-app #gc-joint-plot-svg { grid-area: scatter; }
+        #gaussian-copula-app #gc-marginal-y-svg { grid-area: marg-y; }
+        #gaussian-copula-app .histogram-bar { fill: steelblue; opacity: 0.5; }
         #gaussian-copula-app h3 { margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
         #gaussian-copula-app h4 { margin-top: 0; }
         #gaussian-copula-app .param-group, #gaussian-copula-app .control-group { margin-bottom: 15px; }
@@ -472,7 +477,11 @@
             <div id="gc-plots-panel">
                 <div id="gc-scatter-plot-container" class="panel gc-plot-container">
                     <h4 style="text-align: center; margin-top: 0;">Samples from Joint Distribution</h4>
-                    <svg id="gc-scatter-plot-svg"></svg>
+                    <div id="gc-joint-plot-grid">
+                        <svg id="gc-marginal-x-svg"></svg>
+                        <svg id="gc-joint-plot-svg"></svg>
+                        <svg id="gc-marginal-y-svg"></svg>
+                    </div>
                     <div class="sample-buttons">
                         <button id="gc-sample-clear-btn">Clear Samples</button>
                         <button id="gc-sample-btn-1">Sample 1</button>
@@ -1368,15 +1377,23 @@ document.addEventListener('DOMContentLoaded', () => {
             return sum * h / 3;
         }
 
-        const margin = { top: 20, right: 30, bottom: 40, left: 50 };
+        const margin = { joint: { top: 10, right: 10, bottom: 40, left: 50 }, marginalX: { top: 10, right: 10, bottom: 5, left: 50 }, marginalY: { top: 10, right: 30, bottom: 40, left: 5 } };
 
         // Scatter plot elements
-        const scatterSvg = d3.select("#gc-scatter-plot-svg");
-        let scatterWidth, scatterHeight;
-        const scatterXScale = d3.scaleLinear(), scatterYScale = d3.scaleLinear();
-        const scatterXAxis = scatterSvg.append("g").attr("class", "x-axis axis");
-        const scatterYAxis = scatterSvg.append("g").attr("class", "y-axis axis");
-        const scatterPlotArea = scatterSvg.append("g").attr("class", "plot-area");
+        const jointSvg = d3.select("#gc-joint-plot-svg");
+        const marginalXSvg = d3.select("#gc-marginal-x-svg");
+        const marginalYSvg = d3.select("#gc-marginal-y-svg");
+        
+        const jointXScale = d3.scaleLinear(), jointYScale = d3.scaleLinear();
+        const jointXAxis = jointSvg.append("g").attr("class", "x-axis axis");
+        const jointYAxis = jointSvg.append("g").attr("class", "y-axis axis");
+        const jointPlotArea = jointSvg.append("g").attr("class", "plot-area");
+        
+        const marginalXYScale = d3.scaleLinear();
+        const marginalXPlotArea = marginalXSvg.append("g").attr("class", "plot-area");
+        
+        const marginalYXScale = d3.scaleLinear();
+        const marginalYPlotArea = marginalYSvg.append("g").attr("class", "plot-area");
 
         // Density plot elements
         const densitySvg = d3.select("#gc-density-plot-svg");
@@ -1451,7 +1468,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentState.jstatX = OS_DISTRIBUTIONS[currentState.distKeyX].jStat(currentState.paramsX);
             currentState.jstatY = OS_DISTRIBUTIONS[currentState.distKeyY].jStat(currentState.paramsY);
             
-            updateScatterPlot();
+            updateJointAndMarginalPlots();
             plotConditional();
             if (!options.fromURL) updateURL();
         }
@@ -1474,7 +1491,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     currentState.samples.push([x, y]);
                 }
             }
-            updateScatterPlot();
+            updateJointAndMarginalPlots();
         }
         
         function plotConditional() {
@@ -1575,14 +1592,22 @@ document.addEventListener('DOMContentLoaded', () => {
             return (low + high) / 2;
         }
 
-        function updateScatterPlot() {
-            const svgRect = scatterSvg.node().getBoundingClientRect();
-            if (svgRect.width <= 0) return;
-            scatterWidth = svgRect.width - margin.left - margin.right;
-            scatterHeight = svgRect.height - margin.top - margin.bottom;
-            scatterPlotArea.attr("transform", `translate(${margin.left},${margin.top})`);
+        function updateJointAndMarginalPlots() {
+            const jointRect = jointSvg.node().getBoundingClientRect();
+            const marginalXRect = marginalXSvg.node().getBoundingClientRect();
+            const marginalYRect = marginalYSvg.node().getBoundingClientRect();
+            if (jointRect.width <= 0) return;
 
-            const { distKeyX, paramsX, jstatX, distKeyY, paramsY, jstatY } = currentState;
+            const jointWidth = jointRect.width - margin.joint.left - margin.joint.right;
+            const jointHeight = jointRect.height - margin.joint.top - margin.joint.bottom;
+            const marginalXHeight = marginalXRect.height - margin.marginalX.top - margin.marginalX.bottom;
+            const marginalYWidth = marginalYRect.width - margin.marginalY.left - margin.marginalY.right;
+
+            jointPlotArea.attr("transform", `translate(${margin.joint.left},${margin.joint.top})`);
+            marginalXPlotArea.attr("transform", `translate(${margin.marginalX.left},${margin.marginalX.top})`);
+            marginalYPlotArea.attr("transform", `translate(${margin.marginalY.left},${margin.marginalY.top})`);
+
+            const { distKeyX, paramsX, jstatX, distKeyY, paramsY, jstatY, samples } = currentState;
             if (!jstatX || !jstatY) return;
             const configX = OS_DISTRIBUTIONS[distKeyX];
             const configY = OS_DISTRIBUTIONS[distKeyY];
@@ -1590,24 +1615,52 @@ document.addEventListener('DOMContentLoaded', () => {
             const xDomain = configX.domain(paramsX, jstatX);
             const yDomain = configY.domain(paramsY, jstatY);
             
-            scatterXScale.domain(xDomain).range([0, scatterWidth]);
-            scatterYScale.domain(yDomain).range([scatterHeight, 0]);
+            jointXScale.domain(xDomain).range([0, jointWidth]);
+            jointYScale.domain(yDomain).range([jointHeight, 0]);
 
-            scatterXAxis.attr("transform", `translate(${margin.left}, ${scatterHeight + margin.top})`).call(d3.axisBottom(scatterXScale));
-            scatterYAxis.attr("transform", `translate(${margin.left}, ${margin.top})`).call(d3.axisLeft(scatterYScale));
+            jointXAxis.attr("transform", `translate(${margin.joint.left}, ${jointHeight + margin.joint.top})`).call(d3.axisBottom(jointXScale));
+            jointYAxis.attr("transform", `translate(${margin.joint.left}, ${margin.joint.top})`).call(d3.axisLeft(jointYScale));
 
-            scatterSvg.selectAll(".plot-label").remove();
-            scatterSvg.append("text").attr("class", "plot-label").attr("x", margin.left + scatterWidth / 2).attr("y", scatterHeight + margin.top + 35).style("text-anchor", "middle").text("X");
-            scatterSvg.append("text").attr("class", "plot-label").attr("transform", "rotate(-90)").attr("y", 0).attr("x", -(margin.top + scatterHeight / 2)).attr("dy", "1em").style("text-anchor", "middle").text("Y");
+            jointSvg.selectAll(".plot-label").remove();
+            jointSvg.append("text").attr("class", "plot-label").attr("x", margin.joint.left + jointWidth / 2).attr("y", jointHeight + margin.joint.top + 35).style("text-anchor", "middle").text("X");
+            jointSvg.append("text").attr("class", "plot-label").attr("transform", "rotate(-90)").attr("y", 0).attr("x", -(margin.joint.top + jointHeight / 2)).attr("dy", "1em").style("text-anchor", "middle").text("Y");
 
-            scatterPlotArea.selectAll(".scatter-dot").remove();
-            scatterPlotArea.selectAll(".scatter-dot")
-                .data(currentState.samples)
-                .enter().append("circle")
-                .attr("class", "scatter-dot")
-                .attr("cx", d => scatterXScale(d[0]))
-                .attr("cy", d => scatterYScale(d[1]))
-                .attr("r", 3);
+            jointPlotArea.selectAll(".scatter-dot").remove();
+            jointPlotArea.selectAll(".scatter-dot").data(samples).enter().append("circle").attr("class", "scatter-dot").attr("cx", d => jointXScale(d[0])).attr("cy", d => jointYScale(d[1])).attr("r", 3);
+            
+            marginalXPlotArea.selectAll("*").remove();
+            marginalYPlotArea.selectAll("*").remove();
+
+            // Marginal X plot (top)
+            const xPlotData = d3.range(xDomain[0], xDomain[1], (xDomain[1] - xDomain[0]) / 200).map(x => ({ x: x, y: configX.pdfpmf(x, jstatX, paramsX) }));
+            const yMaxX = d3.max(xPlotData, d => d.y);
+            marginalXYScale.domain([0, yMaxX * 1.1]).range([marginalXHeight, 0]);
+            
+            // Marginal Y plot (right)
+            const yPlotData = d3.range(yDomain[0], yDomain[1], (yDomain[1] - yDomain[0]) / 200).map(y => ({ x: y, y: configY.pdfpmf(y, jstatY, paramsY) }));
+            const yMaxY = d3.max(yPlotData, d => d.y);
+            marginalYXScale.domain([0, yMaxY * 1.1]).range([0, marginalYWidth]);
+            
+            if (samples.length > 0) {
+                // X histogram
+                const xSamples = samples.map(d => d[0]);
+                const xHistogram = d3.histogram().domain(jointXScale.domain()).thresholds(jointXScale.ticks(20))(xSamples);
+                const xHistMax = d3.max(xHistogram, d => d.length) || 1;
+                marginalXPlotArea.selectAll(".histogram-bar").data(xHistogram).enter().append("rect").attr("class", "histogram-bar")
+                    .attr("x", d => jointXScale(d.x0) + 1).attr("width", d => Math.max(0, jointXScale(d.x1) - jointXScale(d.x0) - 1))
+                    .attr("y", d => marginalXYScale(d.length * yMaxX / xHistMax)).attr("height", d => marginalXHeight - marginalXYScale(d.length * yMaxX / xHistMax));
+
+                // Y histogram
+                const ySamples = samples.map(d => d[1]);
+                const yHistogram = d3.histogram().domain(jointYScale.domain()).thresholds(jointYScale.ticks(20))(ySamples);
+                const yHistMax = d3.max(yHistogram, d => d.length) || 1;
+                marginalYPlotArea.selectAll(".histogram-bar").data(yHistogram).enter().append("rect").attr("class", "histogram-bar")
+                    .attr("y", d => jointYScale(d.x1) + 1).attr("height", d => Math.max(0, jointYScale(d.x0) - jointYScale(d.x1) - 1))
+                    .attr("x", 0).attr("width", d => marginalYXScale(d.length * yMaxY / yHistMax));
+            }
+            
+            marginalXPlotArea.append("path").datum(xPlotData).attr("class", "line-path").attr("d", d3.line().x(d => jointXScale(d.x)).y(d => marginalXYScale(d.y)));
+            marginalYPlotArea.append("path").datum(yPlotData).attr("class", "line-path").attr("d", d3.line().x(d => marginalYXScale(d.y)).y(d => jointYScale(d.x)));
         }
 
         function updateDensityPlot() {
@@ -1829,7 +1882,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('gc-sample-btn-1000').addEventListener('click', () => generateSamples(1000));
                 document.getElementById('gc-sample-clear-btn').addEventListener('click', () => {
                     currentState.samples = [];
-                    updateScatterPlot();
+                    updateJointAndMarginalPlots();
                 });
                 
                 condVarSelect = document.getElementById('gc-cond-var');
@@ -1844,7 +1897,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 condValueInput.addEventListener('input', plotConditional);
                 document.getElementById('gc-interval-select').addEventListener('change', updateDensityPlot);
 
-                window.addEventListener('resize', () => { updateScatterPlot(); updateDensityPlot(); });
+                window.addEventListener('resize', () => { updateJointAndMarginalPlots(); updateDensityPlot(); });
                 handleDistChange('x');
                 handleDistChange('y');
                 renderMathInElement(document.getElementById('gaussian-copula-app'), {
