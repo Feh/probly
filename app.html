@@ -1645,7 +1645,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 [OS_DISTRIBUTIONS[distKeyY], paramsY, jstatY] :
                 [OS_DISTRIBUTIONS[distKeyX], paramsX, jstatX];
 
-            const plotDomain = domainConfig.domain(domainParams, domainJstat);
+            const marginalDomain = domainConfig.domain(domainParams, domainJstat);
+            const lowerBound = inverseConditionalCdf(0.001, currentState.conditional, marginalDomain);
+            const upperBound = inverseConditionalCdf(0.999, currentState.conditional, marginalDomain);
+
+            let plotDomain = [lowerBound, upperBound];
+            if (!isFinite(plotDomain[0]) || !isFinite(plotDomain[1]) || plotDomain[0] >= plotDomain[1]) {
+                plotDomain = marginalDomain;
+            }
             const plotData = d3.range(plotDomain[0], plotDomain[1], (plotDomain[1] - plotDomain[0]) / 200).map(v => ({x: v, y: condPdf(v)})).filter(d => isFinite(d.y));
             
             const totalIntegral = integrate(condPdf, plotDomain[0], plotDomain[1], 400);
