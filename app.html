@@ -2100,16 +2100,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function updatePathsPlot() {
             const { x0, m, sigma, T } = state;
-            const container = d3.select('#wp-paths-svg').node().parentNode;
-            const rect = container.getBoundingClientRect();
+            const rect = pathsSvg.node().getBoundingClientRect();
             const width = rect.width - margin.left - margin.right;
             const height = rect.height - margin.top - margin.bottom;
             if (width <= 0 || height <= 0) return;
 
             pathsSvg.selectAll("*").remove();
-            const g = pathsSvg.attr("width", width + margin.left + margin.right)
-                               .attr("height", height + margin.top + margin.bottom)
-                               .append("g")
+            const g = pathsSvg.append("g")
                                .attr("transform", `translate(${margin.left},${margin.top})`);
 
             const timePoints = d3.range(0, T, T/100).concat(T);
@@ -2194,16 +2191,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         function plotOnSvg(svg, data, xDomain, xLabel, yLabel, yDomain = null) {
-            const container = svg.node().parentNode;
-            const rect = container.getBoundingClientRect();
+            const rect = svg.node().getBoundingClientRect();
             const width = rect.width - margin.left - margin.right;
             const height = rect.height - margin.top - margin.bottom;
             if (width <= 0 || height <= 0) return;
 
             svg.selectAll("*").remove();
-            const g = svg.attr("width", width + margin.left + margin.right)
-                         .attr("height", height + margin.top + margin.bottom)
-                         .append("g")
+            const g = svg.append("g")
                          .attr("transform", `translate(${margin.left},${margin.top})`);
             
             const xScale = d3.scaleLinear().domain(xDomain).range([0, width]);
