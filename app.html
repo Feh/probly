@@ -1110,7 +1110,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 group.innerHTML = `<label for="os-param-${p.id}">${p.name}</label><input type="number" id="os-param-${p.id}" data-param="${p.id}" value="${p.default}" ${p.min === undefined ? '' : `min="${p.min}"`} ${p.max === undefined ? '' : `max="${p.max}"`} step="${p.step}">`;
                 paramInputs.appendChild(group);
             });
-            update({ distChangedFor: varName });
+            update();
         }
 
         function updateStats() {
