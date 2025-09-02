@@ -1843,8 +1843,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.addEventListener('resize', () => { updateScatterPlot(); updateDensityPlot(); });
                 handleDistChange('x');
                 handleDistChange('y');
-                updateCondValueToMean();
-                plotConditional();
                 renderMathInElement(document.getElementById('gaussian-copula-app'), {
                     delimiters: [{left: '$$', right: '$$', display: true}, {left: '\\[', right: '\\]', display: true}, {left: '\\(', right: '\\)', display: false}],
                 });
