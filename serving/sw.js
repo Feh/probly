@@ -53,3 +53,28 @@ self.addEventListener('activate', (event) => {
     })
   );
 });
+
+// Offline-first handler that fetches updates in the background to make startup
+// more snappy and reliable.
+self.addEventListener('fetch', (event) => {
+  event.respondWith(async function() {
+    const cache = await caches.open(CACHE_NAME);
+    const cachedResponse = await cache.match(event.request);
+
+    const networkFetch = fetch(event.request)
+      .then(async (networkResponse) => {
+        if (networkResponse.ok) {
+          await cache.put(event.request, networkResponse.clone());
+        }
+        return networkResponse;
+      })
+      .catch(() => {});
+
+    if (cachedResponse) {
+      event.waitUntil(networkFetch); // Keep the service worker alive for the network request
+      return cachedResponse;
+    }
+
+    return networkFetch;
+  }());
+});
