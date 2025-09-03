@@ -226,12 +226,14 @@
         #wiener-process-app #wp-clear-paths-btn { background-color: #6c757d; }
         #wiener-process-app #wp-clear-paths-btn:hover { background-color: #5a6268; }
         #wiener-process-app .wp-plot-container { min-height: 300px; position: relative; flex-grow: 1; resize: both; overflow: auto; display: flex; }
+        #wiener-process-app #wp-paths-plot-grid { display: grid; grid-template-columns: 1fr 100px; grid-template-rows: 1fr; gap: 5px; }
         #wiener-process-app svg { width: 100%; height: 100%; }
         #wiener-process-app .axis path, #wiener-process-app .axis line { fill: none; stroke: #000; shape-rendering: crispEdges; }
         #wiener-process-app .line-path { fill: none; stroke-width: 1.5px; }
         #wiener-process-app .cone-area { fill: var(--accent-color); opacity: 0.3; }
         #wiener-process-app .sample-path { fill: none; stroke: #555; stroke-width: 1px; opacity: 0.6; }
         #wiener-process-app .wp-tooltip { position: absolute; background-color: rgba(0, 0, 0, 0.75); color: white; padding: 5px 10px; border-radius: 3px; pointer-events: none; opacity: 0; font-size: 0.9em; z-index: 10; transform: translate(-9em, -25px); }
+        #wiener-process-app .histogram-bar { fill: steelblue; opacity: 0.5; }
         #wiener-process-app details.panel { grid-column: 1 / -1; }
         #wiener-process-app details > summary { font-weight: bold; cursor: pointer; }
         #wiener-process-app details .formulas { padding-top: 1rem; }
@@ -684,8 +686,9 @@
                             <option value="p99">99%</option>
                         </select>
                     </div>
-                    <div class="wp-plot-container">
+                    <div class="wp-plot-container" id="wp-paths-plot-grid">
                         <svg id="wp-paths-svg"></svg>
+                        <svg id="wp-marginal-svg"></svg>
                     </div>
                     <div class="button-flex">
                         <button id="wp-clear-paths-btn">Clear</button>
@@ -2206,6 +2209,7 @@ document.addEventListener('DOMContentLoaded', () => {
             paths: []
         };
         const pathsSvg = d3.select("#wp-paths-svg");
+        const marginalSvg = d3.select("#wp-marginal-svg");
         const htDensitySvg = d3.select("#wp-ht-density-svg");
         const htProbSvg = d3.select("#wp-ht-prob-svg");
         const hpByBarrierSvg = d3.select("#wp-hp-by-barrier-svg");
@@ -2290,11 +2294,18 @@ document.addEventListener('DOMContentLoaded', () => {
         function updatePathsPlot() {
             const { x0, m, sigma, T } = state;
             const rect = pathsSvg.node().getBoundingClientRect();
+            const marginalRect = marginalSvg.node().getBoundingClientRect();
+            
+            if (rect.width <= 0 || marginalRect.width <= 0) return;
+
             const width = rect.width - margin.left - margin.right;
             const height = rect.height - margin.top - margin.bottom;
+            const marginalWidth = marginalRect.width - margin.right;
+
             if (width <= 0 || height <= 0) return;
 
             pathsSvg.selectAll("*").remove();
+            marginalSvg.selectAll("*").remove();
             const g = pathsSvg.append("g")
                                .attr("transform", `translate(${margin.left},${margin.top})`);
 
@@ -2343,6 +2354,47 @@ document.addEventListener('DOMContentLoaded', () => {
             const line = d3.line().x(d => xScale(d.t)).y(d => yScale(d.x));
             g.selectAll(".sample-path").data(state.paths).enter()
              .append("path").attr("class", "sample-path").attr("d", line);
+            
+            const marginalG = marginalSvg.append("g")
+                .attr("transform", `translate(0,${margin.top})`);
+            
+            const mu_T = x0 + m * T;
+            const sigma_T = sigma * Math.sqrt(T);
+            const terminalDist = jStat.normal(mu_T, sigma_T);
+
+            const yValuesForDensity = d3.range(yDomain[0], yDomain[1], (yDomain[1] - yDomain[0]) / 100);
+            const densityData = yValuesForDensity.map(y => ({ y: y, p: terminalDist.pdf(y) }));
+
+            const maxDensity = d3.max(densityData, d => d.p) || 1;
+            const marginalXScale = d3.scaleLinear().domain([0, maxDensity * 1.1]).range([0, marginalWidth]);
+            
+            if (state.paths.length > 0) {
+                const terminalValues = state.paths.map(path => path[path.length - 1].x);
+                const histogram = d3.histogram()
+                    .domain(yScale.domain())
+                    .thresholds(yScale.ticks(20))
+                    (terminalValues);
+                
+                const histMax = d3.max(histogram, d => d.length) || 1;
+
+                marginalG.selectAll(".histogram-bar")
+                    .data(histogram)
+                    .enter().append("rect")
+                    .attr("class", "histogram-bar")
+                    .attr("y", d => yScale(d.x1) + 1)
+                    .attr("height", d => Math.max(0, yScale(d.x0) - yScale(d.x1) - 1))
+                    .attr("x", 0)
+                    .attr("width", d => marginalXScale(d.length * maxDensity / histMax));
+            }
+            
+            marginalG.append("path")
+                .datum(densityData)
+                .attr("class", "line-path")
+                .style("stroke", "#d9534f")
+                .attr("d", d3.line()
+                    .x(d => marginalXScale(d.p))
+                    .y(d => yScale(d.y))
+                );
         }
 
         function updateHittingTimePlots() {
