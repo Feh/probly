@@ -199,7 +199,7 @@
         }
         #wp-params-panel { grid-area: params; }
         #wp-plots-wrapper { grid-area: plots; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
-        #wiener-process-app .panel { padding: 15px; border: 1px solid var(--border-color); border-radius: 5px; background-color: var(--panel-bg); display: flex; flex-direction: column; }
+        #wiener-process-app .panel { position: relative; padding: 15px; border: 1px solid var(--border-color); border-radius: 5px; background-color: var(--panel-bg); display: flex; flex-direction: column; }
         #wiener-process-app h3, #wiener-process-app h4 { margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
         #wiener-process-app .control-group { margin-bottom: 15px; }
         #wiener-process-app label { font-weight: bold; margin-bottom: 5px; }
@@ -217,6 +217,10 @@
         #wiener-process-app .cone-area { fill: var(--accent-color); opacity: 0.3; }
         #wiener-process-app .sample-path { fill: none; stroke: #555; stroke-width: 1px; opacity: 0.6; }
         #wiener-process-app .wp-tooltip { position: absolute; background-color: rgba(0, 0, 0, 0.75); color: white; padding: 5px 10px; border-radius: 3px; pointer-events: none; opacity: 0; font-size: 0.9em; z-index: 10; transform: translate(-9em, -25px); }
+
+        .move-controls { position: absolute; top: 5px; right: 5px; z-index: 5; display: flex; flex-direction: column; }
+        .move-btn { background: none; border: none; cursor: pointer; font-size: 1.2rem; padding: 0; line-height: 1; color: #888; }
+        .move-btn:hover { color: #333; }
 
         @media (max-width: 800px) {
             #distributions-app { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: "controls" "stats" "sampling" "plot"; }
@@ -509,6 +513,7 @@
             <div id="gc-plots-panel">
                 <div id="gc-scatter-plot-container" class="panel gc-plot-container">
                     <h4 style="text-align: center; margin-top: 0;">Samples from Joint Distribution</h4>
+                    <div class="move-controls"><button class="move-btn move-up">▲</button><button class="move-btn move-down">▼</button></div>
                     <div id="gc-joint-plot-grid">
                         <svg id="gc-marginal-x-svg"></svg>
                         <svg id="gc-joint-plot-svg"></svg>
@@ -524,6 +529,7 @@
                 </div>
                 <div id="gc-density-plot-container" class="panel gc-plot-container">
                     <h4 id="gc-density-plot-title" style="text-align: center; margin-top: 0;">Conditional Density</h4>
+                    <div class="move-controls"><button class="move-btn move-up">▲</button><button class="move-btn move-down">▼</button></div>
                      <div id="gc-density-controls" style="display: flex; gap: 10px; justify-content: flex-end; padding: 0 20px;">
                         <div class="control-group" style="margin-bottom: 0;">
                             <label for="gc-interval-select">Shade Interval</label>
@@ -601,6 +607,7 @@
             <div id="wp-plots-wrapper">
                 <div id="wp-paths-panel" class="panel">
                     <h3>Sample Paths of \( X_t \)</h3>
+                    <div class="move-controls"><button class="move-btn move-up">▲</button><button class="move-btn move-down">▼</button></div>
                     <div class="control-group">
                         <label for="wp-cone-select">Percentile Cone:</label>
                         <select id="wp-cone-select">
@@ -623,6 +630,7 @@
                 </div>
                 <div id="wp-hitting-time-panel" class="panel">
                     <h3>First Hitting Time \( T_b \)</h3>
+                    <div class="move-controls"><button class="move-btn move-up">▲</button><button class="move-btn move-down">▼</button></div>
                     <div class="control-group">
                         <label for="wp-barrier">Barrier \( b =\, \)</label>
                         <input type="number" id="wp-barrier" value="0.5" step="0.01">
@@ -640,6 +648,7 @@
                 </div>
                 <div id="wp-hitting-prob-by-barrier-panel" class="panel">
                     <h3>Hitting Probability by Barrier distance</h3>
+                    <div class="move-controls"><button class="move-btn move-up">▲</button><button class="move-btn move-down">▼</button></div>
                     <p style="text-align: center;">\( \mathbb{P}(\{X_t = b \text{ for any } 0\le t\le T\}) \) as a function of barrier \(b\)</p>
                     <div class="wp-plot-container">
                         <svg id="wp-hp-by-barrier-svg"></svg>
@@ -1470,6 +1479,31 @@ document.addEventListener('DOMContentLoaded', () => {
         return -t + jStat.normal.cdf(x, 0, 1) * jStat.normal.cdf(y, 0, 1);
     };
 
+    function setupMoveControls(containerSelector) {
+        const container = document.querySelector(containerSelector);
+        if (!container) return;
+
+        container.addEventListener('click', e => {
+            const moveBtn = e.target.closest('.move-btn');
+            if (!moveBtn) return;
+            
+            const panel = moveBtn.closest('.panel');
+            if (!panel || panel.parentElement !== container) return;
+
+            if (moveBtn.classList.contains('move-up')) {
+                const prev = panel.previousElementSibling;
+                if (prev) {
+                    container.insertBefore(panel, prev);
+                }
+            } else if (moveBtn.classList.contains('move-down')) {
+                const next = panel.nextElementSibling;
+                if (next) {
+                    container.insertBefore(panel, next.nextElementSibling);
+                }
+            }
+        });
+    }
+
     const gaussianCopulaApp = (() => {
         let currentState = {
             distKeyX: 'normal', paramsX: {}, jstatX: null,
@@ -2019,6 +2053,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const densityResizeObserver = new ResizeObserver(() => setTimeout(updateDensityPlot, 0));
                 densityResizeObserver.observe(document.getElementById('gc-density-plot-container'));
 
+                setupMoveControls('#gc-plots-panel');
+
                 handleDistChange('x');
                 handleDistChange('y');
                 renderMathInElement(document.getElementById('gaussian-copula-app'), {
@@ -2081,6 +2117,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(update, 0);
             });
             document.querySelectorAll('#wiener-process-app .wp-plot-container').forEach(el => resizeObserver.observe(el));
+
+            setupMoveControls('#wp-plots-wrapper');
 
             update();
             renderMathInElement(document.getElementById('wiener-process-app'), {
