@@ -7,7 +7,13 @@ const urlsToCache = [
   '/assets/jstat.min.js',
   '/assets/katex.min.css',
   '/assets/katex.min.js',
-  '/assets/numeric.min.js'
+  '/assets/numeric.min.js',
+  '/assets/fonts/KaTeX_Math-Italic.woff2',
+  '/assets/fonts/KaTeX_Main-Regular.woff2',
+  '/assets/fonts/KaTeX_Math-Italic.woff',
+  '/assets/fonts/KaTeX_Main-Regular.woff',
+  '/assets/fonts/KaTeX_Math-Italic.ttf',
+  '/assets/fonts/KaTeX_Main-Regular.ttf'
 ];
 
 self.addEventListener('install', (event) => {
