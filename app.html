@@ -217,6 +217,9 @@
         #wiener-process-app .cone-area { fill: var(--accent-color); opacity: 0.3; }
         #wiener-process-app .sample-path { fill: none; stroke: #555; stroke-width: 1px; opacity: 0.6; }
         #wiener-process-app .wp-tooltip { position: absolute; background-color: rgba(0, 0, 0, 0.75); color: white; padding: 5px 10px; border-radius: 3px; pointer-events: none; opacity: 0; font-size: 0.9em; z-index: 10; transform: translate(-9em, -25px); }
+        #wiener-process-app details.panel { grid-column: 1 / -1; }
+        #wiener-process-app details > summary { font-weight: bold; cursor: pointer; }
+        #wiener-process-app details .formulas { padding-top: 1rem; }
 
         .move-controls { position: absolute; top: 5px; right: 5px; z-index: 5; display: flex; flex-direction: column; }
         .move-btn { background: none; border: none; cursor: pointer; font-size: 0.8rem; padding: 0; line-height: 1; color: #888; }
@@ -656,6 +659,23 @@
                     </div>
                 </div>
             </div>
+            <details class="panel">
+                <summary>Formulas</summary>
+                <div class="formulas" style="padding-top: 1rem;">
+                    <h4>Distribution of the process at time \(t\)</h4>
+                    <p>The value of the process \(X_t\) at time \(t\) is normally distributed:</p>
+                    $$ X_t \sim \mathcal{N}(X_0 + mt, \sigma^2 t) $$
+
+                    <h4>First Hitting Time</h4>
+                    <p>Let \(a = b - X_0\) be the distance to the barrier. The first time the process hits the barrier, \(T_b = \inf\{t \ge 0 \mid X_t = b\}\), follows an Inverse-Gaussian distribution with PDF:</p>
+                    $$ f_{T_b}(t) = \frac{|a|}{\sigma\sqrt{2\pi t^3}} e^{-\frac{(a-mt)^2}{2\sigma^2 t}} $$
+                    
+                    <h4>Hitting Probability by time \(T\)</h4>
+                    <p>The probability of hitting the barrier \(b\) at or before time \(T\) is:</p>
+                    $$ \mathbb{P}(T_b \le T) = \Phi\left(\frac{mT-a}{\sigma\sqrt{T}}\right) + e^{\frac{2ma}{\sigma^2}} \Phi\left(\frac{-mT-a}{\sigma\sqrt{T}}\right) $$
+                    <p>where \(a=b-X_0\) and \(\Phi\) is the standard normal CDF. This applies when \(a > 0\). If \(a < 0\), the signs of both \(a\) and \(m\) are flipped.</p>
+                </div>
+            </details>
         </div>
     </main>
 
