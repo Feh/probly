@@ -2,6 +2,7 @@ const CACHE_NAME = 'probly-app-cache-v1';
 const urlsToCache = [
   '/',
   '/index.html',
+  '/favicon-48x48.png',
   '/assets/auto-render.min.js',
   '/assets/d3.v7.min.js',
   '/assets/jstat.min.js',
