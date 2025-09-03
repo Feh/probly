@@ -2561,7 +2561,7 @@ document.addEventListener('DOMContentLoaded', () => {
     menu.addEventListener('click', () => menu.classList.remove('visible'));
 
     function router() {
-        const hash = window.location.hash || '#bernoulli';
+        const hash = window.location.hash || '#distributions';
         const [appNameWithHash, queryString] = hash.split('?');
         const appName = appNameWithHash.substring(1);
         const params = new URLSearchParams(queryString);
