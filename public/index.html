@@ -743,7 +743,22 @@
         <div id="about-app" class="app-container">
             <div class="panel">
                 <h3>About</h3>
-                <p>content to be added</p>
+                <p>This is a web app that helps you do quick probability calculations on your phone or computer.</p>
+                <h4>What it can do</h4>
+                <ul>
+                    <li>The app knows a few basic probability distributions, and can help with computing summary statistics as well as plotting the distribution while varying the parameters.</li>
+                    <li>For any density graph, you can compute the area under the curve (click and move over the density graphs).</li>
+                    <li>It can compute the density of order statistics of i.i.d. variables (if you want to know e.g. what the 2nd largest of 10 samples is).</li>
+                    <li>The app can also help with understanding the interaction of dependent variables (either continuous, or Bernoulli variables).</li>
+                    <li>The app can compute Brownian Motion sample paths, first hitting time distributions, and hitting probabilities.</li>
+                </ul>
+                <h4>How it works</h4>
+                <p>For all calculations there are either closed form solutions available, or some simple numeric calculations. The app uses <a href="https://ccc-js.github.io/numeric2/">numeric.js</a> and <a href="https://jstat.github.io/">jStat</a> for most calculations. If you make consequential decisions, don’t solely rely on the answers given here, you should perhaps double check the results with some Python code.</p>
+                <p>The graphing is done with <a href="https://d3js.org/">d3.js</a>.</p>
+                <h4>Bugs/Contributions</h4>
+                <p>The repository is available at TODO. You are welcome to open issues there, or better yet, send a pull request. The purpose of the app is to enable quick and easy probability calculations – so I won’t be accepting contributions of the form “enter 20 data points and compute statistic X”, you’d want a proper data science environment for that.</p>
+                <h4>Author & License</h4>
+                <p>Copyright 2005 Julius Plenz. Published under the <a href="https://opensource.org/license/mit">MIT license</a>.</p>
             </div>
         </div>
         <div id="install-app" class="app-container">
