@@ -701,8 +701,8 @@
                     <div class="control-group">
                         <label for="wp-terminal-time">Terminal Time \( T \)</label>
                         <div class="slider-group">
-                            <input type="range" id="wp-terminal-time-slider" value="1" min="0.01" step="0.1">
-                            <input type="number" id="wp-terminal-time" value="1" min="0.01" step="0.1" style="width: 80px;">
+                            <input type="range" id="wp-terminal-time-slider" value="1" min="0.1" step="0.1">
+                            <input type="number" id="wp-terminal-time" value="1" min="0.1" step="0.1" style="width: 80px;">
                         </div>
                     </div>
                 </div>
@@ -1084,7 +1084,7 @@ document.addEventListener('DOMContentLoaded', () => {
         beta: { name: 'Beta', type: 'continuous', params: [{ id: 'alpha', name: 'α (Shape)', default: 2, min: 0.01, step: 0.01 }, { id: 'beta', name: 'β (Shape)', default: 3, min: 0.01, step: 0.01 }], jStat: p => jStat.beta(p.alpha, p.beta), domain: p => [0, 1], formula: 'f(x; \\alpha, \\beta) = \\frac{x^{\\alpha-1}(1-x)^{\\beta-1}}{\\mathrm{B}(\\alpha, \\beta)}', mean: p => p.alpha / (p.alpha + p.beta), variance: p => (p.alpha * p.beta) / ((p.alpha + p.beta)**2 * (p.alpha + p.beta + 1)), pdfpmf: (x, j) => j.pdf(x), cdf: (x, j) => j.cdf(x), inv: (prob, j) => j.inv(prob), sampler: p => jStat.beta.sample(p.alpha, p.beta) },
         pareto: { name: 'Pareto', type: 'continuous', params: [{ id: 'xm', name: 'xₘ (scale)', default: 1, min: 0.01, step: 0.01 }, { id: 'alpha', name: 'α (shape)', default: 2, min: 0.01, step: 0.01 }], jStat: p => jStat.pareto(p.xm, p.alpha), domain: (p, j) => [p.xm, j.inv(0.98)], formula: 'f(x) = \\frac{\\alpha x_m^\\alpha}{x^{\\alpha+1}}', mean: p => p.alpha > 1 ? (p.alpha * p.xm) / (p.alpha - 1) : Infinity, variance: p => p.alpha > 2 ? ((p.xm**2 * p.alpha) / ((p.alpha - 1)**2 * (p.alpha - 2))) : Infinity, pdfpmf: (x, j) => j.pdf(x), cdf: (x, j) => j.cdf(x), inv: (prob, j) => j.inv(prob), sampler: null },
         weibull: { name: 'Weibull', type: 'continuous', params: [{ id: 'scale', name: 'λ (Scale)', default: 1, min: 0.001, step: 0.001 }, { id: 'shape', name: 'k (Shape)', default: 2, min: 0.001, step: 0.001 }], jStat: p => jStat.weibull(p.scale, p.shape), domain: (p, j) => [0.001, j.inv(0.999)], formula: 'f(x; k, \\lambda) = \\frac{k}{\\lambda}(\\frac{x}{\\lambda})^{k-1}e^{-(x/\\lambda)^k}', mean: p => p.scale * jStat.gammafn(1 + 1 / p.shape), variance: p => p.scale**2 * (jStat.gammafn(1 + 2 / p.shape) - (jStat.gammafn(1 + 1 / p.shape))**2), pdfpmf: (x, j) => j.pdf(x), cdf: (x, j) => j.cdf(x), inv: (prob, j) => j.inv(prob), sampler: p => jStat.weibull.sample(p.scale, p.shape) },
-        uniform: { name: 'Uniform (continuous)', type: 'continuous', params: [{ id: 'a', name: 'a (Min)', default: 0, step: 1 }, { id: 'b', name: 'b (Max)', default: 1, step: 1 }], jStat: p => jStat.uniform(p.a, p.b), domain: p => [p.a - (p.b-p.a)*0.1, p.b + (p.b-p.a)*0.1], formula: 'f(x) = \\frac{1}{b-a}', mean: p => (p.a + p.b) / 2, variance: p => (p.b - p.a)**2 / 12, pdfpmf: (x, j) => j.pdf(x), cdf: (x, j) => j.cdf(x), inv: (prob, j) => j.inv(prob), sampler: p => jStat.uniform.sample(p.a, p.b) },
+        uniform: { name: 'Uniform (continuous)', type: 'continuous', params: [{ id: 'a', name: 'a (Min)', default: 0, step: 0.1 }, { id: 'b', name: 'b (Max)', default: 1, step: 0.1 }], jStat: p => jStat.uniform(p.a, p.b), domain: p => [p.a - (p.b-p.a)*0.1, p.b + (p.b-p.a)*0.1], formula: 'f(x) = \\frac{1}{b-a}', mean: p => (p.a + p.b) / 2, variance: p => (p.b - p.a)**2 / 12, pdfpmf: (x, j) => j.pdf(x), cdf: (x, j) => j.cdf(x), inv: (prob, j) => j.inv(prob), sampler: p => jStat.uniform.sample(p.a, p.b) },
         discreteUniform: { name: 'Uniform (discrete)', type: 'discrete', params: [{ id: 'min', name: 'Min', default: 0, step: 1 }, { id: 'max', name: 'Max', default: 9, step: 1 }], jStat: p => ({}), domain: p => [p.min - 1, p.max + 1], formula: 'P(X=k) = \\frac{1}{n}', mean: p => (p.min + p.max) / 2, variance: p => ((p.max - p.min + 1)**2 - 1) / 12, pdfpmf: (x, j, p) => { const k = Math.round(x); return k >= p.min && k <= p.max ? 1 / (p.max - p.min + 1) : 0; }, cdf: (x, j, p) => { const k = Math.floor(x); if (k < p.min) return 0; if (k >= p.max) return 1; return (k - p.min + 1) / (p.max - p.min + 1); }, inv: (prob, j, p) => discreteInv(prob, (k) => DISTRIBUTIONS.discreteUniform.cdf(k, j, p), p), sampler: p => Math.floor(jStat.uniform.sample(p.min, p.max + 1)) },
         binomial: { name: 'Binomial', type: 'discrete', params: [{ id: 'n', name: 'n (Trials)', default: 20, min: 1, step: 1 }, { id: 'p', name: 'p (Probability)', default: 0.5, min: 0, max: 1, step: 0.01 }], jStat: p => ({}), domain: p => [-0.5, p.n + 0.5], formula: 'P(k; n,p) = \\binom{n}{k} p^k(1-p)^{n-k}', mean: p => p.n * p.p, variance: p => p.n * p.p * (1 - p.p), pdfpmf: (x, j, p) => jStat.binomial.pdf(Math.round(x), p.n, p.p), cdf: (x, j, p) => jStat.binomial.cdf(Math.round(x), p.n, p.p), inv: (prob, j, p) => discreteInv(prob, (k) => jStat.binomial.cdf(k, p.n, p.p), p), sampler: null },
         negativeBinomial: { name: 'Negative Binomial', type: 'discrete', params: [{ id: 'r', name: 'r (Successes)', default: 10, min: 1, step: 1 }, { id: 'p', name: 'p (Probability)', default: 0.5, min: 0.01, max: 1, step: 0.01 }], jStat: p => ({}), domain: (p, j) => [-0.5, discreteInv(0.9999, (k) => jStat.negbin.cdf(k, p.r, p.p), { ...p, min: 0 })], formula: 'P(k; r,p) = \\binom{k+r-1}{k} p^r(1-p)^{k}', mean: p => p.r * (1 - p.p) / p.p, variance: p => p.r * (1 - p.p) / (p.p**2), pdfpmf: (x, j, p) => jStat.negbin.pdf(Math.round(x), p.r, p.p), cdf: (x, j, p) => jStat.negbin.cdf(Math.round(x), p.r, p.p), inv: (prob, j, p) => discreteInv(prob, (k) => jStat.negbin.cdf(k, p.r, p.p), { ...p, min: 0 }), sampler: null },
@@ -2326,7 +2326,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 { id: 'x0', step: 0.1 },
                 { id: 'drift', step: 0.1 },
                 { id: 'volatility', step: 0.01, min: 0.01 },
-                { id: 'terminal-time', step: 0.1, min: 0.01 },
+                { id: 'terminal-time', step: 0.1, min: 0.1 },
                 { id: 'barrier', step: 0.01 }
             ];
 
@@ -2336,11 +2336,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const precision = (() => { if (!p.step || String(p.step).indexOf('.') === -1) return 0; return String(p.step).split('.')[1].length; })();
                 
                 const updateSliderBounds = () => {
-                    const value = parseFloat(numberInput.value); if (isNaN(value) || !numberInput.checkValidity()) return;
+                    const value = parseFloat(numberInput.value);
+                    if (isNaN(value) || !numberInput.checkValidity()) return;
+                    console.log(`called with ${value}`);
                     let sliderMin, sliderMax;
                     if (value === 0) { sliderMin = -1; sliderMax = 1; } else { const logVal = Math.log10(Math.abs(value)); sliderMin = (value > 0 ? 1 : -1) * 10**(logVal - 1); sliderMax = (value > 0 ? 1 : -1) * 10**(logVal + 1); if (value < 0) [sliderMin, sliderMax] = [sliderMax, sliderMin]; }
                     const finalMin = Math.max(p.min ?? -Infinity, sliderMin);
                     const finalMax = Math.min(p.max ?? Infinity, sliderMax);
+                    console.log(`Deretmining min=${finalMin} max=${finalMax}`);
                     sliderInput.min = finalMin; sliderInput.max = finalMax;
                     if (p.step % 1 === 0) { sliderInput.step = 1; sliderInput.min = Math.ceil(finalMin); sliderInput.max = Math.floor(finalMax); } else { sliderInput.step = (finalMax - finalMin) / 200; }
                 };
@@ -2351,6 +2354,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 numberInput.addEventListener('change', updateSliderBounds);
                 sliderInput.addEventListener('input', (e) => { const val = parseFloat(e.target.value); numberInput.value = val.toFixed(precision); update(); });
+                sliderInput.addEventListener('change', updateSliderBounds);
                 updateSliderBounds(); sliderInput.value = numberInput.value;
             });
 
