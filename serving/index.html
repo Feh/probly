@@ -2338,12 +2338,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const updateSliderBounds = () => {
                     const value = parseFloat(numberInput.value);
                     if (isNaN(value) || !numberInput.checkValidity()) return;
-                    console.log(`called with ${value}`);
                     let sliderMin, sliderMax;
                     if (value === 0) { sliderMin = -1; sliderMax = 1; } else { const logVal = Math.log10(Math.abs(value)); sliderMin = (value > 0 ? 1 : -1) * 10**(logVal - 1); sliderMax = (value > 0 ? 1 : -1) * 10**(logVal + 1); if (value < 0) [sliderMin, sliderMax] = [sliderMax, sliderMin]; }
                     const finalMin = Math.max(p.min ?? -Infinity, sliderMin);
                     const finalMax = Math.min(p.max ?? Infinity, sliderMax);
-                    console.log(`Deretmining min=${finalMin} max=${finalMax}`);
                     sliderInput.min = finalMin; sliderInput.max = finalMax;
                     if (p.step % 1 === 0) { sliderInput.step = 1; sliderInput.min = Math.ceil(finalMin); sliderInput.max = Math.floor(finalMax); } else { sliderInput.step = (finalMax - finalMin) / 200; }
                 };
