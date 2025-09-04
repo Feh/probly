@@ -120,7 +120,7 @@
         #distributions-app #stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 0.9em; }
         #distributions-app #stats-grid span { font-weight: bold; color: #333; }
         #distributions-app #formula-display { margin-top: 20px; padding: 10px; background: #eee; border-radius: 3px; text-align: center; min-height: 50px; display: flex; align-items: center; justify-content: center; overflow-x: auto;}
-        #distributions-app .plot-svg-wrapper { position: relative; resize: both; overflow: auto; flex-grow: .5; min-height: 400px; display: flex; }
+        #distributions-app .plot-svg-wrapper { position: relative; resize: both; overflow: auto; flex-grow: .5; display: flex; }
         #distributions-app #plot-svg { user-select: none; width: 100%; height: 100%; }
         #distributions-app .axis path, #distributions-app .axis line { fill: none; stroke: #000; shape-rendering: crispEdges; }
         #distributions-app .line-path { fill: none; stroke: var(--accent-color); stroke-width: 2px; }
@@ -1234,7 +1234,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const resizeObserver = new ResizeObserver(() => {
                     if (currentState.jstat) setTimeout(updatePlot, 0);
                 });
-                resizeObserver.observe(document.getElementById('plot-container'));
+                resizeObserver.observe(document.querySelector('#distributions-app .plot-svg-wrapper'));
                 handleDistChange();
             },
             updateFromURL: (params) => {
@@ -1536,7 +1536,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const resizeObserver = new ResizeObserver(() => {
                     if (currentState.jstat) setTimeout(updatePlot, 0);
                 });
-                resizeObserver.observe(document.getElementById('os-plot-container'));
+                resizeObserver.observe(document.querySelector('#order-statistics-app .plot-svg-wrapper'));
                 handleDistChange();
                 renderMathInElement(document.getElementById('order-statistics-app'), {
                     delimiters: [{left: '$$', right: '$$', display: true}, {left: '\\[', right: '\\]', display: true}, {left: '\\(', right: '\\)', display: false}],
@@ -2175,10 +2175,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.addEventListener('resize', () => { updateJointAndMarginalPlots(); updateDensityPlot(); });
                 
                 const scatterResizeObserver = new ResizeObserver(() => setTimeout(updateJointAndMarginalPlots, 0));
-                scatterResizeObserver.observe(document.getElementById('gc-scatter-plot-container'));
+                scatterResizeObserver.observe(document.getElementById('gc-joint-plot-grid'));
 
                 const densityResizeObserver = new ResizeObserver(() => setTimeout(updateDensityPlot, 0));
-                densityResizeObserver.observe(document.getElementById('gc-density-plot-container'));
+                densityResizeObserver.observe(document.querySelector('#gc-density-plot-container .plot-svg-wrapper'));
 
                 setupMoveControls('#gc-plots-panel');
 
