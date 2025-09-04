@@ -1198,6 +1198,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             config.params.forEach(p => {
                 const btn = document.createElement('button');
+                btn.id = `quick-btn-${p.id}`;
                 btn.innerHTML = p.name.split(' ')[0];
                 btn.dataset.param = p.id;
                 quickParamButtons.appendChild(btn);
@@ -1246,7 +1247,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function update(options = {}) {
             const config = DISTRIBUTIONS[currentState.distKey]; const params = {}; let allValid = true;
-            config.params.forEach(p => { const input = document.getElementById(`param-${p.id}`); if (input.checkValidity()){ params[p.id] = parseFloat(input.value); } else { allValid = false; } });
+            config.params.forEach(p => {
+                const input = document.getElementById(`param-${p.id}`);
+                if (input.checkValidity()){
+                    const val = parseFloat(input.value);
+                    params[p.id] = val;
+                    const btn = document.getElementById(`quick-btn-${p.id}`);
+                    if (btn) {
+                        const precision = (() => { if (!p.step || String(p.step).indexOf('.') === -1) return 0; return String(p.step).split('.')[1].length; })();
+                        btn.innerHTML = `${p.name.split(' ')[0]} = ${val.toFixed(precision)}`;
+                    }
+                } else {
+                    allValid = false;
+                }
+            });
             if (!allValid) return;
             currentState.params = params; currentState.jstat = config.jStat(params);
             const sampler = config.sampler; sampleBtn1.disabled = !sampler; sampleBtn10.disabled = !sampler;
