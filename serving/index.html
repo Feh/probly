@@ -72,6 +72,9 @@
         .app-container.active { display: block; }
         #distributions-app.active, #order-statistics-app.active, #gaussian-copula-app.active, #wiener-process-app.active { display: grid; }
 
+        .slider-group { display: flex; align-items: center; gap: 10px; }
+        .slider-group input[type="range"] { flex-grow: 1; margin: 0; }
+
         /* Scoped styles for Correlated Bernoulli App */
         #bernoulli-app { max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
         #bernoulli-app h2, #bernoulli-app h3 { border-bottom: 1px solid #ddd; padding-bottom: 8px; }
@@ -491,7 +494,6 @@
                 <div class="plot-svg-wrapper">
                     <svg id="plot-svg"></svg>
                 </div>
-                <div id="param-sliders" style="padding: 10px 20px 0;"></div>
                 <div id="tooltip"></div>
             </div>
         </div>
@@ -504,7 +506,18 @@
                 </div>
                 <div id="os-param-inputs"></div>
                 <div class="control-group">
-                    <p>Drawing from <input type="number" id="os-n" value="10" min="1" step="1" style="width: 60px; display: inline-block;"> samples, the density of the <input type="number" id="os-k" value="5" min="1" step="1" style="width: 60px; display: inline-block;">-th order statistic is:</p>
+                    <label for="os-n">Sample size n</label>
+                    <div class="slider-group">
+                        <input type="range" id="os-n-slider" value="10" min="1" step="1">
+                        <input type="number" id="os-n" value="10" min="1" step="1" style="width: 80px;">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label for="os-k">k-th order statistic</label>
+                    <div class="slider-group">
+                        <input type="range" id="os-k-slider" value="5" min="1" step="1">
+                        <input type="number" id="os-k" value="5" min="1" step="1" style="width: 80px;">
+                    </div>
                 </div>
             </div>
 
@@ -578,9 +591,9 @@
 
                 <h3>Dependence Structure</h3>
                 <div class="control-group">
-                    <label for="gc-rho-input">Correlation ρ: <span id="gc-rho-value">0.5</span></label>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <input type="range" id="gc-rho-slider" min="-0.99" max="0.99" step="0.01" value="0.5" style="flex-grow: 1;">
+                    <label for="gc-rho-input">Correlation ρ</label>
+                    <div class="slider-group">
+                        <input type="range" id="gc-rho-slider" min="-0.99" max="0.99" step="0.01" value="0.5">
                         <input type="number" id="gc-rho-input" min="-0.99" max="0.99" step="0.01" value="0.5" style="width: 80px;">
                     </div>
                 </div>
@@ -666,19 +679,31 @@
                 <div class="control-grid">
                     <div class="control-group">
                         <label for="wp-x0">Start Value \( X_0 \)</label>
-                        <input type="number" id="wp-x0" value="0" step="0.1">
+                        <div class="slider-group">
+                            <input type="range" id="wp-x0-slider" value="0" step="0.1">
+                            <input type="number" id="wp-x0" value="0" step="0.1" style="width: 80px;">
+                        </div>
                     </div>
                     <div class="control-group">
                         <label for="wp-drift">Drift \( m \)</label>
-                        <input type="number" id="wp-drift" value="0" step="0.1">
+                        <div class="slider-group">
+                            <input type="range" id="wp-drift-slider" value="0" step="0.1">
+                            <input type="number" id="wp-drift" value="0" step="0.1" style="width: 80px;">
+                        </div>
                     </div>
                     <div class="control-group">
                         <label for="wp-volatility">Volatility \( \sigma \)</label>
-                        <input type="number" id="wp-volatility" value="1" min="0.01" step="0.01">
+                        <div class="slider-group">
+                            <input type="range" id="wp-volatility-slider" value="1" min="0.01" step="0.01">
+                            <input type="number" id="wp-volatility" value="1" min="0.01" step="0.01" style="width: 80px;">
+                        </div>
                     </div>
                     <div class="control-group">
                         <label for="wp-terminal-time">Terminal Time \( T \)</label>
-                        <input type="number" id="wp-terminal-time" value="1" min="0.01" step="0.1">
+                        <div class="slider-group">
+                            <input type="range" id="wp-terminal-time-slider" value="1" min="0.01" step="0.1">
+                            <input type="number" id="wp-terminal-time" value="1" min="0.01" step="0.1" style="width: 80px;">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -711,8 +736,11 @@
                     <h3>First Hitting Time \( T_b \)</h3>
                     <div class="move-controls"><button class="move-btn move-up">▲</button><button class="move-btn move-down">▼</button></div>
                     <div class="control-group">
-                        <label for="wp-barrier">Barrier \( b =\, \)</label>
-                        <input type="number" id="wp-barrier" value="0.5" step="0.01">
+                        <label for="wp-barrier">Barrier \( b \)</label>
+                        <div class="slider-group">
+                            <input type="range" id="wp-barrier-slider" value="0.5" step="0.01">
+                            <input type="number" id="wp-barrier" value="0.5" step="0.01" style="width: 80px;">
+                        </div>
                     </div>
                     <p style="text-align: center;">Density of \( T_b = \inf\{t \ge 0 \mid X_t = b\} \)</p>
                     <div class="wp-plot-container">
@@ -1097,16 +1125,20 @@ document.addEventListener('DOMContentLoaded', () => {
         function handleDistChange(options = {}) {
             currentState.distKey = distSelect.value;
             const config = DISTRIBUTIONS[currentState.distKey];
-            paramInputs.innerHTML = ''; paramSliders.innerHTML = '';
+            paramInputs.innerHTML = '';
             config.params.forEach(p => {
-                const group = document.createElement('div'); group.className = 'param-group';
-                group.innerHTML = `<label for="param-${p.id}">${p.name}</label><input type="number" id="param-${p.id}" data-param="${p.id}" value="${p.default}" ${p.min === undefined ? '' : `min="${p.min}"`} ${p.max === undefined ? '' : `max="${p.max}"`} step="${p.step}">`;
+                const group = document.createElement('div');
+                group.className = 'param-group';
+                group.innerHTML = `<label for="param-${p.id}">${p.name}</label>
+                    <div class="slider-group">
+                        <input type="range" id="slider-${p.id}" value="${p.default}">
+                        <input type="number" id="param-${p.id}" data-param="${p.id}" value="${p.default}" ${p.min === undefined ? '' : `min="${p.min}"`} ${p.max === undefined ? '' : `max="${p.max}"`} step="${p.step}" style="width: 80px;">
+                    </div>`;
                 paramInputs.appendChild(group);
-                const sliderGroup = document.createElement('div'); sliderGroup.className = 'param-group';
-                sliderGroup.innerHTML = `<label for="slider-${p.id}" style="display: block; margin-bottom: 5px;">${p.name}: <span id="slider-val-${p.id}">${p.default}</span></label><input type="range" id="slider-${p.id}" data-param="${p.id}" value="${p.default}" style="width: 100%;">`;
-                paramSliders.appendChild(sliderGroup);
-                const numberInput = document.getElementById(`param-${p.id}`); const sliderInput = document.getElementById(`slider-${p.id}`); const sliderValSpan = document.getElementById(`slider-val-${p.id}`);
-                const precision = (() => { if (String(p.step).indexOf('.') === -1) return 0; return String(p.step).split('.')[1].length; })();
+
+                const numberInput = document.getElementById(`param-${p.id}`);
+                const sliderInput = document.getElementById(`slider-${p.id}`);
+                const precision = (() => { if (!p.step || String(p.step).indexOf('.') === -1) return 0; return String(p.step).split('.')[1].length; })();
                 const updateSliderBounds = () => {
                     const value = parseFloat(numberInput.value); if (isNaN(value) || !numberInput.checkValidity()) return;
                     let sliderMin, sliderMax;
@@ -1115,9 +1147,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     sliderInput.min = finalMin; sliderInput.max = finalMax;
                     if (p.step % 1 === 0) { sliderInput.step = 1; sliderInput.min = Math.ceil(finalMin); sliderInput.max = Math.floor(finalMax); } else { sliderInput.step = (finalMax - finalMin) / 200; }
                 };
-                numberInput.addEventListener('input', () => { const val = parseFloat(numberInput.value); if (!isNaN(val)) { sliderInput.value = val; sliderValSpan.textContent = val.toFixed(precision); } });
+                numberInput.addEventListener('input', () => { const val = parseFloat(numberInput.value); if (!isNaN(val)) { sliderInput.value = val; } });
                 numberInput.addEventListener('change', updateSliderBounds);
-                sliderInput.addEventListener('input', (e) => { const val = parseFloat(e.target.value); numberInput.value = val.toFixed(precision); sliderValSpan.textContent = val.toFixed(precision); update(); });
+                sliderInput.addEventListener('input', (e) => { const val = parseFloat(e.target.value); numberInput.value = val.toFixed(precision); update(); });
                 sliderInput.addEventListener('change', updateSliderBounds);
                 updateSliderBounds(); sliderInput.value = numberInput.value;
             });
@@ -1351,8 +1383,29 @@ document.addEventListener('DOMContentLoaded', () => {
             config.params.forEach(p => {
                 const group = document.createElement('div');
                 group.className = 'param-group';
-                group.innerHTML = `<label for="os-param-${p.id}">${p.name}</label><input type="number" id="os-param-${p.id}" data-param="${p.id}" value="${p.default}" ${p.min === undefined ? '' : `min="${p.min}"`} ${p.max === undefined ? '' : `max="${p.max}"`} step="${p.step}">`;
+                group.innerHTML = `<label for="os-param-${p.id}">${p.name}</label>
+                    <div class="slider-group">
+                        <input type="range" id="os-slider-${p.id}" value="${p.default}">
+                        <input type="number" id="os-param-${p.id}" data-param="${p.id}" value="${p.default}" ${p.min === undefined ? '' : `min="${p.min}"`} ${p.max === undefined ? '' : `max="${p.max}"`} step="${p.step}" style="width: 80px;">
+                    </div>`;
                 paramInputs.appendChild(group);
+
+                const numberInput = document.getElementById(`os-param-${p.id}`);
+                const sliderInput = document.getElementById(`os-slider-${p.id}`);
+                const precision = (() => { if (!p.step || String(p.step).indexOf('.') === -1) return 0; return String(p.step).split('.')[1].length; })();
+
+                const updateSliderBounds = () => {
+                    const value = parseFloat(numberInput.value); if (isNaN(value) || !numberInput.checkValidity()) return;
+                    let sliderMin, sliderMax;
+                    if (value === 0) { sliderMin = -1; sliderMax = 1; } else { const logVal = Math.log10(Math.abs(value)); sliderMin = (value > 0 ? 1 : -1) * 10**(logVal - 1); sliderMax = (value > 0 ? 1 : -1) * 10**(logVal + 1); if (value < 0) [sliderMin, sliderMax] = [sliderMax, sliderMin]; }
+                    const finalMin = Math.max(p.min ?? -Infinity, sliderMin); const finalMax = Math.min(p.max ?? Infinity, sliderMax);
+                    sliderInput.min = finalMin; sliderInput.max = finalMax;
+                    if (p.step % 1 === 0) { sliderInput.step = 1; sliderInput.min = Math.ceil(finalMin); sliderInput.max = Math.floor(finalMax); } else { sliderInput.step = (finalMax - finalMin) / 200; }
+                };
+                numberInput.addEventListener('input', () => { const val = parseFloat(numberInput.value); if (!isNaN(val)) { sliderInput.value = val; } });
+                numberInput.addEventListener('change', updateSliderBounds);
+                sliderInput.addEventListener('input', (e) => { const val = parseFloat(e.target.value); numberInput.value = val.toFixed(precision); update(); });
+                updateSliderBounds(); sliderInput.value = numberInput.value;
             });
             update();
         }
@@ -1522,16 +1575,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 distSelect.addEventListener('change', handleDistChange);
                 intervalSelect.addEventListener('change', update);
                 paramInputs.addEventListener('input', update);
+                const nSlider = document.getElementById('os-n-slider');
+                const kSlider = document.getElementById('os-k-slider');
+
+                const updateNSliderBounds = () => {
+                    const value = parseFloat(nInput.value); if (isNaN(value) || !nInput.checkValidity()) return;
+                    const logVal = Math.max(1, Math.log10(Math.abs(value)));
+                    nSlider.min = 1;
+                    nSlider.max = Math.ceil(10**(logVal + 1));
+                };
+
                 nInput.addEventListener('input', () => {
-                    const old_n = currentState.n;
-                    const old_k = currentState.k;
-                    const new_n = parseInt(nInput.value);
-                    if (old_k === old_n && new_n > old_n) {
-                        kInput.value = new_n;
+                    const old_n = currentState.n; const old_k = currentState.k; const new_n = parseInt(nInput.value);
+                    if (old_k === old_n && new_n > old_n) { kInput.value = new_n; kSlider.value = new_n; }
+                    if (!isNaN(new_n)) {
+                        nSlider.value = new_n;
+                        kSlider.max = new_n;
                     }
                     update();
                 });
-                kInput.addEventListener('input', update);
+                nInput.addEventListener('change', updateNSliderBounds);
+
+                kInput.addEventListener('input', () => { if (!isNaN(parseInt(kInput.value))) kSlider.value = kInput.value; update(); });
+
+                nSlider.addEventListener('input', () => { nInput.value = nSlider.value; nInput.dispatchEvent(new Event('input')); });
+                kSlider.addEventListener('input', () => { kInput.value = kSlider.value; kInput.dispatchEvent(new Event('input')); });
+                
+                updateNSliderBounds();
+                kSlider.max = nInput.value;
+                nSlider.value = nInput.value;
+                kSlider.value = kInput.value;
                 window.addEventListener('resize', () => { if (currentState.jstat) updatePlot(); });
                 const resizeObserver = new ResizeObserver(() => {
                     if (currentState.jstat) setTimeout(updatePlot, 0);
@@ -1703,8 +1776,30 @@ document.addEventListener('DOMContentLoaded', () => {
             config.params.forEach(p => {
                 const group = document.createElement('div');
                 group.className = 'param-group';
-                group.innerHTML = `<label for="gc-param-${p.id}-${varName}">${p.name}</label><input type="number" id="gc-param-${p.id}-${varName}" value="${p.default}" ${p.min === undefined ? '' : `min="${p.min}"`} ${p.max === undefined ? '' : `max="${p.max}"`} step="${p.step}">`;
+                group.innerHTML = `<label for="gc-param-${p.id}-${varName}">${p.name}</label>
+                    <div class="slider-group">
+                        <input type="range" id="gc-slider-${p.id}-${varName}" value="${p.default}">
+                        <input type="number" id="gc-param-${p.id}-${varName}" value="${p.default}" ${p.min === undefined ? '' : `min="${p.min}"`} ${p.max === undefined ? '' : `max="${p.max}"`} step="${p.step}" style="width: 80px;">
+                    </div>`;
                 paramInputs.appendChild(group);
+                
+                const numberInput = document.getElementById(`gc-param-${p.id}-${varName}`);
+                const sliderInput = document.getElementById(`gc-slider-${p.id}-${varName}`);
+                const precision = (() => { if (!p.step || String(p.step).indexOf('.') === -1) return 0; return String(p.step).split('.')[1].length; })();
+
+                const updateSliderBounds = () => {
+                    const value = parseFloat(numberInput.value); if (isNaN(value) || !numberInput.checkValidity()) return;
+                    let sliderMin, sliderMax;
+                    if (value === 0) { sliderMin = -1; sliderMax = 1; } else { const logVal = Math.log10(Math.abs(value)); sliderMin = (value > 0 ? 1 : -1) * 10**(logVal - 1); sliderMax = (value > 0 ? 1 : -1) * 10**(logVal + 1); if (value < 0) [sliderMin, sliderMax] = [sliderMax, sliderMin]; }
+                    const finalMin = Math.max(p.min ?? -Infinity, sliderMin); const finalMax = Math.min(p.max ?? Infinity, sliderMax);
+                    sliderInput.min = finalMin; sliderInput.max = finalMax;
+                    if (p.step % 1 === 0) { sliderInput.step = 1; sliderInput.min = Math.ceil(finalMin); sliderInput.max = Math.floor(finalMax); } else { sliderInput.step = (finalMax - finalMin) / 200; }
+                };
+
+                numberInput.addEventListener('input', () => { const val = parseFloat(numberInput.value); if (!isNaN(val)) { sliderInput.value = val; } });
+                numberInput.addEventListener('change', updateSliderBounds);
+                sliderInput.addEventListener('input', (e) => { const val = parseFloat(e.target.value); numberInput.value = val.toFixed(precision); update(); });
+                updateSliderBounds(); sliderInput.value = numberInput.value;
             });
             update({ distChangedFor: varName });
         }
@@ -1737,7 +1832,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             currentState.rho = parseFloat(document.getElementById('gc-rho-input').value);
-            document.getElementById('gc-rho-value').textContent = currentState.rho.toFixed(2);
             if (!allValid) return;
 
             currentState.jstatX = CONTINUOUS_DISTRIBUTIONS[currentState.distKeyX].jStat(currentState.paramsX);
@@ -2226,11 +2320,38 @@ document.addEventListener('DOMContentLoaded', () => {
         const margin = { top: 20, right: 20, bottom: 40, left: 50 };
 
         function init() {
-            document.getElementById('wp-x0').addEventListener('input', update);
-            document.getElementById('wp-drift').addEventListener('input', update);
-            document.getElementById('wp-volatility').addEventListener('input', update);
-            document.getElementById('wp-terminal-time').addEventListener('input', update);
-            document.getElementById('wp-barrier').addEventListener('input', update);
+            const params = [
+                { id: 'x0', step: 0.1 },
+                { id: 'drift', step: 0.1 },
+                { id: 'volatility', step: 0.01, min: 0.01 },
+                { id: 'terminal-time', step: 0.1, min: 0.01 },
+                { id: 'barrier', step: 0.01 }
+            ];
+
+            params.forEach(p => {
+                const numberInput = document.getElementById(`wp-${p.id}`);
+                const sliderInput = document.getElementById(`wp-${p.id}-slider`);
+                const precision = (() => { if (!p.step || String(p.step).indexOf('.') === -1) return 0; return String(p.step).split('.')[1].length; })();
+                
+                const updateSliderBounds = () => {
+                    const value = parseFloat(numberInput.value); if (isNaN(value) || !numberInput.checkValidity()) return;
+                    let sliderMin, sliderMax;
+                    if (value === 0) { sliderMin = -1; sliderMax = 1; } else { const logVal = Math.log10(Math.abs(value)); sliderMin = (value > 0 ? 1 : -1) * 10**(logVal - 1); sliderMax = (value > 0 ? 1 : -1) * 10**(logVal + 1); if (value < 0) [sliderMin, sliderMax] = [sliderMax, sliderMin]; }
+                    const finalMin = Math.max(p.min ?? -Infinity, sliderMin);
+                    const finalMax = Math.min(p.max ?? Infinity, sliderMax);
+                    sliderInput.min = finalMin; sliderInput.max = finalMax;
+                    if (p.step % 1 === 0) { sliderInput.step = 1; sliderInput.min = Math.ceil(finalMin); sliderInput.max = Math.floor(finalMax); } else { sliderInput.step = (finalMax - finalMin) / 200; }
+                };
+                
+                numberInput.addEventListener('input', () => {
+                    const val = parseFloat(numberInput.value); if (!isNaN(val)) { sliderInput.value = val; }
+                    update();
+                });
+                numberInput.addEventListener('change', updateSliderBounds);
+                sliderInput.addEventListener('input', (e) => { const val = parseFloat(e.target.value); numberInput.value = val.toFixed(precision); update(); });
+                updateSliderBounds(); sliderInput.value = numberInput.value;
+            });
+
             document.getElementById('wp-cone-select').addEventListener('change', update);
 
             document.getElementById('wp-clear-paths-btn').addEventListener('click', () => {
