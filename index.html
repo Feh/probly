@@ -29,11 +29,9 @@
 
     <style>
         /* General and Layout Styles */
-        html {
-            font-size: 16px;
-        }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 16px;
             line-height: 1.6;
             background-color: #fdfdfd;
             color: #333;
@@ -295,7 +293,7 @@
         }
 
         @media (max-width: 1000px) {
-            html { font-size: 12px; }
+            body { font-size: 12px; }
             #distributions-app { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: "controls" "stats" "sampling" "plot"; }
             #distributions-app #stats-grid { grid-template-columns: 1fr; }
             #order-statistics-app { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: "controls" "stats" "plot"; }
