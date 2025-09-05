@@ -103,22 +103,49 @@
         #bernoulli-app .variable-names-container { margin-top: 1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         #bernoulli-app .variable-names-container input { padding: 5px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9em; }
 
-        /* Scoped styles for Distributions App */
-        #distributions-app {
+        /* Shared App Styles */
+        #distributions-app, #order-statistics-app, #gaussian-copula-app, #wiener-process-app {
             --panel-bg: #f9f9f9; --border-color: #ccc; --accent-color: steelblue;
             grid-template-columns: 320px 1fr;
-            grid-template-rows: auto auto 1fr;
-            grid-template-areas: "controls plot" "stats plot" "sampling plot";
             gap: 20px; padding: 20px; max-width: 1400px; margin: auto;
         }
-        #distributions-app .panel { padding: 15px; border: 1px solid var(--border-color); border-radius: 5px; background-color: var(--panel-bg); }
+        .panel { padding: 15px; border: 1px solid var(--border-color); border-radius: 5px; background-color: var(--panel-bg); }
+
+        #distributions-app h3, #order-statistics-app h3, #gaussian-copula-app h3, #wiener-process-app h3, #wiener-process-app h4 {
+            margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 5px;
+        }
+        #gaussian-copula-app h4 { margin-top: 0; } /* Has no border */
+
+        #distributions-app .param-group, #distributions-app .control-group,
+        #order-statistics-app .param-group, #order-statistics-app .control-group,
+        #gaussian-copula-app .param-group, #gaussian-copula-app .control-group,
+        #wiener-process-app .control-group {
+            margin-bottom: 15px;
+        }
+        #distributions-app label, #order-statistics-app label, #gaussian-copula-app label, #wiener-process-app label {
+            display: block; font-weight: bold; margin-bottom: 5px;
+        }
+
+        .plot-svg-wrapper { position: relative; resize: both; overflow: auto; display: flex; min-height: 300px; }
+        .axis path, .axis line { fill: none; stroke: #000; shape-rendering: crispEdges; }
+        .line-path { fill: none; stroke-width: 2px; }
+        .area-path, .cone-area { opacity: 0.3; }
+        .drag-selection { fill: rgba(255, 165, 0, 0.4); stroke: rgba(255, 165, 0, 1); stroke-width: 1px; }
+        .drag-text { font-size: 12px; font-weight: bold; fill: #d9534f; text-anchor: middle; }
+
+        details.panel { grid-column: 1 / -1; }
+        details > summary { font-weight: bold; cursor: pointer; }
+        details .formulas { padding-top: 1rem; }
+
+        /* Scoped styles for Distributions App */
+        #distributions-app {
+            grid-template-rows: auto auto 1fr;
+            grid-template-areas: "controls plot" "stats plot" "sampling plot";
+        }
         #distributions-app #controls-panel { grid-area: controls; }
         #distributions-app #stats-panel { grid-area: stats; }
         #distributions-app #sampling-panel { grid-area: sampling; }
         #distributions-app #plot-container { grid-area: plot; padding: 0; display: flex; flex-direction: column; position: relative; }
-        #distributions-app h3 { margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
-        #distributions-app .param-group, #distributions-app .control-group { margin-bottom: 15px; }
-        #distributions-app label { display: block; font-weight: bold; margin-bottom: 5px; }
         #distributions-app input, #distributions-app select, #distributions-app button { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 3px; }
         #distributions-app button { background-color: #007bff; color: white; border: none; cursor: pointer; }
         #distributions-app button:hover { background-color: #0056b3; }
@@ -126,19 +153,16 @@
         #distributions-app #stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 0.9em; }
         #distributions-app #stats-grid span { font-weight: bold; color: #333; }
         #distributions-app #formula-display { margin-top: 20px; padding: 10px; background: #eee; border-radius: 3px; text-align: center; min-height: 50px; display: flex; align-items: center; justify-content: center; overflow-x: auto;}
-        #distributions-app .plot-svg-wrapper { position: relative; resize: both; overflow: auto; display: flex; min-height: 300px; height: 50%; }
+        #distributions-app .plot-svg-wrapper { height: 50%; }
         #distributions-app #plot-svg { user-select: none; width: 100%; height: 100%; }
-        #distributions-app .axis path, #distributions-app .axis line { fill: none; stroke: #000; shape-rendering: crispEdges; }
-        #distributions-app .line-path { fill: none; stroke: var(--accent-color); stroke-width: 2px; }
-        #distributions-app .area-path { fill: var(--accent-color); opacity: 0.3; }
+        #distributions-app .line-path { stroke: var(--accent-color); }
+        #distributions-app .area-path { fill: var(--accent-color); }
         #distributions-app .bar { fill: var(--accent-color); }
         #distributions-app #tooltip { position: absolute; background-color: rgba(0, 0, 0, 0.75); color: white; padding: 5px 10px; border-radius: 3px; pointer-events: none; opacity: 0; font-size: 0.9em; z-index: 10; transform: translate(-9em, -25px); }
         #distributions-app .sample-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
         #distributions-app #sample-clear-btn { grid-column: 1 / -1; background-color: #6c757d; }
         #distributions-app #sample-clear-btn:hover { background-color: #5a6268; }
         #distributions-app #samples-output { background: #e9ecef; padding: 10px; border-radius: 3px; height: 150px; overflow-y: auto; font-family: monospace; white-space: pre-wrap; word-break: break-all; }
-        #distributions-app .drag-selection { fill: rgba(255, 165, 0, 0.4); stroke: rgba(255, 165, 0, 1); stroke-width: 1px; }
-        #distributions-app .drag-text { font-size: 12px; font-weight: bold; fill: #d9534f; text-anchor: middle; }
         #distributions-app #shading-controls { display: flex; gap: 10px; justify-content: flex-end; padding: 0 20px; }
         .quick-controls-container { display: flex; gap: 10px; align-items: center; padding: 10px 20px; }
         .quick-controls-container button { padding: 2px 8px; font-size: 0.9em; cursor: pointer; }
@@ -147,45 +171,28 @@
 
         /* Scoped styles for Order Statistics App */
         #order-statistics-app {
-            --panel-bg: #f9f9f9; --border-color: #ccc; --accent-color: steelblue;
-            grid-template-columns: 320px 1fr;
             grid-template-rows: auto 1fr;
             grid-template-areas: "controls plot" "stats plot";
-            gap: 20px; padding: 20px; max-width: 1400px; margin: auto;
         }
-        #order-statistics-app .panel { padding: 15px; border: 1px solid var(--border-color); border-radius: 5px; background-color: var(--panel-bg); }
         #order-statistics-app #os-controls-panel { grid-area: controls; }
         #order-statistics-app #os-stats-panel { grid-area: stats; }
         #order-statistics-app #os-plot-container { grid-area: plot; padding: 0; display: flex; flex-direction: column; position: relative; }
-        #order-statistics-app h3 { margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
-        #order-statistics-app .param-group, #order-statistics-app .control-group { margin-bottom: 15px; }
-        #order-statistics-app label { display: block; font-weight: bold; margin-bottom: 5px; }
         #order-statistics-app input, #order-statistics-app select { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 3px; }
         #order-statistics-app button { background-color: #007bff; color: white; border: none; cursor: pointer; border-radius: 3px; padding: 10px 15px; }
         #order-statistics-app button:hover { background-color: #0056b3; }
         #order-statistics-app #os-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 0.9em; }
         #order-statistics-app #os-stats-grid span { font-weight: bold; color: #333; }
-        #order-statistics-app .plot-svg-wrapper { position: relative; resize: both; overflow: auto; display: flex; min-height: 300px; height: 70%; }
+        #order-statistics-app .plot-svg-wrapper { height: 70%; }
         #order-statistics-app #os-plot-svg { user-select: none; width: 100%; height: 100%; }
-        #order-statistics-app .axis path, #order-statistics-app .axis line { fill: none; stroke: #000; shape-rendering: crispEdges; }
-        #order-statistics-app .line-path { fill: none; stroke: var(--accent-color); stroke-width: 2px; }
-        #order-statistics-app .area-path { fill: var(--accent-color); opacity: 0.3; }
+        #order-statistics-app .line-path { stroke: var(--accent-color); }
+        #order-statistics-app .area-path { fill: var(--accent-color); }
         #order-statistics-app #os-tooltip { position: absolute; background-color: rgba(0, 0, 0, 0.75); color: white; padding: 5px 10px; border-radius: 3px; pointer-events: none; opacity: 0; font-size: 0.9em; z-index: 10; transform: translate(-9em, -25px); }
-        #order-statistics-app .drag-selection { fill: rgba(255, 165, 0, 0.4); stroke: rgba(255, 165, 0, 1); stroke-width: 1px; }
-        #order-statistics-app .drag-text { font-size: 12px; font-weight: bold; fill: #d9534f; text-anchor: middle; }
-        #order-statistics-app details.panel { grid-column: 1 / -1; }
-        #order-statistics-app details > summary { font-weight: bold; cursor: pointer; }
-        #order-statistics-app details .formulas { padding-top: 1rem; }
 
         /* Scoped styles for Gaussian Copula App */
         #gaussian-copula-app {
-            --panel-bg: #f9f9f9; --border-color: #ccc; --accent-color: steelblue;
-            grid-template-columns: 320px 1fr;
             grid-template-rows: auto;
             grid-template-areas: "controls plots";
-            gap: 20px; padding: 20px; max-width: 1400px; margin: auto;
         }
-        #gaussian-copula-app .panel { padding: 15px; border: 1px solid var(--border-color); border-radius: 5px; background-color: var(--panel-bg); }
         #gaussian-copula-app #gc-controls-panel { grid-area: controls; }
         #gaussian-copula-app #gc-formulas-panel { grid-column: 1 / -1; }
         #gaussian-copula-app #gc-plots-panel { grid-area: plots; display: flex; flex-direction: column; gap: 20px; padding: 0; border: none; background: transparent; }
@@ -197,10 +204,6 @@
         #gaussian-copula-app #gc-marginal-y-svg { grid-area: marg-y; }
         #gaussian-copula-app #gc-joint-plot-grid svg { width: 100%; height: 100%; }
         #gaussian-copula-app .histogram-bar { fill: steelblue; opacity: 0.5; }
-        #gaussian-copula-app h3 { margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
-        #gaussian-copula-app h4 { margin-top: 0; }
-        #gaussian-copula-app .param-group, #gaussian-copula-app .control-group { margin-bottom: 15px; }
-        #gaussian-copula-app label { display: block; font-weight: bold; margin-bottom: 5px; }
         #gaussian-copula-app input, #gaussian-copula-app select, #gaussian-copula-app button:not(.move-btn) { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 3px; }
         #gaussian-copula-app button:not(.move-btn) { background-color: #007bff; color: white; border: none; cursor: pointer; }
         #gaussian-copula-app button:not(.move-btn):hover { background-color: #0056b3; }
@@ -209,32 +212,23 @@
         #gaussian-copula-app .quick-controls-container button { width: auto; }
         #gaussian-copula-app #gc-sample-clear-btn { background-color: #6c757d; }
         #gaussian-copula-app #gc-sample-clear-btn:hover { background-color: #5a6268; }
-        #gaussian-copula-app .plot-svg-wrapper { position: relative; resize: both; overflow: auto; flex-grow: 1; display: flex; min-height: 300px; }
+        #gaussian-copula-app .plot-svg-wrapper { flex-grow: 1; }
         #gaussian-copula-app #gc-scatter-plot-svg { flex-grow: 1; user-select: none; }
         #gaussian-copula-app #gc-density-plot-svg { user-select: none; width: 100%; height: 100%; }
-        #gaussian-copula-app .axis path, #gaussian-copula-app .axis line { fill: none; stroke: #000; shape-rendering: crispEdges; }
         #gaussian-copula-app .scatter-dot { fill: lightblue; stroke: steelblue; opacity: 0.6; }
-        #gaussian-copula-app .line-path { fill: none; stroke: #d9534f; stroke-width: 2px; }
-        #gaussian-copula-app .area-path { fill: steelblue; opacity: 0.3; }
+        #gaussian-copula-app .line-path { stroke: #d9534f; }
+        #gaussian-copula-app .area-path { fill: steelblue; }
         #gaussian-copula-app #gc-density-tooltip { position: absolute; background-color: rgba(0, 0, 0, 0.75); color: white; padding: 5px 10px; border-radius: 3px; pointer-events: none; opacity: 0; font-size: 0.9em; z-index: 10; transform: translate(-9em, -25px); }
-        #gaussian-copula-app .drag-selection { fill: rgba(255, 165, 0, 0.4); stroke: rgba(255, 165, 0, 1); stroke-width: 1px; }
-        #gaussian-copula-app .drag-text { font-size: 12px; font-weight: bold; fill: #d9534f; text-anchor: middle; }
         #gaussian-copula-app .gc-conditional-controls-row { display: flex; flex-wrap: wrap; gap: 15px; align-items: center; justify-content: center; padding: 10px 0; }
         #gaussian-copula-app .gc-conditional-controls-row .control-group { flex: 1 1 150px; margin: 10px; }
 
         /* Scoped styles for Wiener Process App */
         #wiener-process-app {
-            --panel-bg: #f9f9f9; --border-color: #ccc; --accent-color: steelblue;
-            grid-template-columns: 320px 1fr;
             grid-template-areas: "params plots";
-            gap: 20px; padding: 20px; max-width: 1400px; margin: auto;
         }
         #wp-params-panel { grid-area: params; }
         #wp-plots-wrapper { grid-area: plots; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
-        #wiener-process-app .panel { position: relative; padding: 15px; border: 1px solid var(--border-color); border-radius: 5px; background-color: var(--panel-bg); display: flex; flex-direction: column; }
-        #wiener-process-app h3, #wiener-process-app h4 { margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
-        #wiener-process-app .control-group { margin-bottom: 15px; }
-        #wiener-process-app label { font-weight: bold; margin-bottom: 5px; }
+        #wiener-process-app .panel { position: relative; display: flex; flex-direction: column; }
         #wiener-process-app input, #wiener-process-app select, #wiener-process-app button:not(.move-btn) { width: 8em; padding: 8px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 3px; }
         #wiener-process-app .control-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
         #wiener-process-app .button-flex { justify-content: center; display: flex; gap: 20px; margin-top: 10px; }
@@ -245,15 +239,11 @@
         #wiener-process-app .wp-plot-container { min-height: 300px; position: relative; flex-grow: 1; resize: both; overflow: auto; display: flex; }
         #wiener-process-app #wp-paths-plot-grid { display: grid; grid-template-columns: 1fr 100px; grid-template-rows: 1fr; gap: 5px; }
         #wiener-process-app svg { width: 100%; height: 100%; }
-        #wiener-process-app .axis path, #wiener-process-app .axis line { fill: none; stroke: #000; shape-rendering: crispEdges; }
-        #wiener-process-app .line-path { fill: none; stroke-width: 1.5px; }
-        #wiener-process-app .cone-area { fill: var(--accent-color); opacity: 0.3; }
+        #wiener-process-app .line-path { stroke-width: 1.5px; }
+        #wiener-process-app .cone-area { fill: var(--accent-color); }
         #wiener-process-app .sample-path { fill: none; stroke: #555; stroke-width: 1px; opacity: 0.6; }
         #wiener-process-app .wp-tooltip { position: absolute; background-color: rgba(0, 0, 0, 0.75); color: white; padding: 5px 10px; border-radius: 3px; pointer-events: none; opacity: 0; font-size: 0.9em; z-index: 10; transform: translate(-9em, -25px); }
         #wiener-process-app .histogram-bar { fill: steelblue; opacity: 0.5; }
-        #wiener-process-app details.panel { grid-column: 1 / -1; }
-        #wiener-process-app details > summary { font-weight: bold; cursor: pointer; }
-        #wiener-process-app details .formulas { padding-top: 1rem; }
 
         .move-controls { position: absolute; top: 5px; right: 5px; z-index: 5; display: flex; flex-direction: column; }
         .move-btn { background: none; border: none; cursor: pointer; font-size: 0.8rem; padding: 0; line-height: 1; color: #888; }
