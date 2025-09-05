@@ -77,7 +77,7 @@
         .slider-group input[type="range"] { flex-grow: 1; margin: 0; }
 
         /* Scoped styles for Correlated Bernoulli App */
-        #bernoulli-app { max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+        #bernoulli-app { max-width: 800px; }
         #bernoulli-app h2, #bernoulli-app h3 { border-bottom: 1px solid #ddd; padding-bottom: 8px; }
         #bernoulli-app table { border-collapse: collapse; width: 100%; margin-bottom: 1.5rem; text-align: center; }
         #bernoulli-app th, #bernoulli-app td { border: 1px solid #ccc; padding: 0; }
@@ -325,90 +325,92 @@
     </nav>
     <main>
         <div id="bernoulli-app" class="app-container">
-            <h2>Correlated Bernoulli Variables Calculator</h2>
-            <p>Enter exactly three values to compute the rest. User-entered values are <strong>black</strong>, calculated values are <span style="color:#888">grey</span>. Invalid states are shown in <span style="color:#d9534f">red</span>.</p>
+            <div class="panel">
+                <h2>Correlated Bernoulli Variables Calculator</h2>
+                <p>Enter exactly three values to compute the rest. User-entered values are <strong>black</strong>, calculated values are <span style="color:#888">grey</span>. Invalid states are shown in <span style="color:#d9534f">red</span>.</p>
 
-            <p><button id="reset-button">Reset</button></p>
+                <p><button id="reset-button">Reset</button></p>
 
-            <div class="variable-names-container">
-                <label for="x-name">Name for variable X:</label><input type="text" id="x-name" value="X">
-                <label for="y-name">Name for variable Y:</label><input type="text" id="y-name" value="Y">
+                <div class="variable-names-container">
+                    <label for="x-name">Name for variable X:</label><input type="text" id="x-name" value="X">
+                    <label for="y-name">Name for variable Y:</label><input type="text" id="y-name" value="Y">
+                </div>
+
+                <h3 class="katex-dynamic" data-katex-template="Joint & Marginal Probabilities: \( \mathbb{P}(\X=i, \Y=j) \)"></h3>
+                <table>
+                    <tr>
+                        <th style="border:none; background:transparent;"></th>
+                        <th class="katex-dynamic" data-katex-template="\( \Y = 0 \)"></th>
+                        <th class="katex-dynamic" data-katex-template="\( \Y = 1 \)"></th>
+                        <th class="katex-dynamic" data-katex-template="Marginal (\( \X \))"></th>
+                    </tr>
+                    <tr>
+                        <td class="label katex-dynamic" data-katex-template="\( \X = 0 \)"></td>
+                        <td><input type="number" id="p00" step="0.01" min="0" max="1"></td>
+                        <td><input type="number" id="p01" step="0.01" min="0" max="1"></td>
+                        <td><input type="number" id="pX0" step="0.01" min="0" max="1"></td>
+                    </tr>
+                    <tr>
+                        <td class="label katex-dynamic" data-katex-template="\( \X = 1 \)"></td>
+                        <td><input type="number" id="p10" step="0.01" min="0" max="1"></td>
+                        <td><input type="number" id="p11" step="0.01" min="0" max="1"></td>
+                        <td><input type="number" id="pX" step="0.01" min="0" max="1"></td>
+                    </tr>
+                    <tr>
+                        <td class="katex-dynamic" data-katex-template="Marginal (\( \Y \))"></td>
+                        <td><input type="number" id="pY0" step="0.01" min="0" max="1"></td>
+                        <td><input type="number" id="pY" step="0.01" min="0" max="1"></td>
+                        <td style="background:#eee;">1</td>
+                    </tr>
+                </table>
+
+                <h3>Conditional Probabilities</h3>
+                <table>
+                    <caption class="katex-dynamic" data-katex-template="Conditional Probabilities \( \mathbb{P}(\Y=j \mid \X=i) \)"></caption>
+                    <tr>
+                        <th style="border:none; background:transparent;"></th>
+                        <th class="katex-dynamic" data-katex-template="\( \Y = 0 \)"></th>
+                        <th class="katex-dynamic" data-katex-template="\( \Y = 1 \)"></th>
+                    </tr>
+                    <tr>
+                        <td class="label katex-dynamic" data-katex-template="Given \( \X = 0 \)"></td>
+                        <td><input type="number" id="pY0_X0" step="0.01" min="0" max="1"></td>
+                        <td><input type="number" id="pY1_X0" step="0.01" min="0" max="1"></td>
+                    </tr>
+                    <tr>
+                        <td class="label katex-dynamic" data-katex-template="Given \( \X = 1 \)"></td>
+                        <td><input type="number" id="pY0_X1" step="0.01" min="0" max="1"></td>
+                        <td><input type="number" id="pY1_X1" step="0.01" min="0" max="1"></td>
+                    </tr>
+                </table>
+                <table>
+                    <caption class="katex-dynamic" data-katex-template="Conditional Probabilities \( \mathbb{P}(\X=i \mid \Y=j) \)"></caption>
+                    <tr>
+                        <th style="border:none; background:transparent;"></th>
+                        <th class="katex-dynamic" data-katex-template="\( \X = 0 \)"></th>
+                        <th class="katex-dynamic" data-katex-template="\( \X = 1 \)"></th>
+                    </tr>
+                    <tr>
+                        <td class="label katex-dynamic" data-katex-template="Given \( \Y = 0 \)"></td>
+                        <td><input type="number" id="pX0_Y0" step="0.01" min="0" max="1"></td>
+                        <td><input type="number" id="pX1_Y0" step="0.01" min="0" max="1"></td>
+                    </tr>
+                    <tr>
+                        <td class="label katex-dynamic" data-katex-template="Given \( \Y = 1 \)"></td>
+                        <td><input type="number" id="pX0_Y1" step="0.01" min="0" max="1"></td>
+                        <td><input type="number" id="pX1_Y1" step="0.01" min="0" max="1"></td>
+                    </tr>
+                </table>
+
+                <h3>Correlation</h3>
+                <div class="correlation-container">
+                    <label for="rho">Correlation Coefficient (\( ρ \))</label>
+                    <input type="number" id="rho" step="0.01" min="-1" max="1" style='border:1px solid #ccc;'>
+                </div>
+
+                <h3>Visualizations</h3>
+                <div id="plots-container"></div>
             </div>
-
-            <h3 class="katex-dynamic" data-katex-template="Joint & Marginal Probabilities: \( \mathbb{P}(\X=i, \Y=j) \)"></h3>
-            <table>
-                <tr>
-                    <th style="border:none; background:transparent;"></th>
-                    <th class="katex-dynamic" data-katex-template="\( \Y = 0 \)"></th>
-                    <th class="katex-dynamic" data-katex-template="\( \Y = 1 \)"></th>
-                    <th class="katex-dynamic" data-katex-template="Marginal (\( \X \))"></th>
-                </tr>
-                <tr>
-                    <td class="label katex-dynamic" data-katex-template="\( \X = 0 \)"></td>
-                    <td><input type="number" id="p00" step="0.01" min="0" max="1"></td>
-                    <td><input type="number" id="p01" step="0.01" min="0" max="1"></td>
-                    <td><input type="number" id="pX0" step="0.01" min="0" max="1"></td>
-                </tr>
-                <tr>
-                    <td class="label katex-dynamic" data-katex-template="\( \X = 1 \)"></td>
-                    <td><input type="number" id="p10" step="0.01" min="0" max="1"></td>
-                    <td><input type="number" id="p11" step="0.01" min="0" max="1"></td>
-                    <td><input type="number" id="pX" step="0.01" min="0" max="1"></td>
-                </tr>
-                <tr>
-                    <td class="katex-dynamic" data-katex-template="Marginal (\( \Y \))"></td>
-                    <td><input type="number" id="pY0" step="0.01" min="0" max="1"></td>
-                    <td><input type="number" id="pY" step="0.01" min="0" max="1"></td>
-                    <td style="background:#eee;">1</td>
-                </tr>
-            </table>
-
-            <h3>Conditional Probabilities</h3>
-            <table>
-                <caption class="katex-dynamic" data-katex-template="Conditional Probabilities \( \mathbb{P}(\Y=j \mid \X=i) \)"></caption>
-                <tr>
-                    <th style="border:none; background:transparent;"></th>
-                    <th class="katex-dynamic" data-katex-template="\( \Y = 0 \)"></th>
-                    <th class="katex-dynamic" data-katex-template="\( \Y = 1 \)"></th>
-                </tr>
-                <tr>
-                    <td class="label katex-dynamic" data-katex-template="Given \( \X = 0 \)"></td>
-                    <td><input type="number" id="pY0_X0" step="0.01" min="0" max="1"></td>
-                    <td><input type="number" id="pY1_X0" step="0.01" min="0" max="1"></td>
-                </tr>
-                <tr>
-                    <td class="label katex-dynamic" data-katex-template="Given \( \X = 1 \)"></td>
-                    <td><input type="number" id="pY0_X1" step="0.01" min="0" max="1"></td>
-                    <td><input type="number" id="pY1_X1" step="0.01" min="0" max="1"></td>
-                </tr>
-            </table>
-            <table>
-                <caption class="katex-dynamic" data-katex-template="Conditional Probabilities \( \mathbb{P}(\X=i \mid \Y=j) \)"></caption>
-                <tr>
-                    <th style="border:none; background:transparent;"></th>
-                    <th class="katex-dynamic" data-katex-template="\( \X = 0 \)"></th>
-                    <th class="katex-dynamic" data-katex-template="\( \X = 1 \)"></th>
-                </tr>
-                <tr>
-                    <td class="label katex-dynamic" data-katex-template="Given \( \Y = 0 \)"></td>
-                    <td><input type="number" id="pX0_Y0" step="0.01" min="0" max="1"></td>
-                    <td><input type="number" id="pX1_Y0" step="0.01" min="0" max="1"></td>
-                </tr>
-                <tr>
-                    <td class="label katex-dynamic" data-katex-template="Given \( \Y = 1 \)"></td>
-                    <td><input type="number" id="pX0_Y1" step="0.01" min="0" max="1"></td>
-                    <td><input type="number" id="pX1_Y1" step="0.01" min="0" max="1"></td>
-                </tr>
-            </table>
-
-            <h3>Correlation</h3>
-            <div class="correlation-container">
-                <label for="rho">Correlation Coefficient (\( ρ \))</label>
-                <input type="number" id="rho" step="0.01" min="-1" max="1" style='border:1px solid #ccc;'>
-            </div>
-
-            <h3>Visualizations</h3>
-            <div id="plots-container"></div>
 
             <details>
                 <summary>Formulas</summary>
