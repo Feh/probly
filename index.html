@@ -143,6 +143,7 @@
         .quick-controls-container { display: flex; gap: 10px; align-items: center; padding: 10px 20px; }
         .quick-controls-container button { padding: 2px 8px; font-size: 0.9em; cursor: pointer; }
         .quick-slider-container { flex-grow: 1; }
+        [id$="-quick-param-buttons"] { display: inline-flex; gap: 5px; flex-wrap: wrap; }
 
         /* Scoped styles for Order Statistics App */
         #order-statistics-app {
@@ -203,6 +204,7 @@
         #gaussian-copula-app button:not(.move-btn):hover { background-color: #0056b3; }
         #gaussian-copula-app .sample-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; margin-bottom: 10px; justify-content: center; }
         #gaussian-copula-app .sample-buttons button { width: auto; }
+        #gaussian-copula-app .quick-controls-container button { width: auto; }
         #gaussian-copula-app #gc-sample-clear-btn { background-color: #6c757d; }
         #gaussian-copula-app #gc-sample-clear-btn:hover { background-color: #5a6268; }
         #gaussian-copula-app .plot-svg-wrapper { position: relative; resize: both; overflow: auto; flex-grow: 1; display: flex; min-height: 300px; }
@@ -2871,11 +2873,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const params = [
-                { id: 'x0', name: 'Start Value X₀' },
-                { id: 'drift', name: 'Drift m' },
-                { id: 'volatility', name: 'Volatility σ' },
-                { id: 'terminal-time', name: 'Terminal Time T' },
-                { id: 'barrier', name: 'Barrier b' }
+                { id: 'x0', name: 'Start Value X₀', symbol: 'X₀' },
+                { id: 'drift', name: 'Drift m', symbol: 'm' },
+                { id: 'volatility', name: 'Volatility σ', symbol: 'σ' },
+                { id: 'terminal-time', name: 'Terminal Time T', symbol: 'T' },
+                { id: 'barrier', name: 'Barrier b', symbol: 'b' }
             ];
             const quickContainers = ['wp-paths', 'wp-ht', 'wp-hpbb'];
             quickContainers.forEach(prefix => {
@@ -2885,7 +2887,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 params.forEach(p => {
                     const btn = document.createElement('button');
                     btn.id = `${prefix}-quick-btn-${p.id}`;
-                    btn.innerHTML = p.name.split(' ')[0];
+                    btn.innerHTML = p.symbol;
                     btn.dataset.param = p.id;
                     btn.dataset.prefix = prefix;
                     quickParamButtons.appendChild(btn);
@@ -2904,7 +2906,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const input = document.getElementById(`wp-${p.id}`);
                         const step = parseFloat(input.getAttribute('step'));
                         const precision = (() => { if (!step || String(step).indexOf('.') === -1) return 0; return String(step).split('.')[1].length; })();
-                        btn.innerHTML = `${p.name.split(' ')[0]} = ${values[p.id].toFixed(precision)}`;
+                        btn.innerHTML = `${p.symbol} = ${values[p.id].toFixed(precision)}`;
                     }
                 });
             });
