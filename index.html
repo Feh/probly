@@ -140,6 +140,10 @@
         #distributions-app .drag-selection { fill: rgba(255, 165, 0, 0.4); stroke: rgba(255, 165, 0, 1); stroke-width: 1px; }
         #distributions-app .drag-text { font-size: 12px; font-weight: bold; fill: #d9534f; text-anchor: middle; }
         #distributions-app #shading-controls { display: flex; gap: 10px; justify-content: flex-end; padding: 0 20px; }
+        .quick-controls-container { display: flex; gap: 10px; align-items: center; padding: 10px 20px; }
+        .quick-controls-container button { padding: 2px 8px; font-size: 0.9em; cursor: pointer; }
+        .quick-slider-container { flex-grow: 1; }
+        [id$="quick-param-buttons"] { display: flex; gap: 5px; flex-grow: .2; flex-wrap: wrap; max-width: 50%; }
 
         /* Scoped styles for Order Statistics App */
         #order-statistics-app {
@@ -157,6 +161,8 @@
         #order-statistics-app .param-group, #order-statistics-app .control-group { margin-bottom: 15px; }
         #order-statistics-app label { display: block; font-weight: bold; margin-bottom: 5px; }
         #order-statistics-app input, #order-statistics-app select { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 3px; }
+        #order-statistics-app button { background-color: #007bff; color: white; border: none; cursor: pointer; border-radius: 3px; padding: 10px 15px; }
+        #order-statistics-app button:hover { background-color: #0056b3; }
         #order-statistics-app #os-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 0.9em; }
         #order-statistics-app #os-stats-grid span { font-weight: bold; color: #333; }
         #order-statistics-app .plot-svg-wrapper { position: relative; resize: both; overflow: auto; display: flex; min-height: 300px; height: 70%; }
@@ -200,6 +206,7 @@
         #gaussian-copula-app button:not(.move-btn):hover { background-color: #0056b3; }
         #gaussian-copula-app .sample-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; margin-bottom: 10px; justify-content: center; }
         #gaussian-copula-app .sample-buttons button { width: auto; }
+        #gaussian-copula-app .quick-controls-container button { width: auto; }
         #gaussian-copula-app #gc-sample-clear-btn { background-color: #6c757d; }
         #gaussian-copula-app #gc-sample-clear-btn:hover { background-color: #5a6268; }
         #gaussian-copula-app .plot-svg-wrapper { position: relative; resize: both; overflow: auto; flex-grow: 1; display: flex; min-height: 300px; }
@@ -498,6 +505,11 @@
                 <div class="plot-svg-wrapper">
                     <svg id="plot-svg"></svg>
                 </div>
+                <div id="quick-controls-container" class="quick-controls-container">
+                    <span>Adjust: </span>
+                    <span id="quick-param-buttons"></span>
+                    <span id="quick-slider-container" class="quick-slider-container"></span>
+                </div>
                 <div id="tooltip"></div>
             </div>
         </div>
@@ -559,6 +571,11 @@
                 </div>
                 <div class="plot-svg-wrapper">
                     <svg id="os-plot-svg"></svg>
+                </div>
+                <div id="os-quick-controls-container" class="quick-controls-container">
+                    <span>Adjust: </span>
+                    <span id="os-quick-param-buttons"></span>
+                    <span id="os-quick-slider-container" class="quick-slider-container"></span>
                 </div>
                 <div id="os-tooltip"></div>
             </div>
@@ -635,10 +652,6 @@
                             </select>
                         </div>
                     </div>
-                    <div class="plot-svg-wrapper">
-                        <svg id="gc-density-plot-svg"></svg>
-                    </div>
-                    <div id="gc-conditional-mean-display" style="text-align: center; padding: 5px;"></div>
                     <div class="gc-conditional-controls-row">
                         <div class="control-group">
                             <label for="gc-cond-var">Condition on variable:</label>
@@ -659,6 +672,15 @@
                             <label for="gc-cond-value">Value:</label>
                             <input type="number" id="gc-cond-value" value="0" step="0.1">
                         </div>
+                    </div>
+                    <div class="plot-svg-wrapper">
+                        <svg id="gc-density-plot-svg"></svg>
+                    </div>
+                    <div id="gc-conditional-mean-display" style="text-align: center; padding: 5px;"></div>
+                    <div id="gc-quick-controls-container" class="quick-controls-container">
+                        <span>Adjust: </span>
+                        <span id="gc-quick-param-buttons"></span>
+                        <span id="gc-quick-slider-container" class="quick-slider-container"></span>
                     </div>
                     <div id="gc-density-tooltip"></div>
                 </div>
@@ -725,15 +747,20 @@
                             <option value="p99">99%</option>
                         </select>
                     </div>
-                    <div class="wp-plot-container" id="wp-paths-plot-grid">
-                        <svg id="wp-paths-svg"></svg>
-                        <svg id="wp-marginal-svg"></svg>
-                    </div>
                     <div class="button-flex">
                         <button id="wp-clear-paths-btn">Clear</button>
                         <button id="wp-draw1-btn">Draw 1</button>
                         <button id="wp-draw10-btn">Draw 10</button>
                         <button id="wp-draw100-btn">Draw 100</button>
+                    </div>
+                    <div class="wp-plot-container" id="wp-paths-plot-grid">
+                        <svg id="wp-paths-svg"></svg>
+                        <svg id="wp-marginal-svg"></svg>
+                    </div>
+                    <div id="wp-paths-quick-controls-container" class="quick-controls-container">
+                        <span>Adjust: </span>
+                        <span id="wp-paths-quick-param-buttons"></span>
+                        <span id="wp-paths-quick-slider-container" class="quick-slider-container"></span>
                     </div>
                 </div>
                 <div id="wp-hitting-time-panel" class="panel">
@@ -756,6 +783,11 @@
                         <svg id="wp-ht-prob-svg"></svg>
                         <div id="wp-ht-prob-tooltip" class="wp-tooltip"></div>
                     </div>
+                    <div id="wp-ht-quick-controls-container" class="quick-controls-container">
+                        <span>Adjust: </span>
+                        <span id="wp-ht-quick-param-buttons"></span>
+                        <span id="wp-ht-quick-slider-container" class="quick-slider-container"></span>
+                    </div>
                 </div>
                 <div id="wp-hitting-prob-by-barrier-panel" class="panel">
                     <h3>Hitting Probability by Barrier distance</h3>
@@ -764,6 +796,11 @@
                     <div class="wp-plot-container">
                         <svg id="wp-hp-by-barrier-svg"></svg>
                         <div id="wp-hp-by-barrier-tooltip" class="wp-tooltip"></div>
+                    </div>
+                    <div id="wp-hpbb-quick-controls-container" class="quick-controls-container">
+                        <span>Adjust: </span>
+                        <span id="wp-hpbb-quick-param-buttons"></span>
+                        <span id="wp-hpbb-quick-slider-container" class="quick-slider-container"></span>
                     </div>
                 </div>
             </div>
@@ -1117,6 +1154,59 @@ document.addEventListener('DOMContentLoaded', () => {
         const plotArea = svg.append("g").attr("class", "plot-area");
         const dragLayer = svg.append("g").attr("class", "drag-layer");
 
+        function showQuickSlider(paramId) {
+            const quickSliderContainer = document.getElementById('quick-slider-container');
+            quickSliderContainer.innerHTML = '';
+
+            const config = DISTRIBUTIONS[currentState.distKey];
+            const p = config.params.find(param => param.id === paramId);
+            if (!p) return;
+
+            const mainNumberInput = document.getElementById(`param-${p.id}`);
+            const slider = document.createElement('input');
+            slider.type = 'range';
+            slider.style.width = '100%';
+
+            const precision = (() => { if (!p.step || String(p.step).indexOf('.') === -1) return 0; return String(p.step).split('.')[1].length; })();
+
+            const updateSliderBounds = () => {
+                const value = parseFloat(mainNumberInput.value);
+                if (isNaN(value) || !mainNumberInput.checkValidity()) return;
+                let sliderMin, sliderMax;
+                if (value === 0) { sliderMin = -1; sliderMax = 1; } else {
+                    const logVal = Math.log10(Math.abs(value));
+                    sliderMin = (value > 0 ? 1 : -1) * 10**(logVal - 1);
+                    sliderMax = (value > 0 ? 1 : -1) * 10**(logVal + 1);
+                    if (value < 0) [sliderMin, sliderMax] = [sliderMax, sliderMin];
+                }
+                const finalMin = Math.max(p.min ?? -Infinity, sliderMin);
+                const finalMax = Math.min(p.max ?? Infinity, sliderMax);
+                slider.min = finalMin;
+                slider.max = finalMax;
+                if (p.step % 1 === 0) {
+                    slider.step = 1;
+                    slider.min = Math.ceil(finalMin);
+                    slider.max = Math.floor(finalMax);
+                } else {
+                    slider.step = (finalMax - finalMin) / 200;
+                }
+            };
+
+            updateSliderBounds();
+            slider.value = mainNumberInput.value;
+
+            slider.addEventListener('input', (e) => {
+                const val = parseFloat(e.target.value);
+                mainNumberInput.value = val.toFixed(precision);
+                const mainSliderInput = document.getElementById(`slider-${p.id}`);
+                if(mainSliderInput) mainSliderInput.value = val;
+                update();
+            });
+
+            slider.addEventListener('change', updateSliderBounds);
+            quickSliderContainer.appendChild(slider);
+        }
+
         function updateURL() {
             const params = new URLSearchParams();
             params.set('dist', currentState.distKey);
@@ -1130,7 +1220,18 @@ document.addEventListener('DOMContentLoaded', () => {
             currentState.distKey = distSelect.value;
             const config = DISTRIBUTIONS[currentState.distKey];
             paramInputs.innerHTML = '';
+
+            const quickParamButtons = document.getElementById('quick-param-buttons');
+            quickParamButtons.innerHTML = '';
+            document.getElementById('quick-slider-container').innerHTML = '';
+
             config.params.forEach(p => {
+                const btn = document.createElement('button');
+                btn.id = `quick-btn-${p.id}`;
+                btn.innerHTML = p.name.split(' ')[0];
+                btn.dataset.param = p.id;
+                quickParamButtons.appendChild(btn);
+
                 const group = document.createElement('div');
                 group.className = 'param-group';
                 group.innerHTML = `<label for="param-${p.id}">${p.name}</label>
@@ -1175,7 +1276,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function update(options = {}) {
             const config = DISTRIBUTIONS[currentState.distKey]; const params = {}; let allValid = true;
-            config.params.forEach(p => { const input = document.getElementById(`param-${p.id}`); if (input.checkValidity()){ params[p.id] = parseFloat(input.value); } else { allValid = false; } });
+            config.params.forEach(p => {
+                const input = document.getElementById(`param-${p.id}`);
+                if (input.checkValidity()){
+                    const val = parseFloat(input.value);
+                    params[p.id] = val;
+                    const btn = document.getElementById(`quick-btn-${p.id}`);
+                    if (btn) {
+                        const precision = (() => { if (!p.step || String(p.step).indexOf('.') === -1) return 0; return String(p.step).split('.')[1].length; })();
+                        btn.innerHTML = `${p.name.split(' ')[0]} = ${val.toFixed(precision)}`;
+                    }
+                } else {
+                    allValid = false;
+                }
+            });
             if (!allValid) return;
             currentState.params = params; currentState.jstat = config.jStat(params);
             const sampler = config.sampler; sampleBtn1.disabled = !sampler; sampleBtn10.disabled = !sampler;
@@ -1262,6 +1376,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 Object.keys(DISTRIBUTIONS).forEach(key => distSelect.appendChild(new Option(DISTRIBUTIONS[key].name, key)));
                 distSelect.addEventListener('change', () => handleDistChange());
                 paramInputs.addEventListener('input', () => update());
+                document.getElementById('quick-param-buttons').addEventListener('click', (e) => {
+                    if (e.target.tagName === 'BUTTON') {
+                        showQuickSlider(e.target.dataset.param);
+                    }
+                });
+                document.addEventListener('click', (e) => {
+                    const quickControlsContainer = document.getElementById('quick-controls-container');
+                    if (quickControlsContainer && !quickControlsContainer.contains(e.target)) {
+                        const quickSliderContainer = document.getElementById('quick-slider-container');
+                        if (quickSliderContainer) quickSliderContainer.innerHTML = '';
+                    }
+                });
                 intervalSelect.addEventListener('change', () => update());
                 sampleBtn1.addEventListener('click', () => generateSamples(1));
                 sampleBtn10.addEventListener('click', () => generateSamples(10));
@@ -1327,6 +1453,78 @@ document.addEventListener('DOMContentLoaded', () => {
         const dragLayer = svg.append("g").attr("class", "drag-layer");
         const tooltip = document.getElementById('os-tooltip');
 
+        function showQuickSlider(paramId) {
+            const quickSliderContainer = document.getElementById('os-quick-slider-container');
+            quickSliderContainer.innerHTML = '';
+
+            const config = CONTINUOUS_DISTRIBUTIONS[currentState.distKey];
+            let p = config.params.find(param => param.id === paramId);
+
+            let mainNumberInput;
+            if (p) { // It's a distribution parameter
+                mainNumberInput = document.getElementById(`os-param-${p.id}`);
+            } else { // It must be n or k
+                if (paramId === 'n') {
+                    p = { id: 'n', step: 1, min: 1 };
+                    mainNumberInput = document.getElementById('os-n');
+                } else if (paramId === 'k') {
+                    p = { id: 'k', step: 1, min: 1, max: currentState.n };
+                    mainNumberInput = document.getElementById('os-k');
+                } else {
+                    return;
+                }
+            }
+            
+            if (!p || !mainNumberInput) return;
+
+            const slider = document.createElement('input');
+            slider.type = 'range';
+            slider.style.width = '100%';
+
+            const precision = (() => { if (!p.step || String(p.step).indexOf('.') === -1) return 0; return String(p.step).split('.')[1].length; })();
+
+            const updateSliderBounds = () => {
+                const value = parseFloat(mainNumberInput.value);
+                if (isNaN(value) || !mainNumberInput.checkValidity()) return;
+                let sliderMin, sliderMax;
+                if (value === 0) { sliderMin = -1; sliderMax = 1; } else {
+                    const logVal = Math.log10(Math.abs(value));
+                    sliderMin = (value > 0 ? 1 : -1) * 10**(logVal - 1);
+                    sliderMax = (value > 0 ? 1 : -1) * 10**(logVal + 1);
+                    if (value < 0) [sliderMin, sliderMax] = [sliderMax, sliderMin];
+                }
+                const finalMin = Math.max(p.min ?? -Infinity, sliderMin);
+                const finalMax = Math.min(p.max ?? Infinity, sliderMax);
+                slider.min = finalMin;
+                slider.max = finalMax;
+                if (p.step % 1 === 0) {
+                    slider.step = 1;
+                    slider.min = Math.ceil(finalMin);
+                    slider.max = Math.floor(finalMax);
+                } else {
+                    slider.step = (finalMax - finalMin) / 200;
+                }
+            };
+
+            updateSliderBounds();
+            slider.value = mainNumberInput.value;
+
+            slider.addEventListener('input', (e) => {
+                const val = parseFloat(e.target.value);
+                mainNumberInput.value = val.toFixed(precision);
+                let mainSliderInput;
+                if (paramId === 'n') mainSliderInput = document.getElementById('os-n-slider');
+                else if (paramId === 'k') mainSliderInput = document.getElementById('os-k-slider');
+                else mainSliderInput = document.getElementById(`os-slider-${p.id}`);
+
+                if(mainSliderInput) mainSliderInput.value = val;
+                update();
+            });
+
+            slider.addEventListener('change', updateSliderBounds);
+            quickSliderContainer.appendChild(slider);
+        }
+
         function orderStatPDF(x, distConfig, params, n, k, j) {
             if (k > n || k < 1 || !isFinite(x)) return 0;
             const fx = distConfig.pdfpmf(x, j, params);
@@ -1374,6 +1572,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const k = parseInt(kInput.value);
             if (!allValid || isNaN(n) || isNaN(k) || k > n || k < 1) return;
 
+            config.params.forEach(p => {
+                const btn = document.getElementById(`os-quick-btn-${p.id}`);
+                if (btn) {
+                    const val = params[p.id];
+                    const precision = (() => { if (!p.step || String(p.step).indexOf('.') === -1) return 0; return String(p.step).split('.')[1].length; })();
+                    btn.innerHTML = `${p.name.split(' ')[0]} = ${val.toFixed(precision)}`;
+                }
+            });
+            const btnN = document.getElementById('os-quick-btn-n');
+            if (btnN) btnN.innerHTML = `Sample size = ${n}`;
+            const btnK = document.getElementById('os-quick-btn-k');
+            if (btnK) btnK.innerHTML = `k-th = ${k}`;
+
             currentState = { distKey, params, n, k, jstat: config.jStat(params) };
             updateStats();
             updatePlot();
@@ -1384,7 +1595,18 @@ document.addEventListener('DOMContentLoaded', () => {
             currentState.distKey = distSelect.value;
             const config = CONTINUOUS_DISTRIBUTIONS[currentState.distKey];
             paramInputs.innerHTML = '';
+
+            const quickParamButtons = document.getElementById('os-quick-param-buttons');
+            quickParamButtons.innerHTML = '';
+            document.getElementById('os-quick-slider-container').innerHTML = '';
+
             config.params.forEach(p => {
+                const btn = document.createElement('button');
+                btn.id = `os-quick-btn-${p.id}`;
+                btn.innerHTML = p.name.split(' ')[0];
+                btn.dataset.param = p.id;
+                quickParamButtons.appendChild(btn);
+
                 const group = document.createElement('div');
                 group.className = 'param-group';
                 group.innerHTML = `<label for="os-param-${p.id}">${p.name}</label>
@@ -1412,6 +1634,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 sliderInput.addEventListener('change', updateSliderBounds);
                 updateSliderBounds(); sliderInput.value = numberInput.value;
             });
+
+            const nk_params = [
+                { id: 'n', name: 'Sample size n' },
+                { id: 'k', name: 'k-th statistic' }
+            ];
+            nk_params.forEach(p => {
+                 const btn = document.createElement('button');
+                btn.id = `os-quick-btn-${p.id}`;
+                btn.innerHTML = p.name.split(' ')[0];
+                btn.dataset.param = p.id;
+                quickParamButtons.appendChild(btn);
+            });
+
             update();
         }
 
@@ -1580,6 +1815,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 distSelect.addEventListener('change', handleDistChange);
                 intervalSelect.addEventListener('change', update);
                 paramInputs.addEventListener('input', update);
+                document.getElementById('os-quick-param-buttons').addEventListener('click', (e) => {
+                    if (e.target.tagName === 'BUTTON') {
+                        showQuickSlider(e.target.dataset.param);
+                    }
+                });
+                document.addEventListener('click', (e) => {
+                    const quickControlsContainer = document.getElementById('os-quick-controls-container');
+                    if (quickControlsContainer && !quickControlsContainer.contains(e.target)) {
+                        const quickSliderContainer = document.getElementById('os-quick-slider-container');
+                        if (quickSliderContainer) quickSliderContainer.innerHTML = '';
+                    }
+                });
                 const nSlider = document.getElementById('os-n-slider');
                 const kSlider = document.getElementById('os-k-slider');
 
@@ -1716,6 +1963,93 @@ document.addEventListener('DOMContentLoaded', () => {
             rho: 0.5, samples: [], conditional: null,
         };
 
+        function showQuickSlider(paramId, varName) {
+            const quickSliderContainer = document.getElementById('gc-quick-slider-container');
+            quickSliderContainer.innerHTML = '';
+
+            let p, mainNumberInput;
+
+            if (varName === 'x' || varName === 'y') {
+                const distKey = (varName === 'x') ? currentState.distKeyX : currentState.distKeyY;
+                const config = CONTINUOUS_DISTRIBUTIONS[distKey];
+                p = config.params.find(param => param.id === paramId);
+                mainNumberInput = document.getElementById(`gc-param-${p.id}-${varName}`);
+            } else { // gc var
+                if (paramId === 'rho-input') {
+                    p = { id: 'rho-input', step: 0.01, min: -0.99, max: 0.99 };
+                    mainNumberInput = document.getElementById('gc-rho-input');
+                } else if (paramId === 'cond-value') {
+                    const condVar = document.getElementById('gc-cond-var').value;
+                    const domain = (condVar === 'X' ? CONTINUOUS_DISTRIBUTIONS[currentState.distKeyX].domain(currentState.paramsX, currentState.jstatX) : CONTINUOUS_DISTRIBUTIONS[currentState.distKeyY].domain(currentState.paramsY, currentState.jstatY));
+                    p = { id: 'cond-value', step: 0.1, min: domain[0], max: domain[1] };
+                    mainNumberInput = document.getElementById('gc-cond-value');
+                } else {
+                    return;
+                }
+            }
+
+            if (!p || !mainNumberInput) return;
+
+            const slider = document.createElement('input');
+            slider.type = 'range';
+            slider.style.width = '100%';
+
+            const precision = (() => { if (!p.step || String(p.step).indexOf('.') === -1) return 0; return String(p.step).split('.')[1].length; })();
+
+            const updateSliderBounds = () => {
+                const value = parseFloat(mainNumberInput.value);
+                if (isNaN(value) || !mainNumberInput.checkValidity()) return;
+                let sliderMin, sliderMax;
+                if (paramId === 'cond-value') { 
+                     const condVar = document.getElementById('gc-cond-var').value;
+                     const range = (condVar === 'X' ? CONTINUOUS_DISTRIBUTIONS[currentState.distKeyX].domain(currentState.paramsX, currentState.jstatX) : CONTINUOUS_DISTRIBUTIONS[currentState.distKeyY].domain(currentState.paramsY, currentState.jstatY));
+                     sliderMin = range[0]; sliderMax = range[1];
+                } else if (value === 0) { sliderMin = -1; sliderMax = 1; } else {
+                    const logVal = Math.log10(Math.abs(value));
+                    sliderMin = (value > 0 ? 1 : -1) * 10**(logVal - 1);
+                    sliderMax = (value > 0 ? 1 : -1) * 10**(logVal + 1);
+                    if (value < 0) [sliderMin, sliderMax] = [sliderMax, sliderMin];
+                }
+                const finalMin = Math.max(p.min ?? -Infinity, sliderMin);
+                const finalMax = Math.min(p.max ?? Infinity, sliderMax);
+                slider.min = finalMin;
+                slider.max = finalMax;
+                if (p.step % 1 === 0) {
+                    slider.step = 1;
+                    slider.min = Math.ceil(finalMin);
+                    slider.max = Math.floor(finalMax);
+                } else {
+                    slider.step = (finalMax - finalMin) / 200;
+                }
+            };
+
+            updateSliderBounds();
+            slider.value = mainNumberInput.value;
+
+            slider.addEventListener('input', (e) => {
+                const val = parseFloat(e.target.value);
+                mainNumberInput.value = val.toFixed(precision);
+
+                let mainSliderInput;
+                if (varName === 'x' || varName === 'y') {
+                    mainSliderInput = document.getElementById(`gc-slider-${p.id}-${varName}`);
+                } else if (paramId === 'rho-input') {
+                    mainSliderInput = document.getElementById('gc-rho-slider');
+                }
+                
+                if(mainSliderInput) mainSliderInput.value = val;
+                
+                if (paramId === 'cond-value') {
+                    plotConditional();
+                } else {
+                    update();
+                }
+            });
+
+            slider.addEventListener('change', updateSliderBounds);
+            quickSliderContainer.appendChild(slider);
+        }
+        
         function integrate(f, a, b, n_steps = 200) {
             if (a >= b) return 0;
             n_steps = n_steps % 2 === 0 ? n_steps : n_steps + 1;
@@ -1843,6 +2177,23 @@ document.addEventListener('DOMContentLoaded', () => {
             currentState.jstatX = CONTINUOUS_DISTRIBUTIONS[currentState.distKeyX].jStat(currentState.paramsX);
             currentState.jstatY = CONTINUOUS_DISTRIBUTIONS[currentState.distKeyY].jStat(currentState.paramsY);
             
+            const quickParamButtons = document.getElementById('gc-quick-param-buttons');
+            quickParamButtons.innerHTML = '';
+            
+            const createBtn = (p, varName) => {
+                const btn = document.createElement('button');
+                btn.id = `gc-quick-btn-${p.id}-${varName}`;
+                btn.innerHTML = p.name.split(' ')[0];
+                btn.dataset.param = p.id;
+                btn.dataset.var = varName;
+                quickParamButtons.appendChild(btn);
+            };
+
+            CONTINUOUS_DISTRIBUTIONS[currentState.distKeyX].params.forEach(p => createBtn(p, 'x'));
+            CONTINUOUS_DISTRIBUTIONS[currentState.distKeyY].params.forEach(p => createBtn(p, 'y'));
+            createBtn({id: 'rho-input', name: 'Corr ρ'}, 'gc');
+            createBtn({id: 'cond-value', name: 'Cond value'}, 'gc');
+
             updateJointAndMarginalPlots();
             plotConditional();
             if (!options.fromURL) updateURL();
@@ -2091,6 +2442,20 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 meanEl.textContent = 'Mean: N/A';
             }
+
+            const updateBtn = (p, varName, value) => {
+                const btn = document.getElementById(`gc-quick-btn-${p.id}-${varName}`);
+                if (btn) {
+                    const inputEl = document.getElementById(`gc-param-${p.id}-${varName}`) || document.getElementById(`gc-${p.id}`);
+                    const step = inputEl ? parseFloat(inputEl.step) : 0.01;
+                    const precision = (() => { if (!step || String(step).indexOf('.') === -1) return 0; return String(step).split('.')[1].length; })();
+                    btn.innerHTML = `${p.name.split(' ')[0]} = ${value.toFixed(precision)}`;
+                }
+            };
+            CONTINUOUS_DISTRIBUTIONS[currentState.distKeyX].params.forEach(p => updateBtn(p, 'x', currentState.paramsX[p.id]));
+            CONTINUOUS_DISTRIBUTIONS[currentState.distKeyY].params.forEach(p => updateBtn(p, 'y', currentState.paramsY[p.id]));
+            updateBtn({id: 'rho-input', name: 'Corr ρ'}, 'gc', currentState.rho);
+            updateBtn({id: 'cond-value', name: 'Cond value'}, 'gc', parseFloat(document.getElementById('gc-cond-value').value));
             
             const yMax = d3.max(plotData, d => d.y);
 
@@ -2236,6 +2601,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 distSelectX.addEventListener('change', () => handleDistChange('x'));
                 distSelectY.addEventListener('change', () => handleDistChange('y'));
+
+                document.getElementById('gc-quick-param-buttons').addEventListener('click', (e) => {
+                    if (e.target.tagName === 'BUTTON') {
+                        showQuickSlider(e.target.dataset.param, e.target.dataset.var);
+                    }
+                });
+                document.addEventListener('click', (e) => {
+                    const quickControlsContainer = document.getElementById('gc-quick-controls-container');
+                    if (quickControlsContainer && !quickControlsContainer.contains(e.target)) {
+                        const quickSliderContainer = document.getElementById('gc-quick-slider-container');
+                        if (quickSliderContainer) quickSliderContainer.innerHTML = '';
+                    }
+                });
+
                 document.getElementById('gc-param-inputs-x').addEventListener('input', update);
                 document.getElementById('gc-param-inputs-y').addEventListener('input', update);
                 const rhoSlider = document.getElementById('gc-rho-slider');
@@ -2318,6 +2697,70 @@ document.addEventListener('DOMContentLoaded', () => {
             barrier: 2,
             paths: []
         };
+
+        function showQuickSlider(paramId, prefix) {
+            document.querySelectorAll('.quick-slider-container').forEach(c => {
+                if (c.id !== `${prefix}-quick-slider-container`) {
+                    c.innerHTML = '';
+                }
+            });
+            const quickSliderContainer = document.getElementById(`${prefix}-quick-slider-container`);
+            quickSliderContainer.innerHTML = '';
+            
+            const mainNumberInput = document.getElementById(`wp-${paramId}`);
+            if (!mainNumberInput) return;
+
+            const p = {
+                id: paramId,
+                step: parseFloat(mainNumberInput.step),
+                min: mainNumberInput.min ? parseFloat(mainNumberInput.min) : undefined,
+                max: mainNumberInput.max ? parseFloat(mainNumberInput.max) : undefined
+            };
+
+            const slider = document.createElement('input');
+            slider.type = 'range';
+            slider.style.width = '100%';
+
+            const precision = (() => { if (!p.step || String(p.step).indexOf('.') === -1) return 0; return String(p.step).split('.')[1].length; })();
+
+            const updateSliderBounds = () => {
+                const value = parseFloat(mainNumberInput.value);
+                if (isNaN(value) || !mainNumberInput.checkValidity()) return;
+                let sliderMin, sliderMax;
+                if (value === 0) { sliderMin = -1; sliderMax = 1; } else {
+                    const logVal = Math.log10(Math.abs(value));
+                    sliderMin = (value > 0 ? 1 : -1) * 10**(logVal - 1);
+                    sliderMax = (value > 0 ? 1 : -1) * 10**(logVal + 1);
+                    if (value < 0) [sliderMin, sliderMax] = [sliderMax, sliderMin];
+                }
+                const finalMin = Math.max(p.min ?? -Infinity, sliderMin);
+                const finalMax = Math.min(p.max ?? Infinity, sliderMax);
+                slider.min = finalMin;
+                slider.max = finalMax;
+                if (p.step % 1 === 0) {
+                    slider.step = 1;
+                    slider.min = Math.ceil(finalMin);
+                    slider.max = Math.floor(finalMax);
+                } else {
+                    slider.step = (finalMax - finalMin) / 200;
+                }
+            };
+
+            updateSliderBounds();
+            slider.value = mainNumberInput.value;
+
+            slider.addEventListener('input', (e) => {
+                const val = parseFloat(e.target.value);
+                mainNumberInput.value = val.toFixed(precision);
+                const mainSliderInput = document.getElementById(`wp-${p.id}-slider`);
+                if(mainSliderInput) mainSliderInput.value = val;
+                update();
+            });
+
+            slider.addEventListener('change', updateSliderBounds);
+            quickSliderContainer.appendChild(slider);
+        }
+
         const pathsSvg = d3.select("#wp-paths-svg");
         const marginalSvg = d3.select("#wp-marginal-svg");
         const htDensitySvg = d3.select("#wp-ht-density-svg");
@@ -2370,6 +2813,33 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('wp-draw10-btn').addEventListener('click', () => drawSamplePaths(10));
             document.getElementById('wp-draw100-btn').addEventListener('click', () => drawSamplePaths(100));
             
+            const quickContainers = ['wp-paths', 'wp-ht', 'wp-hpbb'];
+            quickContainers.forEach(prefix => {
+                 const container = document.getElementById(`${prefix}-quick-param-buttons`);
+                 if (container) {
+                    container.addEventListener('click', (e) => {
+                        if (e.target.tagName === 'BUTTON') {
+                            showQuickSlider(e.target.dataset.param, e.target.dataset.prefix);
+                        }
+                    });
+                 }
+            });
+            document.addEventListener('click', (e) => {
+                let isInside = false;
+                quickContainers.forEach(prefix => {
+                    const quickControlsContainer = document.getElementById(`${prefix}-quick-controls-container`);
+                    if (quickControlsContainer && quickControlsContainer.contains(e.target)) {
+                        isInside = true;
+                    }
+                });
+                if (!isInside) {
+                     quickContainers.forEach(prefix => {
+                        const quickSliderContainer = document.getElementById(`${prefix}-quick-slider-container`);
+                        if (quickSliderContainer) quickSliderContainer.innerHTML = '';
+                    });
+                }
+            });
+            
             const resizeObserver = new ResizeObserver(() => {
                 setTimeout(update, 0);
             });
@@ -2404,9 +2874,45 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            const params = [
+                { id: 'x0', name: 'Start Value X₀', symbol: 'X₀' },
+                { id: 'drift', name: 'Drift m', symbol: 'm' },
+                { id: 'volatility', name: 'Volatility σ', symbol: 'σ' },
+                { id: 'terminal-time', name: 'Terminal Time T', symbol: 'T' },
+                { id: 'barrier', name: 'Barrier b', symbol: 'b' }
+            ];
+            const quickContainers = ['wp-paths', 'wp-ht', 'wp-hpbb'];
+            quickContainers.forEach(prefix => {
+                const quickParamButtons = document.getElementById(`${prefix}-quick-param-buttons`);
+                if (!quickParamButtons) return;
+                quickParamButtons.innerHTML = '';
+                params.forEach(p => {
+                    const btn = document.createElement('button');
+                    btn.id = `${prefix}-quick-btn-${p.id}`;
+                    btn.innerHTML = p.symbol;
+                    btn.dataset.param = p.id;
+                    btn.dataset.prefix = prefix;
+                    quickParamButtons.appendChild(btn);
+                });
+            });
+
             updatePathsPlot();
             updateHittingTimePlots();
             updateHittingProbByBarrierPlot();
+
+            const values = { x0: state.x0, drift: state.m, volatility: state.sigma, 'terminal-time': state.T, barrier: state.barrier };
+            quickContainers.forEach(prefix => {
+                 params.forEach(p => {
+                    const btn = document.getElementById(`${prefix}-quick-btn-${p.id}`);
+                    if (btn) {
+                        const input = document.getElementById(`wp-${p.id}`);
+                        const step = parseFloat(input.getAttribute('step'));
+                        const precision = (() => { if (!step || String(step).indexOf('.') === -1) return 0; return String(step).split('.')[1].length; })();
+                        btn.innerHTML = `${p.symbol} = ${values[p.id].toFixed(precision)}`;
+                    }
+                });
+            });
+
             if (!options.fromURL) {
                 updateURL();
             }
