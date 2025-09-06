@@ -78,12 +78,11 @@
 
         /* Scoped styles for Correlated Bernoulli App */
         #bernoulli-app { max-width: 800px; }
-        #bernoulli-app h2, #bernoulli-app h3 { border-bottom: 1px solid #ddd; padding-bottom: 8px; }
         #bernoulli-app table { border-collapse: collapse; width: 100%; margin-bottom: 1.5rem; text-align: center; }
         #bernoulli-app th, #bernoulli-app td { border: 1px solid #ccc; padding: 0; }
         #bernoulli-app th { background-color: #f7f7f7; font-weight: normal; }
         #bernoulli-app td.label { background-color: #f7f7f7; font-weight: bold; }
-        #bernoulli-app input[type="number"] { width: 100%; height: 100%; border: 2px solid transparent; padding: 10px; box-sizing: border-box; text-align: center; font-size: 1em; background-color: transparent; color: #888; }
+        #bernoulli-app input[type="number"] { width: 100%; height: 100%; border: 2px solid transparent; padding: 10px; box-sizing: border-box; text-align: center; font-size: 1em; background-color: #fff; color: #888; }
         #bernoulli-app input.user-input { color: black; font-weight: bold; }
         #bernoulli-app input:focus { outline: none; border-color: #007bff; }
         #bernoulli-app .error { color: #d9534f !important; border-color: #d9534f !important; }
@@ -92,14 +91,13 @@
         #bernoulli-app .correlation-container input { flex-grow: 1; }
         #bernoulli-app button { padding: 10px 15px; border: 1px solid #ccc; background-color: #f0f0f0; cursor: pointer; border-radius: 4px; }
         #bernoulli-app button:hover { background-color: #e0e0e0; }
-        #bernoulli-app details { margin-top: 2rem; border: 1px solid #ddd; border-radius: 4px; }
-        #bernoulli-app summary { padding: 1rem; font-weight: bold; cursor: pointer; background-color: #f7f7f7; }
-        #bernoulli-app .formulas { padding: 0 1rem 1rem 1rem; background-color: #fff; }
         #bernoulli-app #plots-container { display: flex; flex-wrap: wrap; justify-content: space-around; gap: 20px; margin-top: 2rem; }
         #bernoulli-app .plot { border: 1px solid #ddd; padding: 10px; border-radius: 4px; }
         #bernoulli-app .plot-title { text-align: center; font-weight: bold; margin-bottom: 5px; font-size: 0.9em; }
-        #bernoulli-app .variable-names-container { margin-top: 1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        #bernoulli-app .variable-names-container { margin-top: .5rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         #bernoulli-app .variable-names-container input { padding: 5px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9em; }
+        #bernoulli-app .variable-names-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        #bernoulli-app details { margin-top: 1rem; }
 
         /* Shared App Styles */
         .app-container {
@@ -330,8 +328,12 @@
                 <p><button id="reset-button">Reset</button></p>
 
                 <div class="variable-names-container">
-                    <label for="x-name">Name for variable X:</label><input type="text" id="x-name" value="X">
-                    <label for="y-name">Name for variable Y:</label><input type="text" id="y-name" value="Y">
+                    <div class="variable-names-row">
+                        <label for="x-name">Name for variable X:</label><input type="text" id="x-name" value="X">
+                    </div>
+                    <div class="variable-names-row">
+                        <label for="y-name">Name for variable Y:</label><input type="text" id="y-name" value="Y">
+                    </div>
                 </div>
 
                 <h3 class="katex-dynamic" data-katex-template="Joint & Marginal Probabilities: \( \mathbb{P}(\X=i, \Y=j) \)"></h3>
@@ -410,7 +412,7 @@
                 <div id="plots-container"></div>
             </div>
 
-            <details>
+            <details class="panel">
                 <summary>Formulas</summary>
                 <div class="formulas" id="formula-container" data-katex-template='
                 <p>In these formulas, \( p_{\X} = \mathbb{P}(\X=1) \) and \( p_{\Y} = \mathbb{P}(\Y=1) \).</p>
