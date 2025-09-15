@@ -3398,27 +3398,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         Object.values(appContainers).forEach(c => c.classList.remove('active'));
 
-        if (appContainers[appName]) {
-            const title = `Probly: ${appTitles[appName]}`;
-            document.title = title;
-            document.getElementById('app-title-bar').textContent = title;
-            appContainers[appName].classList.add('active');
-            if (appModules[appName] && !initializedApps[appName]) {
-                appModules[appName].init();
-                initializedApps[appName] = true;
-            }
-            if (appModules[appName]) {
-                appModules[appName].updateFromURL(params);
-            }
-        } else {
-            const title = `Probly: ${appTitles.bernoulli}`;
-            document.title = title;
-            document.getElementById('app-title-bar').textContent = title;
-            appContainers.bernoulli.classList.add('active');
-            if (!initializedApps.bernoulli) {
-                appModules.bernoulli.init();
-                initializedApps.bernoulli = true;
-            }
+        if (!appContainers[appName]) {
+            appName = 'distributions'
+        }
+        const title = `Probly: ${appTitles[appName]}`;
+        document.title = title;
+        document.getElementById('app-title-bar').textContent = title;
+        appContainers[appName].classList.add('active');
+        if (appModules[appName] && !initializedApps[appName]) {
+            appModules[appName].init();
+            initializedApps[appName] = true;
+        }
+        if (appModules[appName]) {
+            appModules[appName].updateFromURL(params);
         }
     }
 
