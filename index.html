@@ -873,7 +873,7 @@
                     <h4>First Hitting Time</h4>
                     <p>Let \(a = b - X_0\) be the distance to the barrier. The first time the process hits the barrier, \(T_b = \inf\{t \ge 0 \mid X_t = b\}\), follows an Inverse-Gaussian distribution with PDF:</p>
                     $$ f_{T_b}(t) = \frac{|a|}{\sigma\sqrt{2\pi t^3}} e^{-\frac{(a-mt)^2}{2\sigma^2 t}} $$
-                    
+
                     <h4>Hitting Probability by time \(T\)</h4>
                     <p>The probability of hitting the barrier \(b\) at or before time \(T\) is:</p>
                     $$ \mathbb{P}(T_b \le T) = \Phi\left(\frac{mT-a}{\sigma\sqrt{T}}\right) + e^{\frac{2ma}{\sigma^2}} \Phi\left(\frac{-mT-a}{\sigma\sqrt{T}}\right) $$
@@ -1566,7 +1566,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
             }
-            
+
             if (!p || !mainNumberInput) return;
 
             const slider = document.createElement('input');
@@ -1944,7 +1944,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 nSlider.addEventListener('input', () => { nInput.value = nSlider.value; nInput.dispatchEvent(new Event('input')); });
                 kSlider.addEventListener('input', () => { kInput.value = kSlider.value; kInput.dispatchEvent(new Event('input')); });
-                
+
                 updateNSliderBounds();
                 kSlider.max = nInput.value;
                 nSlider.value = nInput.value;
@@ -2008,7 +2008,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return jStat.normal.cdf(x, 0, 1) + jStat.normal.cdf(y, 0, 1) - 1 + bivariateNormalCDF(x, y, -rho);
             }
         }
-        
+
         // At this point, x>=0, y>=0, rho>=0
         const h = x, k = y;
         const hk = h * k;
@@ -2030,7 +2030,7 @@ document.addEventListener('DOMContentLoaded', () => {
         container.addEventListener('click', e => {
             const moveBtn = e.target.closest('.move-btn');
             if (!moveBtn) return;
-            
+
             const panel = moveBtn.closest('.panel');
             if (!panel || panel.parentElement !== container) return;
 
@@ -2092,7 +2092,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const value = parseFloat(mainNumberInput.value);
                 if (isNaN(value) || !mainNumberInput.checkValidity()) return;
                 let sliderMin, sliderMax;
-                if (paramId === 'cond-value') { 
+                if (paramId === 'cond-value') {
                      const condVar = document.getElementById('gc-cond-var').value;
                      const range = (condVar === 'X' ? CONTINUOUS_DISTRIBUTIONS[currentState.distKeyX].domain(currentState.paramsX, currentState.jstatX) : CONTINUOUS_DISTRIBUTIONS[currentState.distKeyY].domain(currentState.paramsY, currentState.jstatY));
                      sliderMin = range[0]; sliderMax = range[1];
@@ -2128,9 +2128,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (paramId === 'rho-input') {
                     mainSliderInput = document.getElementById('gc-rho-slider');
                 }
-                
+
                 if(mainSliderInput) mainSliderInput.value = val;
-                
+
                 if (paramId === 'cond-value') {
                     plotConditional();
                 } else {
@@ -2141,7 +2141,7 @@ document.addEventListener('DOMContentLoaded', () => {
             slider.addEventListener('change', updateSliderBounds);
             quickSliderContainer.appendChild(slider);
         }
-        
+
         function integrate(f, a, b, n_steps = 200) {
             if (a >= b) return 0;
             n_steps = n_steps % 2 === 0 ? n_steps : n_steps + 1;
@@ -2162,15 +2162,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const jointSvg = d3.select("#gc-joint-plot-svg");
         const marginalXSvg = d3.select("#gc-marginal-x-svg");
         const marginalYSvg = d3.select("#gc-marginal-y-svg");
-        
+
         const jointXScale = d3.scaleLinear(), jointYScale = d3.scaleLinear();
         const jointXAxis = jointSvg.append("g").attr("class", "x-axis axis");
         const jointYAxis = jointSvg.append("g").attr("class", "y-axis axis");
         const jointPlotArea = jointSvg.append("g").attr("class", "plot-area");
-        
+
         const marginalXYScale = d3.scaleLinear();
         const marginalXPlotArea = marginalXSvg.append("g").attr("class", "plot-area");
-        
+
         const marginalYXScale = d3.scaleLinear();
         const marginalYPlotArea = marginalYSvg.append("g").attr("class", "plot-area");
 
@@ -2213,7 +2213,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <input type="number" id="gc-param-${p.id}-${varName}" value="${p.default}" ${p.min === undefined ? '' : `min="${p.min}"`} ${p.max === undefined ? '' : `max="${p.max}"`} step="${p.step}" style="width: 80px;">
                     </div>`;
                 paramInputs.appendChild(group);
-                
+
                 const numberInput = document.getElementById(`gc-param-${p.id}-${varName}`);
                 const sliderInput = document.getElementById(`gc-slider-${p.id}-${varName}`);
                 const precision = (() => { if (!p.step || String(p.step).indexOf('.') === -1) return 0; return String(p.step).split('.')[1].length; })();
@@ -2255,23 +2255,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
             currentState.paramsX = readParams('x');
             currentState.paramsY = readParams('y');
-            
+
             if (options.distChangedFor && condVarSelect) {
                 const currentCondVar = condVarSelect.value.toLowerCase();
                 if (options.distChangedFor === currentCondVar) {
                     updateCondValueToMean();
                 }
             }
-            
+
             currentState.rho = parseFloat(document.getElementById('gc-rho-input').value);
             if (!allValid) return;
 
             currentState.jstatX = CONTINUOUS_DISTRIBUTIONS[currentState.distKeyX].jStat(currentState.paramsX);
             currentState.jstatY = CONTINUOUS_DISTRIBUTIONS[currentState.distKeyY].jStat(currentState.paramsY);
-            
+
             const quickParamButtons = document.getElementById('gc-quick-param-buttons');
             quickParamButtons.innerHTML = '';
-            
+
             const createBtn = (p, varName) => {
                 const btn = document.createElement('button');
                 btn.id = `gc-quick-btn-${p.id}-${varName}`;
@@ -2311,7 +2311,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             updateJointAndMarginalPlots();
         }
-        
+
         function plotConditional() {
             const condVar = document.getElementById('gc-cond-var').value;
             const condType = document.getElementById('gc-cond-type').value;
@@ -2429,10 +2429,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!jstatX || !jstatY) return;
             const configX = CONTINUOUS_DISTRIBUTIONS[distKeyX];
             const configY = CONTINUOUS_DISTRIBUTIONS[distKeyY];
-            
+
             const xDomain = configX.domain(paramsX, jstatX);
             const yDomain = configY.domain(paramsY, jstatY);
-            
+
             jointXScale.domain(xDomain).range([0, jointWidth]);
             jointYScale.domain(yDomain).range([jointHeight, 0]);
 
@@ -2445,7 +2445,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             jointPlotArea.selectAll(".scatter-dot").remove();
             jointPlotArea.selectAll(".scatter-dot").data(samples).enter().append("circle").attr("class", "scatter-dot").attr("cx", d => jointXScale(d[0])).attr("cy", d => jointYScale(d[1])).attr("r", 3);
-            
+
             marginalXPlotArea.selectAll("*").remove();
             marginalYPlotArea.selectAll("*").remove();
 
@@ -2453,12 +2453,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const xPlotData = d3.range(xDomain[0], xDomain[1], (xDomain[1] - xDomain[0]) / 200).map(x => ({ x: x, y: configX.pdfpmf(x, jstatX, paramsX) }));
             const yMaxX = d3.max(xPlotData, d => d.y);
             marginalXYScale.domain([0, yMaxX * 1.1]).range([marginalXHeight, 0]);
-            
+
             // Marginal Y plot (right)
             const yPlotData = d3.range(yDomain[0], yDomain[1], (yDomain[1] - yDomain[0]) / 200).map(y => ({ x: y, y: configY.pdfpmf(y, jstatY, paramsY) }));
             const yMaxY = d3.max(yPlotData, d => d.y);
             marginalYXScale.domain([0, yMaxY * 1.1]).range([0, marginalYWidth]);
-            
+
             if (samples.length > 0) {
                 // X histogram
                 const xSamples = samples.map(d => d[0]);
@@ -2476,7 +2476,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     .attr("y", d => jointYScale(d.x1) + 1).attr("height", d => Math.max(0, jointYScale(d.x0) - jointYScale(d.x1) - 1))
                     .attr("x", 0).attr("width", d => marginalYXScale(d.length * yMaxY / yHistMax));
             }
-            
+
             marginalXPlotArea.append("path").datum(xPlotData).attr("class", "line-path").attr("d", d3.line().x(d => jointXScale(d.x)).y(d => marginalXYScale(d.y)));
             marginalYPlotArea.append("path").datum(yPlotData).attr("class", "line-path").attr("d", d3.line().x(d => marginalYXScale(d.y)).y(d => jointYScale(d.x)));
         }
@@ -2502,16 +2502,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const otherVar = condVar === 'X' ? 'Y' : 'X';
             const typeSymbol = { eq: '=', ge: '≥', le: '≤' }[condType];
             titleEl.textContent = `Density of ${otherVar} | ${condVar} ${typeSymbol} ${condValue}`;
-            
+
             const svgRect = densitySvg.node().getBoundingClientRect();
              if (svgRect.width <= 0) return;
             densityWidth = svgRect.width - margin.density.left - margin.density.right;
             densityHeight = svgRect.height - margin.density.top - margin.density.bottom;
             densityPlotArea.attr("transform", `translate(${margin.density.left},${margin.density.top})`);
             densityDragLayer.attr("transform", `translate(${margin.density.left},${margin.density.top})`);
-            
+
             const { distKeyX, paramsX, jstatX, distKeyY, paramsY, jstatY } = currentState;
-            
+
             const [domainConfig, domainParams, domainJstat] = (condVar === 'X') ?
                 [CONTINUOUS_DISTRIBUTIONS[distKeyY], paramsY, jstatY] :
                 [CONTINUOUS_DISTRIBUTIONS[distKeyX], paramsX, jstatX];
@@ -2525,7 +2525,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 plotDomain = marginalDomain;
             }
             const plotData = d3.range(plotDomain[0], plotDomain[1], (plotDomain[1] - plotDomain[0]) / 200).map(v => ({x: v, y: condPdf(v)})).filter(d => isFinite(d.y));
-            
+
             const totalIntegral = integrate(condPdf, plotDomain[0], plotDomain[1], 400);
             const meanIntegrand = x => x * condPdf(x);
             const mean = integrate(meanIntegrand, plotDomain[0], plotDomain[1], 400) / totalIntegral;
@@ -2548,7 +2548,7 @@ document.addEventListener('DOMContentLoaded', () => {
             CONTINUOUS_DISTRIBUTIONS[currentState.distKeyY].params.forEach(p => updateBtn(p, 'y', currentState.paramsY[p.id]));
             updateBtn({id: 'rho-input', name: 'Corr ρ'}, 'gc', currentState.rho);
             updateBtn({id: 'cond-value', name: 'Cond value'}, 'gc', parseFloat(document.getElementById('gc-cond-value').value));
-            
+
             const yMax = d3.max(plotData, d => d.y);
 
             densityXScale.domain(plotDomain).range([0, densityWidth]);
@@ -2556,7 +2556,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             densityXAxis.attr("transform", `translate(${margin.density.left}, ${densityHeight + margin.density.top})`).call(d3.axisBottom(densityXScale));
             densityYAxis.attr("transform", `translate(${margin.density.left}, ${margin.density.top})`).call(d3.axisLeft(densityYScale));
-            
+
             densityPlotArea.selectAll("*").remove();
             densityDragLayer.selectAll("*").remove();
 
@@ -2570,9 +2570,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     densityPlotArea.append("path").datum(plotData.filter(d => d.x >= lower && d.x <= upper)).attr("class", "area-path").attr("d", area);
                 }
             }
-            
+
             densityPlotArea.append("path").datum(plotData).attr("class", "line-path").attr("d", d3.line().x(d => densityXScale(d.x)).y(d => densityYScale(d.y)));
-            
+
             setupDensityInteractionLayer();
         }
 
@@ -2607,7 +2607,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             interactionRect.call(drag);
-            
+
             function updateTooltip(event) {
                 const [tipX, tipY] = d3.pointer(event, document.getElementById('gc-density-plot-container'));
                 densityTooltip.style("left", tipX + "px").style("top", tipY + "px");
@@ -2669,7 +2669,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
-        
+
         function updateURL() {
             const params = new URLSearchParams();
             params.set('distX', currentState.distKeyX);
@@ -2721,7 +2721,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         update();
                     }
                 });
-                
+
                 document.getElementById('gc-sample-btn-1').addEventListener('click', () => generateSamples(1));
                 document.getElementById('gc-sample-btn-10').addEventListener('click', () => generateSamples(10));
                 document.getElementById('gc-sample-btn-100').addEventListener('click', () => generateSamples(100));
@@ -2730,11 +2730,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     currentState.samples = [];
                     updateJointAndMarginalPlots();
                 });
-                
+
                 condVarSelect = document.getElementById('gc-cond-var');
                 const condTypeSelect = document.getElementById('gc-cond-type');
                 condValueInput = document.getElementById('gc-cond-value');
-                
+
                 condVarSelect.addEventListener('input', () => {
                     updateCondValueToMean();
                     plotConditional();
@@ -2744,7 +2744,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('gc-interval-select').addEventListener('change', updateDensityPlot);
 
                 window.addEventListener('resize', () => { updateJointAndMarginalPlots(); updateDensityPlot(); });
-                
+
                 const scatterResizeObserver = new ResizeObserver(() => setTimeout(updateJointAndMarginalPlots, 0));
                 scatterResizeObserver.observe(document.getElementById('gc-joint-plot-grid'));
 
@@ -2798,7 +2798,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const quickSliderContainer = document.getElementById(`${prefix}-quick-slider-container`);
             quickSliderContainer.innerHTML = '';
-            
+
             const mainNumberInput = document.getElementById(`wp-${paramId}`);
             if (!mainNumberInput) return;
 
@@ -2873,7 +2873,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const numberInput = document.getElementById(`wp-${p.id}`);
                 const sliderInput = document.getElementById(`wp-${p.id}-slider`);
                 const precision = (() => { if (!p.step || String(p.step).indexOf('.') === -1) return 0; return String(p.step).split('.')[1].length; })();
-                
+
                 const updateSliderBounds = () => {
                     const value = parseFloat(numberInput.value);
                     if (isNaN(value) || !numberInput.checkValidity()) return;
@@ -2884,7 +2884,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     sliderInput.min = finalMin; sliderInput.max = finalMax;
                     if (p.step % 1 === 0) { sliderInput.step = 1; sliderInput.min = Math.ceil(finalMin); sliderInput.max = Math.floor(finalMax); } else { sliderInput.step = (finalMax - finalMin) / 200; }
                 };
-                
+
                 numberInput.addEventListener('input', () => {
                     const val = parseFloat(numberInput.value); if (!isNaN(val)) { sliderInput.value = val; }
                     update();
@@ -2904,7 +2904,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('wp-draw1-btn').addEventListener('click', () => drawSamplePaths(1));
             document.getElementById('wp-draw10-btn').addEventListener('click', () => drawSamplePaths(10));
             document.getElementById('wp-draw100-btn').addEventListener('click', () => drawSamplePaths(100));
-            
+
             const quickContainers = ['wp-paths', 'wp-ht', 'wp-hpbb'];
             quickContainers.forEach(prefix => {
                  const container = document.getElementById(`${prefix}-quick-param-buttons`);
@@ -2931,7 +2931,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                 }
             });
-            
+
             const resizeObserver = new ResizeObserver(() => {
                 setTimeout(update, 0);
             });
@@ -2961,7 +2961,7 @@ document.addEventListener('DOMContentLoaded', () => {
             state.sigma = parseFloat(document.getElementById('wp-volatility').value);
             state.T = parseFloat(document.getElementById('wp-terminal-time').value);
             state.barrier = parseFloat(document.getElementById('wp-barrier').value);
-            
+
             if (isNaN(state.x0) || isNaN(state.m) || isNaN(state.sigma) || isNaN(state.T) || state.sigma <= 0 || state.T <= 0) {
                 return;
             }
@@ -3009,7 +3009,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateURL();
             }
         }
-        
+
         function drawSamplePaths(count) {
             const dt = state.T / 100;
             const drift_term = state.m * dt;
@@ -3032,7 +3032,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const { x0, m, sigma, T } = state;
             const rect = pathsSvg.node().getBoundingClientRect();
             const marginalRect = marginalSvg.node().getBoundingClientRect();
-            
+
             if (rect.width <= 0 || marginalRect.width <= 0) return;
 
             const width = rect.width - margin.left - margin.right;
@@ -3049,14 +3049,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const timePoints = d3.range(0, T, T/100).concat(T);
             const meanPath = timePoints.map(t => x0 + m * t);
             const stdDevs = timePoints.map(t => sigma * Math.sqrt(t));
-            
+
             const coneValue = document.getElementById('wp-cone-select').value;
             let z_score = 0;
             if (coneValue !== '0') {
                 const p = parseFloat(coneValue.substring(1)) / 100;
                 z_score = jStat.normal.inv(1 - (1-p)/2, 0, 1);
             }
-            
+
             const lowerBound = meanPath.map((mean, i) => mean - z_score * stdDevs[i]);
             const upperBound = meanPath.map((mean, i) => mean + z_score * stdDevs[i]);
 
@@ -3064,7 +3064,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ...lowerBound, ...upperBound,
                 ...(state.paths.length > 0 ? state.paths.flatMap(path => path.map(p => p.x)) : [x0])
             ]);
-            
+
             if (yDomain[0] === yDomain[1]) {
                  yDomain[0] -= 1; yDomain[1] += 1;
             }
@@ -3083,7 +3083,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     .y1(d => yScale(d.upper));
                 g.append("path").datum(coneData).attr("class", "cone-area").attr("d", area);
             }
-            
+
             g.append("path").datum(timePoints.map((t, i) => ({t, x: meanPath[i]})))
              .attr("class", "line-path").style("stroke", "black").style("stroke-dasharray", "4")
              .attr("d", d3.line().x(d => xScale(d.t)).y(d => yScale(d.x)));
@@ -3091,10 +3091,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const line = d3.line().x(d => xScale(d.t)).y(d => yScale(d.x));
             g.selectAll(".sample-path").data(state.paths).enter()
              .append("path").attr("class", "sample-path").attr("d", line);
-            
+
             const marginalG = marginalSvg.append("g")
                 .attr("transform", `translate(0,${margin.top})`);
-            
+
             const mu_T = x0 + m * T;
             const sigma_T = sigma * Math.sqrt(T);
             const terminalDist = jStat.normal(mu_T, sigma_T);
@@ -3104,14 +3104,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const maxDensity = d3.max(densityData, d => d.p) || 1;
             const marginalXScale = d3.scaleLinear().domain([0, maxDensity * 1.1]).range([0, marginalWidth]);
-            
+
             if (state.paths.length > 0) {
                 const terminalValues = state.paths.map(path => path[path.length - 1].x);
                 const histogram = d3.histogram()
                     .domain(yScale.domain())
                     .thresholds(yScale.ticks(20))
                     (terminalValues);
-                
+
                 const histMax = d3.max(histogram, d => d.length) || 1;
 
                 marginalG.selectAll(".histogram-bar")
@@ -3123,7 +3123,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     .attr("x", 0)
                     .attr("width", d => marginalXScale(d.length * maxDensity / histMax));
             }
-            
+
             marginalG.append("path")
                 .datum(densityData)
                 .attr("class", "line-path")
@@ -3136,10 +3136,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function updateHittingTimePlots() {
             const { x0, m, sigma, T, barrier } = state;
-            
+
             const a = barrier - x0;
 
-            if (Math.abs(a) < 1e-9) { 
+            if (Math.abs(a) < 1e-9) {
                 htDensitySvg.selectAll("*").remove();
                 htProbSvg.selectAll("*").remove();
                 return;
@@ -3149,7 +3149,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (t <= 0) return 0;
                 return (Math.abs(a) / (sigma * Math.sqrt(2 * Math.PI * t * t * t))) * Math.exp(-Math.pow(a - m * t, 2) / (2 * sigma * sigma * t));
             };
-            
+
             const htProbCdf = t => {
                 if (t <= 0) return 0;
                 let eff_m = m, eff_a = a;
@@ -3168,14 +3168,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const densityData = plotTimePoints.map(t => ({t, p: htDensityPdf(t)}));
             plotOnSvg(htDensitySvg, densityData, [0, T], "Time (t)", "Density", null, document.getElementById('wp-ht-density-tooltip'), htDensityPdf);
-            
+
             const probData = plotTimePoints.map(t => ({t, p: htProbCdf(t)}));
             plotOnSvg(htProbSvg, probData, [0, T], "Time (t)", "Probability", [0, 1], document.getElementById('wp-ht-prob-tooltip'), htProbCdf);
         }
 
         function updateHittingProbByBarrierPlot() {
             const { x0, m, sigma, T } = state;
-            
+
             if (sigma <= 0 || T <= 0) {
                 hpByBarrierSvg.selectAll("*").remove();
                 return;
@@ -3185,7 +3185,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const a = b - x0;
                 if (Math.abs(a) < 1e-9) return 1.0;
                 const t = T;
-                
+
                 let eff_m = m, eff_a = a;
                 if (eff_a < 0) {
                     eff_m = -m;
@@ -3200,14 +3200,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const range_dev = 4 * sigma * Math.sqrt(T);
             const barrierDomain = [x0 - range_dev, x0 + range_dev];
-            
+
             const plotBarrierPoints = d3.range(barrierDomain[0], barrierDomain[1], (barrierDomain[1] - barrierDomain[0])/200);
 
             const plotData = plotBarrierPoints.map(b => ({b, p: hittingProbByBarrier(b)}));
-            
+
             plotBarrierProbOnSvg(hpByBarrierSvg, plotData, barrierDomain, "Barrier (b)", "Hitting Probability", [0, 1], document.getElementById('wp-hp-by-barrier-tooltip'), hittingProbByBarrier);
         }
-        
+
         function plotOnSvg(svg, data, xDomain, xLabel, yLabel, yDomain = null, tooltipEl = null, yFunc = null) {
             const rect = svg.node().getBoundingClientRect();
             const width = rect.width - margin.left - margin.right;
@@ -3217,9 +3217,9 @@ document.addEventListener('DOMContentLoaded', () => {
             svg.selectAll("*").remove();
             const g = svg.append("g")
                          .attr("transform", `translate(${margin.left},${margin.top})`);
-            
+
             const xScale = d3.scaleLinear().domain(xDomain).range([0, width]);
-            
+
             if (!yDomain) {
                 const yMax = d3.max(data, d => d.p);
                 yDomain = [0, isFinite(yMax) && yMax > 0 ? yMax * 1.1 : 1];
@@ -3228,7 +3228,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             g.append("g").attr("class", "x-axis axis").attr("transform", `translate(0, ${height})`).call(d3.axisBottom(xScale));
             g.append("g").attr("class", "y-axis axis").call(d3.axisLeft(yScale).ticks(5));
-            
+
             g.append("text").attr("x", width/2).attr("y", height + 35).style("text-anchor", "middle").text(xLabel);
             g.append("text").attr("transform", "rotate(-90)").attr("y", -margin.left+15).attr("x", -height/2).style("text-anchor", "middle").text(yLabel);
 
@@ -3239,7 +3239,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!tooltipEl || !yFunc) return;
 
             const focus = g.append("circle").style("fill", "none").attr("stroke", "black").attr("r", 4).style("opacity", 0);
-            
+
             const interactionRect = svg.append("rect")
                 .attr("transform", `translate(${margin.left},${margin.top})`)
                 .style("fill", "none")
@@ -3252,16 +3252,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 const [tipX, tipY] = d3.pointer(event, svg.node().parentNode);
                 tooltipEl.style.left = tipX + "px";
                 tooltipEl.style.top = tipY + "px";
-                
+
                 const [x_coord] = d3.pointer(event, interactionRect.node());
                 const x_val = xScale.invert(x_coord);
                 if (x_val < xDomain[0] || x_val > xDomain[1]) return;
                 const y_val = yFunc(x_val);
-                
+
                 focus.attr("cx", xScale(x_val)).attr("cy", yScale(y_val));
                 tooltipEl.innerHTML = `t: ${x_val.toFixed(3)}<br>y: ${y_val.toFixed(5)}`;
             }
-            
+
             interactionRect.on("mouseover", () => {
                 focus.style("opacity", 1);
                 tooltipEl.style.opacity = 1;
@@ -3292,7 +3292,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
-        
+
         function plotBarrierProbOnSvg(svg, data, xDomain, xLabel, yLabel, yDomain = null, tooltipEl = null, yFunc = null) {
             const rect = svg.node().getBoundingClientRect();
             const width = rect.width - margin.left - margin.right;
@@ -3302,9 +3302,9 @@ document.addEventListener('DOMContentLoaded', () => {
             svg.selectAll("*").remove();
             const g = svg.append("g")
                             .attr("transform", `translate(${margin.left},${margin.top})`);
-            
+
             const xScale = d3.scaleLinear().domain(xDomain).range([0, width]);
-            
+
             if (!yDomain) {
                 const yMax = d3.max(data, d => d.p);
                 yDomain = [0, isFinite(yMax) && yMax > 0 ? yMax * 1.1 : 1];
@@ -3313,7 +3313,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             g.append("g").attr("class", "x-axis axis").attr("transform", `translate(0, ${height})`).call(d3.axisBottom(xScale));
             g.append("g").attr("class", "y-axis axis").call(d3.axisLeft(yScale).ticks(5));
-            
+
             g.append("text").attr("x", width/2).attr("y", height + 35).style("text-anchor", "middle").text(xLabel);
             g.append("text").attr("transform", "rotate(-90)").attr("y", -margin.left+15).attr("x", -height/2).style("text-anchor", "middle").text(yLabel);
 
@@ -3324,7 +3324,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!tooltipEl || !yFunc) return;
 
             const focus = g.append("circle").style("fill", "none").attr("stroke", "black").attr("r", 4).style("opacity", 0);
-            
+
             const interactionRect = svg.append("rect")
                 .attr("transform", `translate(${margin.left},${margin.top})`)
                 .style("fill", "none")
@@ -3337,16 +3337,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 const [tipX, tipY] = d3.pointer(event, svg.node().parentNode);
                 tooltipEl.style.left = tipX + "px";
                 tooltipEl.style.top = tipY + "px";
-                
+
                 const [x_coord] = d3.pointer(event, interactionRect.node());
                 const x_val = xScale.invert(x_coord);
                 if (x_val < xDomain[0] || x_val > xDomain[1]) return;
                 const y_val = yFunc(x_val);
-                
+
                 focus.attr("cx", xScale(x_val)).attr("cy", yScale(y_val));
                 tooltipEl.innerHTML = `b: ${x_val.toFixed(3)}<br>y: ${y_val.toFixed(5)}`;
             }
-            
+
             interactionRect.on("mouseover", () => {
                 focus.style("opacity", 1);
                 tooltipEl.style.opacity = 1;
@@ -3434,12 +3434,12 @@ document.addEventListener('DOMContentLoaded', () => {
             // Using a document fragment for performance
             const fragment = document.createDocumentFragment();
             inputGrid.querySelectorAll('.input-row').forEach(row => row.remove());
-            
+
             state.rows.forEach(row => {
                 const rowEl = document.createElement('div');
                 rowEl.className = 'input-row';
                 rowEl.dataset.id = row.id;
-                
+
                 const pInput = document.createElement('input');
                 pInput.type = 'number';
                 pInput.className = 'prob-input';
@@ -3456,7 +3456,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 xInput.value = isNaN(row.x) ? '' : row.x;
                 xInput.placeholder = "Value";
                 xInput.addEventListener('input', (e) => handleInputChange(row.id, 'x', e.target.value));
-                
+
                 const removeBtn = document.createElement('button');
                 removeBtn.className = 'remove-row-btn';
                 removeBtn.innerHTML = '🗑️';
@@ -3484,13 +3484,13 @@ document.addEventListener('DOMContentLoaded', () => {
             state.rows.push({ p: NaN, x: NaN, id: state.nextId++ });
             renderInputs();
         }
-        
+
         function removeRow(id) {
             if (state.rows.length <= 1) return;
             state.rows = state.rows.filter(r => r.id !== id);
             renderInputs();
         }
-        
+
         function normalizeProbabilities() {
             const totalP = state.rows.reduce((sum, row) => sum + (isNaN(row.p) ? 0 : row.p), 0);
             if (totalP > 0) {
@@ -3506,7 +3506,7 @@ document.addEventListener('DOMContentLoaded', () => {
         function validateAndPlot() {
             const totalP = state.rows.reduce((sum, row) => sum + (isNaN(row.p) ? 0 : row.p), 0);
             const isSumInvalid = Math.abs(totalP - 1) > 1e-9 && totalP > 0;
-            
+
             inputGrid.querySelectorAll('.prob-input').forEach(input => {
                 input.classList.toggle('error', isSumInvalid);
             });
@@ -3520,7 +3520,7 @@ document.addEventListener('DOMContentLoaded', () => {
                  mleParamsSpan.innerHTML = '';
             }
         }
-        
+
         function plotPMF() {
             svg.selectAll("*").remove();
             mleParamsSpan.innerHTML = '';
@@ -3533,13 +3533,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (width <= 0 || height <= 0) return;
 
             const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
-            
+
             const xValues = validRows.map(r => r.x);
             const xExtent = d3.extent(xValues);
             const xPadding = (xExtent[1] - xExtent[0]) * 0.1 || 1;
             const xDomain = [xExtent[0] - xPadding, xExtent[1] + xPadding];
             const xScale = d3.scaleLinear().domain(xDomain).range([0, width]);
-            
+
             const pValues = validRows.map(r => r.p);
             const yMax = d3.max(pValues);
             const yScale = d3.scaleLinear().domain([0, yMax * 1.1]).range([height, 0]);
@@ -3556,12 +3556,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 .attr("y", d => yScale(d.p))
                 .attr("width", barWidth)
                 .attr("height", d => height - yScale(d.p));
-            
+
             const overlayDist = overlaySelect.value;
             if (overlayDist !== 'none') {
                 let params, distConfig;
                 const mean = validRows.reduce((sum, row) => sum + row.p * row.x, 0);
-                
+
                 if (overlayDist === 'normal') {
                     const variance = validRows.reduce((sum, row) => sum + row.p * Math.pow(row.x - mean, 2), 0);
                     params = { mu: mean, sigma: Math.sqrt(variance) };
@@ -3587,9 +3587,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         const mean = positiveRows.reduce((sum, row) => sum + (row.p/totalP) * row.x, 0);
                         const variance = positiveRows.reduce((sum, row) => sum + (row.p/totalP) * Math.pow(row.x - mean, 2), 0);
                         if (variance > 0) {
-                            params = { 
-                                alpha: Math.pow(mean, 2) / variance, 
-                                lambda: mean / variance 
+                            params = {
+                                alpha: Math.pow(mean, 2) / variance,
+                                lambda: mean / variance
                             };
                             distConfig = DISTRIBUTIONS.gamma;
                         }
@@ -3611,25 +3611,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (positiveRows.length > 1) {
                         const totalP = positiveRows.reduce((sum, row) => sum + row.p, 0);
                         const normalizedRows = positiveRows.map(r => ({ ...r, p: r.p / totalP }));
-                        
+
                         const negLogLikelihood = (k_arr) => {
                             const k = k_arr[0];
                             if (k <= 0) return Infinity;
-                            
+
                             const sum_p_x_k = normalizedRows.reduce((sum, row) => sum + row.p * Math.pow(row.x, k), 0);
                             if (sum_p_x_k <= 0) return Infinity;
 
                             const lambda = Math.pow(sum_p_x_k, 1/k);
                             if (lambda <= 0) return Infinity;
-                            
+
                             const logLikelihood = normalizedRows.reduce((sum, row) => sum + row.p * (Math.log(k) - Math.log(lambda) + (k - 1) * Math.log(row.x) - Math.pow(row.x / lambda, k)), 0);
 
                             if (!isFinite(logLikelihood)) return Infinity;
                             return -logLikelihood;
                         };
-                        
+
                         const result = numeric.uncmin(negLogLikelihood, [1.0]);
-                        
+
                         if (result.f < Infinity && result.solution[0] > 0) {
                             const k = result.solution[0];
                             const sum_p_x_k = normalizedRows.reduce((sum, row) => sum + row.p * Math.pow(row.x, k), 0);
@@ -3709,7 +3709,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             renderInputs();
         }
-        
+
         return {
             init: init,
             updateFromURL: () => { /* Not implemented yet, can be added later */ }
