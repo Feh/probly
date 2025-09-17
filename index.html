@@ -883,8 +883,8 @@
                 <h3>Expected Value Calculator</h3>
                 <p>Enter the probability mass function (PMF) of a discrete random variable.</p>
                 <div id="ev-input-grid" class="input-grid">
-                    <label>P(X=x)</label>
-                    <label>x</label>
+                    <label>\(\mathbb{P}(X=x)\)</label>
+                    <label>\(x\)</label>
                     <span></span> <!-- for alignment -->
                 </div>
                 <div class="controls">
@@ -3419,6 +3419,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 pInput.className = 'prob-input';
                 pInput.min = 0;
                 pInput.max = 1;
+                pInput.step = 0.01;
                 pInput.value = isNaN(row.p) ? '' : row.p;
                 pInput.placeholder = "Probability";
                 pInput.addEventListener('input', (e) => handleInputChange(row.id, 'p', e.target.value));
@@ -3549,6 +3550,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function init() {
             addRowBtn.addEventListener('click', addRow);
+            renderMathInElement(document.getElementById('ev-input-grid'));
             normalizeBtn.addEventListener('click', normalizeProbabilities);
             const resizeObserver = new ResizeObserver(() => {
                 setTimeout(validateAndPlot, 0);
