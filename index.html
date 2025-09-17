@@ -150,6 +150,8 @@
         #distributions-app button:disabled { background-color: #ccc; cursor: not-allowed; }
         #distributions-app #stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.9em; }
         #distributions-app #stats-grid span { font-weight: bold; color: #333; }
+        #distributions-app #conditional-expectations-grid { display: grid; grid-template-columns: auto 1fr; gap: 5px 10px; font-size: 0.9em; align-items: center; }
+        #distributions-app #conditional-expectations-grid span { font-weight: bold; }
         #distributions-app #formula-display { margin-top: 20px; padding: 10px; background: #eee; border-radius: 3px; text-align: center; min-height: 50px; display: flex; align-items: center; justify-content: center; overflow-x: auto;}
         #distributions-app .plot-svg-wrapper { height: 50%; }
         #distributions-app #plot-svg { user-select: none; width: 100%; height: 100%; }
@@ -570,6 +572,7 @@
                     <span id="quick-param-buttons" class="quick-param-buttons"></span>
                     <span id="quick-slider-container" class="quick-slider-container"></span>
                 </div>
+                <div id="conditional-expectations-grid"></div>
                 <div id="tooltip"></div>
             </div>
         </div>
@@ -1230,6 +1233,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const distributionsApp = (() => {
 
+        const integrate = (f, a, b, n_steps = 1000) => {
+            if (a >= b) return 0;
+            if (!isFinite(a) || !isFinite(b)) return NaN;
+            n_steps = n_steps % 2 === 0 ? n_steps : n_steps + 1;
+            let h = (b - a) / n_steps;
+            if (h === 0) return 0;
+            let sum = f(a) + f(b);
+            for (let i = 1; i < n_steps; i += 2) {
+                sum += 4 * f(a + i * h);
+            }
+            for (let i = 2; i < n_steps - 1; i += 2) {
+                sum += 2 * f(a + i * h);
+            }
+            return sum * h / 3;
+        };
+
         const distSelect = document.getElementById('dist-select');
         const paramInputs = document.getElementById('param-inputs');
         const paramSliders = document.getElementById('param-sliders');
@@ -1418,6 +1437,7 @@ document.addEventListener('DOMContentLoaded', () => {
             else { plotData = d3.range(Math.floor(xDomain[0]), Math.ceil(xDomain[1])).map(x => ({ x: x, y: config.pdfpmf(x, j, currentState.params) })); yMax = d3.max(plotData, d => d.y); }
             yScale.domain([0, yMax * 1.1]).range([height, 0]); yAxis.attr("transform", `translate(${margin.left}, ${margin.top})`).call(d3.axisLeft(yScale).ticks(5));
             plotArea.selectAll("*").remove(); dragLayer.selectAll("*").remove();
+            document.getElementById('conditional-expectations-grid').innerHTML = '';
             const intervalValue = intervalSelect.value;
             if (config.type === 'continuous' && intervalValue !== '0') {
                 const quantile = (prob) => config.inv(prob, j, currentState.params); let lower, upper;
@@ -1431,18 +1451,80 @@ document.addEventListener('DOMContentLoaded', () => {
             setupInteractionLayer();
         }
 
+        function calculateAndDisplayConditionalExpectations(lower, upper) {
+            const grid = document.getElementById('conditional-expectations-grid');
+            const config = DISTRIBUTIONS[currentState.distKey];
+            
+            const { jstat, params } = currentState;
+            const pdf = x => config.pdfpmf(x, jstat, params);
+            const cdf = x => config.cdf(x, jstat, params);
+            const xDomain = config.domain(params, jstat);
+            const domain_min = xDomain[0];
+            const domain_max = xDomain[1];
+
+            let E_lower, E_middle, E_upper;
+
+            const prob_lower = cdf(lower) - cdf(domain_min);
+            const prob_middle = cdf(upper) - cdf(lower);
+            const prob_upper = cdf(domain_max) - cdf(upper);
+
+            if (currentState.distKey === 'normal') {
+                const mu = params.mu;
+                const sigma = params.sigma;
+                const variance = sigma * sigma;
+                if (prob_lower > 1e-9) E_lower = mu - variance * pdf(lower) / prob_lower;
+                if (prob_middle > 1e-9) E_middle = mu - variance * (pdf(upper) - pdf(lower)) / prob_middle;
+                if (prob_upper > 1e-9) E_upper = mu + variance * pdf(upper) / prob_upper;
+            } else {
+                const integrand = x => x * pdf(x);
+                if (prob_lower > 1e-9) {
+                    const integral = integrate(integrand, domain_min, lower);
+                    E_lower = integral / prob_lower;
+                }
+                if (prob_middle > 1e-9) {
+                    const integral = integrate(integrand, lower, upper);
+                    E_middle = integral / prob_middle;
+                }
+                if (prob_upper > 1e-9) {
+                    const integral = integrate(integrand, upper, domain_max);
+                    E_upper = integral / prob_upper;
+                }
+            }
+            
+            const format = val => (val === undefined || !isFinite(val)) ? 'N/A' : val.toFixed(4);
+
+            grid.innerHTML = `
+                <div>E[X | X < ${lower.toFixed(2)}]</div><span>${format(E_lower)}</span>
+                <div>E[X | ${lower.toFixed(2)} ≤ X ≤ ${upper.toFixed(2)}]</div><span>${format(E_middle)}</span>
+                <div>E[X | X > ${upper.toFixed(2)}]</div><span>${format(E_upper)}</span>
+            `;
+        }
+
         function setupInteractionLayer() {
             const config = DISTRIBUTIONS[currentState.distKey]; const focus = plotArea.append("circle").style("fill", "none").attr("stroke", "black").attr("r", 4).style("opacity", 0);
             let dragState = { startX: null, isDragging: false }; let touchDragState = {};
             const interactionRect = svg.append("rect").attr("transform", `translate(${margin.left},${margin.top})`).style("fill", "none").style("pointer-events", "all").style("touch-action", "none").attr("width", width).attr("height", height);
             function calculateAndDisplayArea(pixel1, pixel2) {
-                if (Math.abs(pixel1 - pixel2) < 5) { dragLayer.selectAll("*").remove(); return; }
+                if (Math.abs(pixel1 - pixel2) < 5) {
+                    dragLayer.selectAll("*").remove();
+                    document.getElementById('conditional-expectations-grid').innerHTML = '';
+                    return;
+                }
                 const x0 = xScale.invert(pixel1), x1 = xScale.invert(pixel2); const lower = Math.min(x0, x1), upper = Math.max(x0, x1); let area, text;
-                if (config.type === 'discrete') { const lowerBound = Math.ceil(lower), upperBound = Math.floor(upper); area = (upperBound < lowerBound) ? 0 : config.cdf(upperBound, currentState.jstat, currentState.params) - config.cdf(lowerBound - 1, currentState.jstat, currentState.params); text = `P(${lowerBound} ≤ X ≤ ${upperBound}) = ${area.toFixed(4)}`; }
-                else { area = config.cdf(upper, currentState.jstat, currentState.params) - config.cdf(lower, currentState.jstat, currentState.params); text = `P(${lower.toFixed(2)} < X < ${upper.toFixed(2)}) = ${area.toFixed(4)}`; }
+                if (config.type === 'discrete') {
+                    document.getElementById('conditional-expectations-grid').innerHTML = '';
+                    const lowerBound = Math.ceil(lower), upperBound = Math.floor(upper);
+                    area = (upperBound < lowerBound) ? 0 : config.cdf(upperBound, currentState.jstat, currentState.params) - config.cdf(lowerBound - 1, currentState.jstat, currentState.params);
+                    text = `P(${lowerBound} ≤ X ≤ ${upperBound}) = ${area.toFixed(4)}`;
+                }
+                else {
+                    area = config.cdf(upper, currentState.jstat, currentState.params) - config.cdf(lower, currentState.jstat, currentState.params);
+                    text = `P(${lower.toFixed(2)} < X < ${upper.toFixed(2)}) = ${area.toFixed(4)}`;
+                    calculateAndDisplayConditionalExpectations(lower, upper);
+                }
                 dragLayer.append("text").attr("class", "drag-text").attr("x", (pixel1 + pixel2) / 2).attr("y", -5).text(text);
             }
-            const drag = d3.drag().filter(event => !event.touches).on("start", (event) => { const [x_coord] = d3.pointer(event, interactionRect.node()); dragState.isDragging = true; dragState.startX = x_coord; dragLayer.selectAll("*").remove(); dragLayer.append("rect").attr("class", "drag-selection").attr("y", 0).attr("height", height); tooltip.style.opacity = 0; }).on("drag", (event) => { const [currentX] = d3.pointer(event, interactionRect.node()); const x = Math.min(dragState.startX, currentX), w = Math.abs(currentX - dragState.startX); dragLayer.select(".drag-selection").attr("x", x).attr("width", w); }).on("end", (event) => { dragState.isDragging = false; const [endX, endY] = d3.pointer(event, interactionRect.node()); if (endX >= 0 && endX <= width && endY >= 0 && endY <= height) { tooltip.style.opacity = 1; } calculateAndDisplayArea(dragState.startX, endX); });
+            const drag = d3.drag().filter(event => !event.touches).on("start", (event) => { const [x_coord] = d3.pointer(event, interactionRect.node()); dragState.isDragging = true; dragState.startX = x_coord; dragLayer.selectAll("*").remove(); document.getElementById('conditional-expectations-grid').innerHTML = ''; dragLayer.append("rect").attr("class", "drag-selection").attr("y", 0).attr("height", height); tooltip.style.opacity = 0; }).on("drag", (event) => { const [currentX] = d3.pointer(event, interactionRect.node()); const x = Math.min(dragState.startX, currentX), w = Math.abs(currentX - dragState.startX); dragLayer.select(".drag-selection").attr("x", x).attr("width", w); }).on("end", (event) => { dragState.isDragging = false; const [endX, endY] = d3.pointer(event, interactionRect.node()); if (endX >= 0 && endX <= width && endY >= 0 && endY <= height) { tooltip.style.opacity = 1; } calculateAndDisplayArea(dragState.startX, endX); });
             interactionRect.call(drag);
             function updateTooltip(event) {
                 const [tipX, tipY] = d3.pointer(event, document.getElementById('plot-container')); tooltip.style.left = tipX + "px"; tooltip.style.top = tipY + "px";
@@ -1453,8 +1535,8 @@ document.addEventListener('DOMContentLoaded', () => {
             interactionRect.on("mouseover", () => { if (!dragState.isDragging) { focus.style("opacity", 1); tooltip.style.opacity = 1; }}).on("mouseout", () => { if (!dragState.isDragging) { focus.style("opacity", 0); tooltip.style.opacity = 0; }}).on("mousemove", (event) => { if (dragState.isDragging) return; updateTooltip(event); });
             const node = interactionRect.node();
             node.addEventListener('touchstart', (event) => {
-                if (event.touches.length === 2) { event.preventDefault(); touchDragState.isDragging = true; const pointers = d3.pointers(event, node); touchDragState.x1 = pointers[0][0]; touchDragState.x2 = pointers[1][0]; dragLayer.selectAll("*").remove(); dragLayer.append("rect").attr("class", "drag-selection").attr("y", 0).attr("height", height); tooltip.style.opacity = 0; focus.style.opacity = 0; const x = Math.min(touchDragState.x1, touchDragState.x2), w = Math.abs(touchDragState.x1 - touchDragState.x2); dragLayer.select(".drag-selection").attr("x", x).attr("width", w); }
-                else if (event.touches.length === 1) { event.preventDefault(); dragLayer.selectAll("*").remove(); updateTooltip(event.touches[0]); focus.style.opacity = 1; tooltip.style.opacity = 1; }
+                if (event.touches.length === 2) { event.preventDefault(); touchDragState.isDragging = true; const pointers = d3.pointers(event, node); touchDragState.x1 = pointers[0][0]; touchDragState.x2 = pointers[1][0]; dragLayer.selectAll("*").remove(); document.getElementById('conditional-expectations-grid').innerHTML = ''; dragLayer.append("rect").attr("class", "drag-selection").attr("y", 0).attr("height", height); tooltip.style.opacity = 0; focus.style.opacity = 0; const x = Math.min(touchDragState.x1, touchDragState.x2), w = Math.abs(touchDragState.x1 - touchDragState.x2); dragLayer.select(".drag-selection").attr("x", x).attr("width", w); }
+                else if (event.touches.length === 1) { event.preventDefault(); dragLayer.selectAll("*").remove(); document.getElementById('conditional-expectations-grid').innerHTML = ''; updateTooltip(event.touches[0]); focus.style.opacity = 1; tooltip.style.opacity = 1; }
             });
             node.addEventListener('touchmove', (event) => {
                 if (event.touches.length === 2 && touchDragState.isDragging) { event.preventDefault(); const pointers = d3.pointers(event, node); touchDragState.x1 = pointers[0][0]; touchDragState.x2 = pointers[1][0]; const x = Math.min(touchDragState.x1, touchDragState.x2), w = Math.abs(touchDragState.x1 - touchDragState.x2); dragLayer.select(".drag-selection").attr("x", x).attr("width", w); }
