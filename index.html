@@ -898,7 +898,7 @@
                 <div id="ev-plot-container" class="plot-container plot-svg-wrapper">
                     <svg id="ev-plot-svg"></svg>
                 </div>
-                <div class="control-group" style="margin-top: 1rem;">
+                <div class="control-group" style="margin-top: 1rem; display: flex; align-items: center; gap: 10px;">
                     <label for="ev-overlay-select">Fit Distribution (MLE)</label>
                     <select id="ev-overlay-select">
                         <option value="none">(no overlay)</option>
@@ -906,6 +906,7 @@
                         <option value="exponential">Exponential</option>
                         <option value="lognormal">Lognormal</option>
                     </select>
+                    <span id="ev-mle-params"></span>
                 </div>
             </div>
         </div>
@@ -3415,6 +3416,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const normalizeBtn = document.getElementById('ev-normalize-btn');
         const svg = d3.select("#ev-plot-svg");
         const overlaySelect = document.getElementById('ev-overlay-select');
+        const mleParamsSpan = document.getElementById('ev-mle-params');
         const margin = { top: 30, right: 50, bottom: 40, left: 50 };
 
         function renderInputs() {
@@ -3504,11 +3506,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 plotPMF();
             } else {
                  svg.selectAll("*").remove();
+                 mleParamsSpan.innerHTML = '';
             }
         }
         
         function plotPMF() {
             svg.selectAll("*").remove();
+            mleParamsSpan.innerHTML = '';
             const validRows = state.rows.filter(r => !isNaN(r.p) && !isNaN(r.x) && r.p > 0);
             if (validRows.length === 0) return;
 
@@ -3568,6 +3572,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 if (params && distConfig) {
+                    let paramsString;
+                    if (overlayDist === 'normal') {
+                        if (params.sigma > 0) paramsString = `\\mathcal{N}(\\mu=${params.mu.toFixed(2)}, \\sigma^2=${(params.sigma**2).toFixed(2)})`;
+                    } else if (overlayDist === 'exponential') {
+                        paramsString = `\\text{Exp}(\\lambda=${params.lambda.toFixed(2)})`;
+                    } else if (overlayDist === 'lognormal') {
+                        if (params.sigma > 0) paramsString = `\\text{Lognormal}(\\mu=${params.mu.toFixed(2)}, \\sigma^2=${(params.sigma**2).toFixed(2)})`;
+                    }
+                    if (paramsString) {
+                        katex.render(paramsString, mleParamsSpan, { throwOnError: false });
+                    }
+
                     const jstat = distConfig.jStat(params);
                     const lineData = d3.range(xDomain[0], xDomain[1], (xDomain[1] - xDomain[0]) / 200)
                         .map(x => ({ x: x, y: distConfig.pdfpmf(x, jstat, params) }));
