@@ -3411,10 +3411,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const expectedValueApp = (() => {
         let state = {
             rows: [
-                { p: 0.5, x: 0, id: 0 },
-                { p: 0.5, x: 1, id: 1 }
+                { p: 0.5, x: 1, id: 0 },
+                { p: 0.25, x: 2, id: 1 },
+                { p: 0.25, x: 4, id: 2 }
             ],
-            nextId: 2
+            nextId: 3
         };
 
         function formatParam(value) {
@@ -3486,7 +3487,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         function addRow() {
-            if (state.rows.length >= 100) return;
             state.rows.push({ p: NaN, x: NaN, id: state.nextId++ });
             renderInputs();
         }
