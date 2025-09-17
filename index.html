@@ -905,6 +905,9 @@
                         <option value="normal">Normal</option>
                         <option value="exponential">Exponential</option>
                         <option value="lognormal">Lognormal</option>
+                        <option value="gamma">Gamma</option>
+                        <option value="pareto">Pareto</option>
+                        <option value="weibull">Weibull</option>
                     </select>
                     <span id="ev-mle-params"></span>
                 </div>
@@ -3569,6 +3572,64 @@ document.addEventListener('DOMContentLoaded', () => {
                         params = { mu: meanLog, sigma: Math.sqrt(varianceLog) };
                         distConfig = DISTRIBUTIONS.lognormal;
                     }
+                } else if (overlayDist === 'gamma') {
+                    const positiveRows = validRows.filter(r => r.x > 0);
+                    if (positiveRows.length > 0) {
+                        const totalP = positiveRows.reduce((sum, row) => sum + row.p, 0);
+                        const mean = positiveRows.reduce((sum, row) => sum + (row.p/totalP) * row.x, 0);
+                        const variance = positiveRows.reduce((sum, row) => sum + (row.p/totalP) * Math.pow(row.x - mean, 2), 0);
+                        if (variance > 0) {
+                            params = { 
+                                alpha: Math.pow(mean, 2) / variance, 
+                                lambda: mean / variance 
+                            };
+                            distConfig = DISTRIBUTIONS.gamma;
+                        }
+                    }
+                } else if (overlayDist === 'pareto') {
+                    const positiveRows = validRows.filter(r => r.x > 0);
+                    if (positiveRows.length > 1) {
+                        const xm = Math.min(...positiveRows.map(r => r.x));
+                        const totalP = positiveRows.reduce((sum, row) => sum + row.p, 0);
+                        const sum_log_x = positiveRows.reduce((sum, row) => sum + (row.p/totalP) * Math.log(row.x), 0);
+                        if (isFinite(sum_log_x) && sum_log_x > Math.log(xm)) {
+                            const alpha = 1 / (sum_log_x - Math.log(xm));
+                            params = { xm, alpha };
+                            distConfig = DISTRIBUTIONS.pareto;
+                        }
+                    }
+                } else if (overlayDist === 'weibull') {
+                    const positiveRows = validRows.filter(r => r.x > 0);
+                    if (positiveRows.length > 1) {
+                        const totalP = positiveRows.reduce((sum, row) => sum + row.p, 0);
+                        const normalizedRows = positiveRows.map(r => ({ ...r, p: r.p / totalP }));
+                        
+                        const negLogLikelihood = (k_arr) => {
+                            const k = k_arr[0];
+                            if (k <= 0) return Infinity;
+                            
+                            const sum_p_x_k = normalizedRows.reduce((sum, row) => sum + row.p * Math.pow(row.x, k), 0);
+                            if (sum_p_x_k <= 0) return Infinity;
+
+                            const lambda = Math.pow(sum_p_x_k, 1/k);
+                            if (lambda <= 0) return Infinity;
+                            
+                            const logLikelihood = normalizedRows.reduce((sum, row) => sum + row.p * (Math.log(k) - Math.log(lambda) + (k - 1) * Math.log(row.x) - Math.pow(row.x / lambda, k)), 0);
+
+                            if (!isFinite(logLikelihood)) return Infinity;
+                            return -logLikelihood;
+                        };
+                        
+                        const result = numeric.uncmin(negLogLikelihood, [1.0]);
+                        
+                        if (result.f < Infinity && result.solution[0] > 0) {
+                            const k = result.solution[0];
+                            const sum_p_x_k = normalizedRows.reduce((sum, row) => sum + row.p * Math.pow(row.x, k), 0);
+                            const lambda = Math.pow(sum_p_x_k, 1/k);
+                            params = { shape: k, scale: lambda };
+                            distConfig = DISTRIBUTIONS.weibull;
+                        }
+                    }
                 }
 
                 if (params && distConfig) {
@@ -3579,6 +3640,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         paramsString = `\\text{Exp}(\\lambda=${params.lambda.toFixed(2)})`;
                     } else if (overlayDist === 'lognormal') {
                         if (params.sigma > 0) paramsString = `\\text{Lognormal}(\\mu=${params.mu.toFixed(2)}, \\sigma^2=${(params.sigma**2).toFixed(2)})`;
+                    } else if (overlayDist === 'gamma') {
+                        paramsString = `\\text{Gamma}(\\alpha=${params.alpha.toFixed(2)}, \\lambda=${params.lambda.toFixed(2)})`;
+                    } else if (overlayDist === 'pareto') {
+                        paramsString = `\\text{Pareto}(x_m=${params.xm.toFixed(2)}, \\alpha=${params.alpha.toFixed(2)})`;
+                    } else if (overlayDist === 'weibull') {
+                        paramsString = `\\text{Weibull}(k=${params.shape.toFixed(2)}, \\lambda=${params.scale.toFixed(2)})`;
                     }
                     if (paramsString) {
                         katex.render(paramsString, mleParamsSpan, { throwOnError: false });
