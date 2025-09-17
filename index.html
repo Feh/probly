@@ -893,6 +893,8 @@
                 <div class="controls">
                     <button id="ev-add-row-btn">+</button>
                     <button id="ev-normalize-btn">Normalize Probabilities</button>
+                    <button id="ev-uniform-btn">Uniform Probabilities</button>
+                    <button id="ev-round-btn">Round Probabilities</button>
                 </div>
                 <h4>PMF Plot</h4>
                 <div id="ev-plot-container" class="plot-container plot-svg-wrapper">
@@ -3425,6 +3427,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const inputGrid = document.getElementById('ev-input-grid');
         const addRowBtn = document.getElementById('ev-add-row-btn');
         const normalizeBtn = document.getElementById('ev-normalize-btn');
+        const uniformBtn = document.getElementById('ev-uniform-btn');
+        const roundBtn = document.getElementById('ev-round-btn');
         const svg = d3.select("#ev-plot-svg");
         const overlaySelect = document.getElementById('ev-overlay-select');
         const mleParamsSpan = document.getElementById('ev-mle-params');
@@ -3500,6 +3504,47 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
             }
+            renderInputs();
+        }
+
+        function setUniformProbabilities() {
+            const n = state.rows.length;
+            if (n > 0) {
+                const uniformP = 1 / n;
+                state.rows.forEach(row => {
+                    row.p = uniformP;
+                });
+            }
+            renderInputs();
+        }
+
+        function roundProbabilities() {
+            if (state.rows.length === 0) return;
+
+            let roundedProbs = state.rows.map(row => isNaN(row.p) ? 0 : parseFloat(row.p.toPrecision(2)));
+            let sumRounded = roundedProbs.reduce((sum, p) => sum + p, 0);
+
+            let diff = 1 - sumRounded;
+
+            if (Math.abs(diff) > 1e-9) {
+                // Find row with largest probability to adjust
+                let maxP = -1;
+                let maxIdx = -1;
+                for (let i = 0; i < roundedProbs.length; i++) {
+                    if (roundedProbs[i] > maxP) {
+                        maxP = roundedProbs[i];
+                        maxIdx = i;
+                    }
+                }
+                if (maxIdx > -1) {
+                    roundedProbs[maxIdx] += diff;
+                }
+            }
+
+            state.rows.forEach((row, i) => {
+                row.p = roundedProbs[i];
+            });
+
             renderInputs();
         }
 
@@ -3699,6 +3744,8 @@ document.addEventListener('DOMContentLoaded', () => {
             addRowBtn.addEventListener('click', addRow);
             renderMathInElement(document.getElementById('ev-input-grid'));
             normalizeBtn.addEventListener('click', normalizeProbabilities);
+            uniformBtn.addEventListener('click', setUniformProbabilities);
+            roundBtn.addEventListener('click', roundProbabilities);
             overlaySelect.addEventListener('change', validateAndPlot);
             const resizeObserver = new ResizeObserver(() => {
                 setTimeout(validateAndPlot, 0);
