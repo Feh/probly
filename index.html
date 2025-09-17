@@ -3414,6 +3414,14 @@ document.addEventListener('DOMContentLoaded', () => {
             nextId: 2
         };
 
+        function formatParam(value) {
+            if (Math.abs(value) < 1e-9) return "0";
+            const s = value.toPrecision(3);
+            const parts = s.split('e');
+            if (parts.length === 1) return s;
+            return `${parts[0]}\\times 10^{${parts[1].replace('+', '')}}`;
+        }
+
         const inputGrid = document.getElementById('ev-input-grid');
         const addRowBtn = document.getElementById('ev-add-row-btn');
         const normalizeBtn = document.getElementById('ev-normalize-btn');
@@ -3635,17 +3643,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (params && distConfig) {
                     let paramsString;
                     if (overlayDist === 'normal') {
-                        if (params.sigma > 0) paramsString = `\\mathcal{N}(\\mu=${params.mu.toFixed(2)}, \\sigma^2=${(params.sigma**2).toFixed(2)})`;
+                        if (params.sigma > 0) paramsString = `\\mathcal{N}(\\mu=${formatParam(params.mu)}, \\sigma^2=${formatParam(params.sigma**2)})`;
                     } else if (overlayDist === 'exponential') {
-                        paramsString = `\\text{Exp}(\\lambda=${params.lambda.toFixed(2)})`;
+                        paramsString = `\\text{Exp}(\\lambda=${formatParam(params.lambda)})`;
                     } else if (overlayDist === 'lognormal') {
-                        if (params.sigma > 0) paramsString = `\\text{Lognormal}(\\mu=${params.mu.toFixed(2)}, \\sigma^2=${(params.sigma**2).toFixed(2)})`;
+                        if (params.sigma > 0) paramsString = `\\text{Lognormal}(\\mu=${formatParam(params.mu)}, \\sigma^2=${formatParam(params.sigma**2)})`;
                     } else if (overlayDist === 'gamma') {
-                        paramsString = `\\text{Gamma}(\\alpha=${params.alpha.toFixed(2)}, \\lambda=${params.lambda.toFixed(2)})`;
+                        paramsString = `\\text{Gamma}(\\alpha=${formatParam(params.alpha)}, \\lambda=${formatParam(params.lambda)})`;
                     } else if (overlayDist === 'pareto') {
-                        paramsString = `\\text{Pareto}(x_m=${params.xm.toFixed(2)}, \\alpha=${params.alpha.toFixed(2)})`;
+                        paramsString = `\\text{Pareto}(x_m=${formatParam(params.xm)}, \\alpha=${formatParam(params.alpha)})`;
                     } else if (overlayDist === 'weibull') {
-                        paramsString = `\\text{Weibull}(k=${params.shape.toFixed(2)}, \\lambda=${params.scale.toFixed(2)})`;
+                        paramsString = `\\text{Weibull}(k=${formatParam(params.shape)}, \\lambda=${formatParam(params.scale)})`;
                     }
                     if (paramsString) {
                         katex.render(paramsString, mleParamsSpan, { throwOnError: false });
