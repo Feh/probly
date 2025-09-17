@@ -1455,39 +1455,79 @@ document.addEventListener('DOMContentLoaded', () => {
             const config = DISTRIBUTIONS[currentState.distKey];
             
             const { jstat, params } = currentState;
-            const pdf = x => config.pdfpmf(x, jstat, params);
             const cdf = x => config.cdf(x, jstat, params);
             const xDomain = config.domain(params, jstat);
-            const domain_min = xDomain[0];
-            const domain_max = xDomain[1];
-
+            
             let E_lower, E_middle, E_upper;
 
-            const prob_lower = cdf(lower) - cdf(domain_min);
-            const prob_middle = cdf(upper) - cdf(lower);
-            const prob_upper = cdf(domain_max) - cdf(upper);
+            if (config.type === 'continuous') {
+                const pdf = x => config.pdfpmf(x, jstat, params);
+                const domain_min = xDomain[0];
+                const domain_max = xDomain[1];
+                const prob_lower = cdf(lower) - cdf(domain_min);
+                const prob_middle = cdf(upper) - cdf(lower);
+                const prob_upper = cdf(domain_max) - cdf(upper);
 
-            if (currentState.distKey === 'normal') {
-                const mu = params.mu;
-                const sigma = params.sigma;
-                const variance = sigma * sigma;
-                if (prob_lower > 1e-9) E_lower = mu - variance * pdf(lower) / prob_lower;
-                if (prob_middle > 1e-9) E_middle = mu - variance * (pdf(upper) - pdf(lower)) / prob_middle;
-                if (prob_upper > 1e-9) E_upper = mu + variance * pdf(upper) / prob_upper;
-            } else {
-                const integrand = x => x * pdf(x);
-                if (prob_lower > 1e-9) {
-                    const integral = integrate(integrand, domain_min, lower);
-                    E_lower = integral / prob_lower;
+                if (currentState.distKey === 'normal') {
+                    const mu = params.mu;
+                    const sigma = params.sigma;
+                    const variance = sigma * sigma;
+                    if (prob_lower > 1e-9) E_lower = mu - variance * pdf(lower) / prob_lower;
+                    if (prob_middle > 1e-9) E_middle = mu - variance * (pdf(upper) - pdf(lower)) / prob_middle;
+                    if (prob_upper > 1e-9) E_upper = mu + variance * pdf(upper) / prob_upper;
+                } else {
+                    const integrand = x => x * pdf(x);
+                    if (prob_lower > 1e-9) {
+                        const integral = integrate(integrand, domain_min, lower);
+                        E_lower = integral / prob_lower;
+                    }
+                    if (prob_middle > 1e-9) {
+                        const integral = integrate(integrand, lower, upper);
+                        E_middle = integral / prob_middle;
+                    }
+                    if (prob_upper > 1e-9) {
+                        const integral = integrate(integrand, upper, domain_max);
+                        E_upper = integral / prob_upper;
+                    }
                 }
-                if (prob_middle > 1e-9) {
-                    const integral = integrate(integrand, lower, upper);
-                    E_middle = integral / prob_middle;
+            } else { // Discrete
+                const lowerBound = Math.ceil(lower);
+                const upperBound = Math.floor(upper);
+                
+                const pmf = x => config.pdfpmf(x, jstat, params);
+                const domain_min_k = Math.ceil(xDomain[0]);
+                const domain_max_k = Math.floor(xDomain[1]);
+
+                let sum_lower = 0, prob_lower = 0;
+                for (let k = domain_min_k; k < lowerBound; k++) {
+                    const p = pmf(k);
+                    if (p > 0) {
+                        prob_lower += p;
+                        sum_lower += k * p;
+                    }
                 }
-                if (prob_upper > 1e-9) {
-                    const integral = integrate(integrand, upper, domain_max);
-                    E_upper = integral / prob_upper;
+
+                let sum_middle = 0, prob_middle = 0;
+                for (let k = lowerBound; k <= upperBound; k++) {
+                     const p = pmf(k);
+                    if (p > 0) {
+                        prob_middle += p;
+                        sum_middle += k * p;
+                    }
                 }
+
+                let sum_upper = 0, prob_upper = 0;
+                for (let k = upperBound + 1; k <= domain_max_k; k++) {
+                     const p = pmf(k);
+                    if (p > 0) {
+                        prob_upper += p;
+                        sum_upper += k * p;
+                    }
+                }
+
+                if (prob_lower > 1e-9) E_lower = sum_lower / prob_lower;
+                if (prob_middle > 1e-9) E_middle = sum_middle / prob_middle;
+                if (prob_upper > 1e-9) E_upper = sum_upper / prob_upper;
             }
             
             const format = val => (val === undefined || !isFinite(val)) ? '\\text{N/A}' : val.toFixed(4);
@@ -1512,10 +1552,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 const x0 = xScale.invert(pixel1), x1 = xScale.invert(pixel2); const lower = Math.min(x0, x1), upper = Math.max(x0, x1); let area, text;
                 if (config.type === 'discrete') {
-                    document.getElementById('conditional-expectations-grid').innerHTML = '';
                     const lowerBound = Math.ceil(lower), upperBound = Math.floor(upper);
                     area = (upperBound < lowerBound) ? 0 : config.cdf(upperBound, currentState.jstat, currentState.params) - config.cdf(lowerBound - 1, currentState.jstat, currentState.params);
                     text = `P(${lowerBound} ≤ X ≤ ${upperBound}) = ${area.toFixed(4)}`;
+                    calculateAndDisplayConditionalExpectations(lower, upper);
                 }
                 else {
                     area = config.cdf(upper, currentState.jstat, currentState.params) - config.cdf(lower, currentState.jstat, currentState.params);
