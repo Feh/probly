@@ -911,7 +911,6 @@
                         <option value="lognormal">Lognormal</option>
                         <option value="gamma">Gamma</option>
                         <option value="pareto">Pareto</option>
-                        <option value="weibull">Weibull</option>
                     </select>
                     <span id="ev-mle-params"></span>
                 </div>
@@ -3663,38 +3662,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             distConfig = DISTRIBUTIONS.pareto;
                         }
                     }
-                } else if (overlayDist === 'weibull') {
-                    const positiveRows = validRows.filter(r => r.x > 0);
-                    if (positiveRows.length > 1) {
-                        const totalP = positiveRows.reduce((sum, row) => sum + row.p, 0);
-                        const normalizedRows = positiveRows.map(r => ({ ...r, p: r.p / totalP }));
-
-                        const negLogLikelihood = (k_arr) => {
-                            const k = k_arr[0];
-                            if (k <= 0) return Infinity;
-
-                            const sum_p_x_k = normalizedRows.reduce((sum, row) => sum + row.p * Math.pow(row.x, k), 0);
-                            if (sum_p_x_k <= 0) return Infinity;
-
-                            const lambda = Math.pow(sum_p_x_k, 1/k);
-                            if (lambda <= 0) return Infinity;
-
-                            const logLikelihood = normalizedRows.reduce((sum, row) => sum + row.p * (Math.log(k) - Math.log(lambda) + (k - 1) * Math.log(row.x) - Math.pow(row.x / lambda, k)), 0);
-
-                            if (!isFinite(logLikelihood)) return Infinity;
-                            return -logLikelihood;
-                        };
-
-                        const result = numeric.uncmin(negLogLikelihood, [1.0]);
-
-                        if (result.f < Infinity && result.solution[0] > 0) {
-                            const k = result.solution[0];
-                            const sum_p_x_k = normalizedRows.reduce((sum, row) => sum + row.p * Math.pow(row.x, k), 0);
-                            const lambda = Math.pow(sum_p_x_k, 1/k);
-                            params = { shape: k, scale: lambda };
-                            distConfig = DISTRIBUTIONS.weibull;
-                        }
-                    }
                 }
 
                 if (params && distConfig) {
@@ -3709,8 +3676,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         paramsString = `\\text{Gamma}(\\alpha=${formatParam(params.alpha)}, \\lambda=${formatParam(params.lambda)})`;
                     } else if (overlayDist === 'pareto') {
                         paramsString = `\\text{Pareto}(x_m=${formatParam(params.xm)}, \\alpha=${formatParam(params.alpha)})`;
-                    } else if (overlayDist === 'weibull') {
-                        paramsString = `\\text{Weibull}(k=${formatParam(params.shape)}, \\lambda=${formatParam(params.scale)})`;
                     }
                     if (paramsString) {
                         katex.render(paramsString, mleParamsSpan, { throwOnError: false });
