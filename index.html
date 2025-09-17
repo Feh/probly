@@ -898,6 +898,15 @@
                 <div id="ev-plot-container" class="plot-container plot-svg-wrapper">
                     <svg id="ev-plot-svg"></svg>
                 </div>
+                <div class="control-group" style="margin-top: 1rem;">
+                    <label for="ev-overlay-select">Fit Distribution (MLE)</label>
+                    <select id="ev-overlay-select">
+                        <option value="none">(no overlay)</option>
+                        <option value="normal">Normal</option>
+                        <option value="exponential">Exponential</option>
+                        <option value="lognormal">Lognormal</option>
+                    </select>
+                </div>
             </div>
         </div>
         <div id="about-app" class="app-container">
@@ -3405,7 +3414,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const addRowBtn = document.getElementById('ev-add-row-btn');
         const normalizeBtn = document.getElementById('ev-normalize-btn');
         const svg = d3.select("#ev-plot-svg");
-        const margin = { top: 30, right: 30, bottom: 40, left: 50 };
+        const overlaySelect = document.getElementById('ev-overlay-select');
+        const margin = { top: 30, right: 50, bottom: 40, left: 50 };
 
         function renderInputs() {
             // Using a document fragment for performance
@@ -3532,6 +3542,49 @@ document.addEventListener('DOMContentLoaded', () => {
                 .attr("width", barWidth)
                 .attr("height", d => height - yScale(d.p));
             
+            const overlayDist = overlaySelect.value;
+            if (overlayDist !== 'none') {
+                let params, distConfig;
+                const mean = validRows.reduce((sum, row) => sum + row.p * row.x, 0);
+                
+                if (overlayDist === 'normal') {
+                    const variance = validRows.reduce((sum, row) => sum + row.p * Math.pow(row.x - mean, 2), 0);
+                    params = { mu: mean, sigma: Math.sqrt(variance) };
+                    distConfig = DISTRIBUTIONS.normal;
+                } else if (overlayDist === 'exponential') {
+                    if (mean > 0) {
+                        params = { lambda: 1 / mean };
+                        distConfig = DISTRIBUTIONS.exponential;
+                    }
+                } else if (overlayDist === 'lognormal') {
+                    const logRows = validRows.filter(r => r.x > 0);
+                    if (logRows.length > 0) {
+                        const totalP = logRows.reduce((sum, row) => sum + row.p, 0);
+                        const meanLog = logRows.reduce((sum, row) => sum + (row.p/totalP) * Math.log(row.x), 0);
+                        const varianceLog = logRows.reduce((sum, row) => sum + (row.p/totalP) * Math.pow(Math.log(row.x) - meanLog, 2), 0);
+                        params = { mu: meanLog, sigma: Math.sqrt(varianceLog) };
+                        distConfig = DISTRIBUTIONS.lognormal;
+                    }
+                }
+
+                if (params && distConfig) {
+                    const jstat = distConfig.jStat(params);
+                    const lineData = d3.range(xDomain[0], xDomain[1], (xDomain[1] - xDomain[0]) / 200)
+                        .map(x => ({ x: x, y: distConfig.pdfpmf(x, jstat, params) }));
+
+                    const y2Max = d3.max(lineData, d => d.y);
+                    const y2Scale = d3.scaleLinear().domain([0, y2Max * 1.1]).range([height, 0]);
+
+                    g.append("g").attr("class", "y-axis-2 axis").attr("transform", `translate(${width}, 0)`).call(d3.axisRight(y2Scale).ticks(5));
+
+                    g.append("path")
+                        .datum(lineData)
+                        .attr("class", "line-path")
+                        .style("stroke", "#d9534f")
+                        .attr("d", d3.line().x(d => xScale(d.x)).y(d => y2Scale(d.y)));
+                }
+            }
+
             const expectedValue = validRows.reduce((sum, row) => sum + row.p * row.x, 0);
 
             if (isFinite(expectedValue)) {
@@ -3555,6 +3608,7 @@ document.addEventListener('DOMContentLoaded', () => {
             addRowBtn.addEventListener('click', addRow);
             renderMathInElement(document.getElementById('ev-input-grid'));
             normalizeBtn.addEventListener('click', normalizeProbabilities);
+            overlaySelect.addEventListener('change', validateAndPlot);
             const resizeObserver = new ResizeObserver(() => {
                 setTimeout(validateAndPlot, 0);
             });
