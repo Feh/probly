@@ -895,6 +895,7 @@
                     <button id="ev-normalize-btn">Normalize Probabilities</button>
                     <button id="ev-uniform-btn">Uniform Probabilities</button>
                     <button id="ev-round-btn">Round Probabilities</button>
+                    <button id="ev-order-btn">Order rows by x</button>
                 </div>
                 <h4>PMF Plot</h4>
                 <div id="ev-plot-container" class="plot-container plot-svg-wrapper">
@@ -3429,6 +3430,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const normalizeBtn = document.getElementById('ev-normalize-btn');
         const uniformBtn = document.getElementById('ev-uniform-btn');
         const roundBtn = document.getElementById('ev-round-btn');
+        const orderBtn = document.getElementById('ev-order-btn');
         const svg = d3.select("#ev-plot-svg");
         const overlaySelect = document.getElementById('ev-overlay-select');
         const mleParamsSpan = document.getElementById('ev-mle-params');
@@ -3545,6 +3547,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 row.p = roundedProbs[i];
             });
 
+            renderInputs();
+        }
+
+        function orderRowsByX() {
+            state.rows.sort((a, b) => {
+                const aX = isNaN(a.x) ? Infinity : a.x;
+                const bX = isNaN(b.x) ? Infinity : b.x;
+                return aX - bX;
+            });
             renderInputs();
         }
 
@@ -3746,6 +3757,7 @@ document.addEventListener('DOMContentLoaded', () => {
             normalizeBtn.addEventListener('click', normalizeProbabilities);
             uniformBtn.addEventListener('click', setUniformProbabilities);
             roundBtn.addEventListener('click', roundProbabilities);
+            orderBtn.addEventListener('click', orderRowsByX);
             overlaySelect.addEventListener('change', validateAndPlot);
             const resizeObserver = new ResizeObserver(() => {
                 setTimeout(validateAndPlot, 0);
