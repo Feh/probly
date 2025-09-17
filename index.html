@@ -1491,13 +1491,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
             
-            const format = val => (val === undefined || !isFinite(val)) ? 'N/A' : val.toFixed(4);
+            const format = val => (val === undefined || !isFinite(val)) ? '\\text{N/A}' : val.toFixed(4);
 
             grid.innerHTML = `
-                <div>E[X | X < ${lower.toFixed(2)}]</div><span>${format(E_lower)}</span>
-                <div>E[X | ${lower.toFixed(2)} ≤ X ≤ ${upper.toFixed(2)}]</div><span>${format(E_middle)}</span>
-                <div>E[X | X > ${upper.toFixed(2)}]</div><span>${format(E_upper)}</span>
+                <div>\\(E[X \\mid X < ${lower.toFixed(2)}] = \\)</div><span>\\(${format(E_lower)}\\)</span>
+                <div>\\(E[X \\mid ${lower.toFixed(2)} \\le X \\le ${upper.toFixed(2)}] = \\)</div><span>\\(${format(E_middle)}\\)</span>
+                <div>\\(E[X \\mid X > ${upper.toFixed(2)}] = \\)</div><span>\\(${format(E_upper)}\\)</span>
             `;
+            renderMathInElement(grid, { delimiters: [ {left: "\\(", right: "\\)", display: false} ] });
         }
 
         function setupInteractionLayer() {
