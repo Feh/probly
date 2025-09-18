@@ -942,7 +942,7 @@
         </div>
         <div id="information-value-app" class="app-container">
             <div class="panel">
-                <h3>Information Value Calculator</h3>
+                <h3>Inputs</h3>
                 <p>Define states, actions, prior probabilities, and payoffs to calculate the value of information.</p>
                 <div class="controls">
                     <button id="iv-add-state-btn">Add State</button>
@@ -951,7 +951,7 @@
                 <div id="iv-table-container"></div>
             </div>
             <div class="panel">
-                <h3>Results</h3>
+                <h3>Value of Information</h3>
                 <div id="iv-results-grid" class="results-grid"></div>
                 <h4>Expected Value of Sample Information (EVSI)</h4>
                 <div id="iv-plot-container" class="plot-container plot-svg-wrapper">
@@ -4175,9 +4175,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function renderResults(ev_without, ev_with_pi, evpi) {
             resultsGrid.innerHTML = `
-                <div class="result-item"><h4>EV without Information</h4><span>${ev_without.toFixed(4)}</span></div>
-                <div class="result-item"><h4>EV with Perfect Info</h4><span>${ev_with_pi.toFixed(4)}</span></div>
-                <div class="result-item"><h4>Value of Perfect Info (EVPI)</h4><span>${evpi.toFixed(4)}</span></div>
+                <div class="result-item"><h4>EV without Information</h4><em>The best action (column), in expectation, yields:</em><br /><span>${ev_without.toFixed(4)}</span></div>
+                <div class="result-item"><h4>EV with Perfect Info</h4><em>The best action if you know the true state, yields in expectation:</em><br /><span>${ev_with_pi.toFixed(4)}</span></div>
+                <div class="result-item"><h4>Value of Perfect Info (EVPI)</h4><em>The delta between EV with and without perfect information:</em><br /><span>${evpi.toFixed(4)}</span></div>
             `;
         }
 
