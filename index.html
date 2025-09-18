@@ -985,30 +985,30 @@
                         </ul>
                     </p>
                     <h4>The Update Steps</h4>
-                    <p>The update from prior beliefs (\(\pi_i\)) to posterior beliefs (\(P(S_k|R_j)\)) requires defining the information's reliability and then applying Bayes' theorem.</p>
+                    <p>The update from prior beliefs (\(\pi_i\)) to posterior beliefs (\(P(S_k\mid R_j)\)) requires defining the information's reliability and then applying Bayes' theorem.</p>
                     <p><b>1. Construct the Likelihood Matrix (\(L\))</b></p>
-                    <p>The \(n \times n\) likelihood matrix \(L\), where \(L_{ij} = P(R_j|S_i)\), formalizes the "uniform accuracy, symmetric error" assumption.
+                    <p>The \(n \times n\) likelihood matrix \(L\), where \(L_{ij} = P(R_j\mid S_i)\), formalizes the "uniform accuracy, symmetric error" assumption.
                         <ul>
-                            <li>The probability of a correct report is \(P(R_i|S_i) = a\).</li>
-                            <li>The probability of an incorrect report is \(1-a\), distributed evenly among the \(n-1\) other possibilities. Thus, \(P(R_j|S_i) = \frac{1-a}{n-1}\) for \(i \neq j\).</li>
+                            <li>The probability of a correct report is \(P(R_i\mid S_i) = a\).</li>
+                            <li>The probability of an incorrect report is \(1-a\), distributed evenly among the \(n-1\) other possibilities. Thus, \(P(R_j\mid S_i) = \frac{1-a}{n-1}\) for \(i \neq j\).</li>
                         </ul>
                     </p>
                     <p>Using the Kronecker delta \(\delta_{ij}\), the matrix elements are given by:
                     $$L_{ij} = a \cdot \delta_{ij} + \frac{1-a}{n-1} \cdot (1-\delta_{ij})$$</p>
                     <p><b>2. Calculate the Probability of Each Report (\(P(R_j)\))</b></p>
                     <p>For each possible report \(R_j\) (where \(j=1, ..., n\)), its marginal probability is calculated using the law of total probability, summing over all possible true states:
-                    $$P(R_j) = \sum_{i=1}^{n} P(R_j|S_i)P(S_i) = \sum_{i=1}^{n} L_{ij} \pi_i$$</p>
-                    <p><b>3. Calculate the Posterior Probabilities (\(P(S_k|R_j)\))</b></p>
+                    $$P(R_j) = \sum_{i=1}^{n} P(R_j\mid S_i)P(S_i) = \sum_{i=1}^{n} L_{ij} \pi_i$$</p>
+                    <p><b>3. Calculate the Posterior Probabilities (\(P(S_k\mid R_j)\))</b></p>
                     <p>This is the core update step. Given that the survey has returned report \(R_j\), the updated (posterior) probability of the true state being \(S_k\) is found using Bayes' theorem:
-                    $$P(S_k|R_j) = \frac{P(R_j|S_k)P(S_k)}{P(R_j)}$$</p>
+                    $$P(S_k\mid R_j) = \frac{P(R_j\mid S_k)P(S_k)}{P(R_j)}$$</p>
                     <p>Substituting the notation from the previous steps, the explicit update formula is:
-                    $$P(S_k|R_j) = \frac{L_{kj} \cdot \pi_k}{\sum_{i=1}^{n} L_{ij} \pi_i}$$
+                    $$P(S_k\mid R_j) = \frac{L_{kj} \cdot \pi_k}{\sum_{i=1}^{n} L_{ij} \pi_i}$$
                     This calculation is performed for each possible combination of true state \(S_k\) and report \(R_j\).</p>
                     <h4>Using the Updated Probabilities</h4>
                     <p>These posterior probabilities are then used to find the expected value with the information.</p>
                     <ol>
                         <li><b>Expected Value without Information:</b> $$EV_{\text{without}} = \max_{j=1..m} \left( \sum_{i=1}^{n} V_{ji} \pi_i \right)$$</li>
-                        <li><b>Expected Value with Information:</b> $$EV_{\text{with}} = \sum_{j=1}^{n} \left[ \max_{l=1..m} \left( \sum_{k=1}^{n} V_{lk} P(S_k|R_j) \right) \right] P(R_j)$$</li>
+                        <li><b>Expected Value with Information:</b> $$EV_{\text{with}} = \sum_{j=1}^{n} \left[ \max_{l=1..m} \left( \sum_{k=1}^{n} V_{lk} P(S_k\mid R_j) \right) \right] P(R_j)$$</li>
                         <li><b>EVSI:</b> $$EVSI = EV_{\text{with}} - EV_{\text{without}}$$</li>
                     </ol>
                 </div>
@@ -4230,8 +4230,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function renderResults(ev_without, ev_with_pi, evpi, best_action_name) {
             resultsGrid.innerHTML = `
-                <div class="result-item"><h4>EV without Information</h4><em>The best action (${best_action_name}), in expectation, yields:</em><br /><strong>${ev_without.toFixed(2)}</strong></div>
-                <div class="result-item"><h4>EV with Perfect Info</h4><em>The best action if you know the true state, yields in expectation:</em><br /><strong>${ev_with_pi.toFixed(2)}</strong></div>
+                <div class="result-item"><h4>EV without Information</h4><em>The best action (column ${best_action_name}), in expectation, yields:</em><br /><strong>${ev_without.toFixed(2)}</strong></div>
+                <div class="result-item"><h4>EV with Perfect Info</h4><em>The best action if you know the true state (light yellow fields), yields in expectation:</em><br /><strong>${ev_with_pi.toFixed(2)}</strong></div>
                 <div class="result-item"><h4>Value of Perfect Info (EVPI)</h4><em>The delta between EV with and without perfect information:</em><br /><strong>${evpi.toFixed(2)}</strong></div>
             `;
         }
