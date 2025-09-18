@@ -3991,7 +3991,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Actions header row
             if (state.actions.length > 0) {
                 const trHeadActions = document.createElement('tr');
-                trHeadActions.innerHTML = '<th colspan="2"></th>';
+                trHeadActions.innerHTML = '<th colspan="2" style="border-top: 0; border-left: 0; background: transparent;"></th>';
                 const thActions = document.createElement('th');
                 thActions.colSpan = state.actions.length;
                 thActions.textContent = 'Actions';
