@@ -305,6 +305,24 @@
         }
         #expected-value-app .bar { opacity: .7; fill: var(--accent-color); }
 
+        /* Scoped styles for Information Value App */
+        #information-value-app { grid-template-columns: 1fr; max-width: 900px; margin: 2rem auto; }
+        #information-value-app .panel { grid-column: 1 / -1; }
+        #information-value-app .controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 1rem; }
+        #information-value-app .controls button { padding: 10px 15px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 3px; background-color: #f0f0f0; cursor: pointer; }
+        #information-value-app .controls button:hover { background-color: #e0e0e0; }
+        #information-value-app table { border-collapse: collapse; width: 100%; margin-bottom: 1rem; }
+        #information-value-app th, #information-value-app td { border: 1px solid #ccc; padding: 0; }
+        #information-value-app th input, #information-value-app td input { width: 100%; height: 100%; border: none; padding: 8px; box-sizing: border-box; text-align: center; }
+        #information-value-app input[type="number"].prob-input.error { border-color: #d9534f; border-width: 2px; }
+        #information-value-app th { background-color: #f7f7f7; }
+        #information-value-app .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem; }
+        #information-value-app .result-item { padding: 10px; border: 1px solid var(--border-color); border-radius: 3px; background-color: var(--panel-bg); }
+        #information-value-app .result-item h4 { margin: 0 0 10px 0; padding-bottom: 5px; border-bottom: 1px solid var(--border-color); }
+        #information-value-app .plot-container { min-height: 300px; border: 1px solid var(--border-color); }
+        #information-value-app #iv-plot-svg { width: 100%; }
+        #information-value-app .tooltip { position: absolute; background-color: rgba(0, 0, 0, 0.75); color: white; padding: 5px 10px; border-radius: 3px; pointer-events: none; opacity: 0; font-size: 0.9em; z-index: 10; transform: translate(-50%, -110%); }
+
 
         .move-controls { position: absolute; top: 5px; right: 5px; z-index: 5; display: flex; flex-direction: row; }
         .move-btn { background: none; border: none; cursor: pointer; font-size: 0.8rem; padding: 0; line-height: 1; color: #888; }
@@ -382,6 +400,7 @@
             <li><a href="#wiener-process">Wiener Process</a></li>
             <li><a href="#bernoulli">Correlated Bernoulli</a></li>
             <li><a href="#expected-value">Expected Value</a></li>
+            <li><a href="#information-value">Information Value</a></li>
             <div class="nav-divider"></div>
             <li class="nav-secondary-item"><a href="#about">About</a></li>
             <li class="nav-secondary-item"><a href="#install">Install on device</a></li>
@@ -919,6 +938,81 @@
                     <span id="ev-mle-params"></span>
                 </div>
             </div>
+        </div>
+        <div id="information-value-app" class="app-container">
+            <div class="panel">
+                <h3>Information Value Calculator</h3>
+                <p>Define states, actions, prior probabilities, and payoffs to calculate the value of information.</p>
+                <div class="controls">
+                    <button id="iv-add-state-btn">Add State</button>
+                    <button id="iv-remove-state-btn">Remove State</button>
+                    <button id="iv-add-action-btn">Add Action</button>
+                    <button id="iv-remove-action-btn">Remove Action</button>
+                </div>
+                <div id="iv-table-container"></div>
+            </div>
+            <div class="panel">
+                <h3>Results</h3>
+                <div id="iv-results-grid" class="results-grid"></div>
+                <h4>Expected Value of Sample Information (EVSI)</h4>
+                <div id="iv-plot-container" class="plot-container plot-svg-wrapper">
+                    <svg id="iv-plot-svg"></svg>
+                    <div id="iv-tooltip" class="tooltip"></div>
+                </div>
+            </div>
+            <details class="panel">
+                <summary>Formulas & Assumptions</summary>
+                <div class="formulas" style="padding-top: 1rem;">
+                    <h4>Decision Making with (unreliable) information</h4>
+                    <p>Assume there are multiple possible states of the world, and multiple actions you can take.</p>
+                    <p>For example:
+                        <ul>
+                            <li>Demand is low/high (unknown, but we have an idea), and</li>
+                            <li>Actions are invest/not invest (or build/not build).</li>
+                            <li>What is the value of reducing the uncertainty about the state of the world?</li>
+                            <li>We could fully know the state of the world (“expected value of perfect information”) or have a somewhat unreliable report on the state of the world (“expected value of sample information”).</li>
+                        </ul>
+                    </p>
+                    <h4>Model Definition</h4>
+                    <p>This model calculates the value of imperfect information (EVSI) under specific assumptions of uniform accuracy and symmetric error.</p>
+                    <p><b>Inputs:</b>
+                        <ul>
+                            <li><b>States ($S_i$):</b> A set of $n$ mutually exclusive states of nature, $\{S_1, ..., S_n\}$.</li>
+                            <li><b>Actions ($A_j$):</b> A set of $m$ possible actions, $\{A_1, ..., A_m\}$.</li>
+                            <li><b>Priors ($\pi$):</b> An $n \times 1$ vector of prior probabilities, where $\pi_i = P(S_i)$ and $\sum \pi_i = 1$.</li>
+                            <li><b>Payoffs ($V$):</b> An $m \times n$ matrix where $V_{ji}$ is the payoff of taking action $A_j$ if state $S_i$ occurs.</li>
+                            <li><b>Accuracy ($a$):</b> A scalar $a \in (0, 1)$ representing the probability that the information source correctly identifies the true state.</li>
+                        </ul>
+                    </p>
+                    <h4>The Update Steps</h4>
+                    <p>The update from prior beliefs ($\pi_i$) to posterior beliefs ($P(S_k|R_j)$) requires defining the information's reliability and then applying Bayes' theorem.</p>
+                    <p><b>1. Construct the Likelihood Matrix ($L$)</b></p>
+                    <p>The $n \times n$ likelihood matrix $L$, where $L_{ij} = P(R_j|S_i)$, formalizes the "uniform accuracy, symmetric error" assumption.
+                        <ul>
+                            <li>The probability of a correct report is $P(R_i|S_i) = a$.</li>
+                            <li>The probability of an incorrect report is $1-a$, distributed evenly among the $n-1$ other possibilities. Thus, $P(R_j|S_i) = \frac{1-a}{n-1}$ for $i \neq j$.</li>
+                        </ul>
+                    </p>
+                    <p>Using the Kronecker delta, $\delta_{ij}$ (which is 1 if $i=j$ and 0 otherwise), the matrix elements are given by:
+                    $$L_{ij} = a \cdot \delta_{ij} + \frac{1-a}{n-1} \cdot (1-\delta_{ij})$$</p>
+                    <p><b>2. Calculate the Probability of Each Report ($P(R_j)$)</b></p>
+                    <p>For each possible report $R_j$ (where $j=1, ..., n$), its marginal probability is calculated using the law of total probability, summing over all possible true states:
+                    $$P(R_j) = \sum_{i=1}^{n} P(R_j|S_i)P(S_i) = \sum_{i=1}^{n} L_{ij} \pi_i$$</p>
+                    <p><b>3. Calculate the Posterior Probabilities ($P(S_k|R_j)$)</b></p>
+                    <p>This is the core update step. Given that the survey has returned report $R_j$, the updated (posterior) probability of the true state being $S_k$ is found using Bayes' theorem:
+                    $$P(S_k|R_j) = \frac{P(R_j|S_k)P(S_k)}{P(R_j)}$$</p>
+                    <p>Substituting the notation from the previous steps, the explicit update formula is:
+                    $$P(S_k|R_j) = \frac{L_{kj} \cdot \pi_k}{\sum_{i=1}^{n} L_{ij} \pi_i}$$
+                    This calculation must be performed for each possible combination of true state $S_k$ and report $R_j$.</p>
+                    <h4>Using the Updated Probabilities</h4>
+                    <p>These posterior probabilities are then used to find the expected value with the information.</p>
+                    <ol>
+                        <li><b>Expected Value without Information:</b> $$EV_{\text{without}} = \max_{j=1..m} \left( \sum_{i=1}^{n} V_{ji} \pi_i \right)$$</li>
+                        <li><b>Expected Value with Information:</b> $$EV_{\text{with}} = \sum_{j=1}^{n} \left[ \max_{l=1..m} \left( \sum_{k=1}^{n} V_{lk} P(S_k|R_j) \right) \right] P(R_j)$$</li>
+                        <li><b>EVSI:</b> $$EVSI = EV_{\text{with}} - EV_{\text{without}}$$</li>
+                    </ol>
+                </div>
+            </details>
         </div>
         <div id="about-app" class="app-container">
             <div class="panel">
@@ -3866,6 +3960,294 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     })();
 
+    const informationValueApp = (() => {
+        let state = {
+            states: [
+                { id: 0, name: 'S1', prob: 0.5 },
+                { id: 1, name: 'S2', prob: 0.5 }
+            ],
+            actions: [
+                { id: 0, name: 'A1' },
+                { id: 1, name: 'A2' }
+            ],
+            payoffs: {
+                0: { 0: 10, 1: 0 }, // state 0, action 0 and 1
+                1: { 0: 0, 1: 20 }  // state 1, action 0 and 1
+            },
+            nextStateId: 2,
+            nextActionId: 2
+        };
+
+        const tableContainer = document.getElementById('iv-table-container');
+        const resultsGrid = document.getElementById('iv-results-grid');
+        const svg = d3.select("#iv-plot-svg");
+        const tooltip = d3.select("#iv-tooltip");
+        const margin = { top: 30, right: 30, bottom: 40, left: 50 };
+
+        function renderTable() {
+            const table = document.createElement('table');
+            const thead = document.createElement('thead');
+            const tbody = document.createElement('tbody');
+            
+            // Header row
+            const trHead = document.createElement('tr');
+            trHead.innerHTML = '<th>State</th><th>P(S)</th>';
+            state.actions.forEach(action => {
+                const th = document.createElement('th');
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = action.name;
+                input.addEventListener('change', e => {
+                    action.name = e.target.value;
+                });
+                th.appendChild(input);
+                trHead.appendChild(th);
+            });
+            thead.appendChild(trHead);
+
+            // State rows
+            state.states.forEach(s => {
+                const tr = document.createElement('tr');
+                // State name
+                let td = document.createElement('td');
+                let input = document.createElement('input');
+                input.type = 'text';
+                input.value = s.name;
+                input.addEventListener('change', e => {
+                    s.name = e.target.value;
+                });
+                td.appendChild(input);
+                tr.appendChild(td);
+
+                // Probability
+                td = document.createElement('td');
+                input = document.createElement('input');
+                input.type = 'number';
+                input.className = 'prob-input';
+                input.min = 0; input.max = 1; input.step = 0.01;
+                input.value = s.prob;
+                input.addEventListener('input', e => {
+                    s.prob = e.target.value === '' ? NaN : parseFloat(e.target.value);
+                    calculateAndRender();
+                });
+                td.appendChild(input);
+                tr.appendChild(td);
+
+                // Payoffs
+                state.actions.forEach(a => {
+                    td = document.createElement('td');
+                    input = document.createElement('input');
+                    input.type = 'number';
+                    input.value = state.payoffs[s.id]?.[a.id] ?? 0;
+                     input.addEventListener('input', e => {
+                        if (!state.payoffs[s.id]) state.payoffs[s.id] = {};
+                        state.payoffs[s.id][a.id] = e.target.value === '' ? NaN : parseFloat(e.target.value);
+                        calculateAndRender();
+                    });
+                    td.appendChild(input);
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            
+            table.appendChild(thead);
+            table.appendChild(tbody);
+            tableContainer.innerHTML = '';
+            tableContainer.appendChild(table);
+        }
+
+        function calculateAndRender() {
+            const priors = state.states.map(s => s.prob);
+            const totalP = priors.reduce((sum, p) => sum + (isNaN(p) ? 0 : p), 0);
+            const isSumInvalid = Math.abs(totalP - 1) > 1e-9 && totalP > 0;
+
+            tableContainer.querySelectorAll('.prob-input').forEach(input => {
+                input.classList.toggle('error', isSumInvalid);
+            });
+
+            if (isSumInvalid || state.states.length < 2) {
+                resultsGrid.innerHTML = '';
+                svg.selectAll("*").remove();
+                return;
+            }
+
+            const n = state.states.length;
+            const m = state.actions.length;
+
+            const V = state.actions.map(a => 
+                state.states.map(s => state.payoffs[s.id]?.[a.id] ?? 0)
+            );
+
+            // EV without info
+            const ev_actions = state.actions.map((a, j) => {
+                return state.states.reduce((sum, s, i) => sum + (V[j][i] * s.prob), 0);
+            });
+            const ev_without = Math.max(...ev_actions);
+
+            // EV with perfect info
+            const ev_perfect_info_per_state = state.states.map((s, i) => {
+                const best_payoff = Math.max(...state.actions.map((a, j) => V[j][i]));
+                return s.prob * best_payoff;
+            });
+            const ev_with_pi = ev_perfect_info_per_state.reduce((sum, v) => sum + v, 0);
+            const evpi = ev_with_pi - ev_without;
+
+            // EVSI
+            const accuracy_points = d3.range(0.5, 1.01, 0.01);
+            const evsi_data = accuracy_points.map(a => {
+                if (a < 1 / n) return {a, evsi: 0}; // information is useless
+                if (Math.abs(a-1) < 1e-9) return {a, evsi: evpi};
+                
+                const L = new Array(n).fill(0).map(() => new Array(n).fill(0));
+                for(let i = 0; i < n; i++) {
+                    for(let j = 0; j < n; j++) {
+                        L[i][j] = (i === j) ? a : (1 - a) / (n - 1);
+                    }
+                }
+
+                const p_reports = new Array(n).fill(0);
+                for (let j = 0; j < n; j++) {
+                    for (let i = 0; i < n; i++) {
+                        p_reports[j] += L[i][j] * priors[i];
+                    }
+                }
+                
+                let ev_with_si = 0;
+                for (let j = 0; j < n; j++) { // for each report R_j
+                    if (p_reports[j] < 1e-9) continue;
+                    const posteriors = new Array(n).fill(0);
+                    for (let k = 0; k < n; k++) { // for each state S_k
+                        posteriors[k] = (L[k][j] * priors[k]) / p_reports[j];
+                    }
+
+                    const ev_actions_posterior = state.actions.map((act, l) => {
+                        return posteriors.reduce((sum, post, k) => sum + V[l][k] * post, 0);
+                    });
+
+                    ev_with_si += p_reports[j] * Math.max(...ev_actions_posterior);
+                }
+                const evsi = ev_with_si - ev_without;
+                return {a, evsi};
+            });
+            
+            renderResults(ev_without, ev_with_pi, evpi);
+            plotEVSI(evsi_data);
+        }
+
+        function renderResults(ev_without, ev_with_pi, evpi) {
+            resultsGrid.innerHTML = `
+                <div class="result-item"><h4>EV without Information</h4><span>${ev_without.toFixed(4)}</span></div>
+                <div class="result-item"><h4>EV with Perfect Info</h4><span>${ev_with_pi.toFixed(4)}</span></div>
+                <div class="result-item"><h4>Value of Perfect Info (EVPI)</h4><span>${evpi.toFixed(4)}</span></div>
+            `;
+        }
+
+        function plotEVSI(data) {
+            svg.selectAll("*").remove();
+            const rect = svg.node().getBoundingClientRect();
+            const width = rect.width - margin.left - margin.right;
+            const height = rect.height - margin.top - margin.bottom;
+            if (width <= 0 || height <= 0) return;
+
+            const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+            const xScale = d3.scaleLinear().domain([0.5, 1]).range([0, width]);
+            const yMax = d3.max(data, d => d.evsi);
+            const yScale = d3.scaleLinear().domain([0, yMax > 0 ? yMax * 1.1 : 1]).range([height, 0]);
+
+            g.append("g").attr("class", "x-axis axis").attr("transform", `translate(0, ${height})`).call(d3.axisBottom(xScale));
+            g.append("g").attr("class", "y-axis axis").call(d3.axisLeft(yScale).ticks(5));
+
+            g.append("text").attr("x", width / 2).attr("y", height + 35).style("text-anchor", "middle").text("Accuracy (a)");
+            g.append("text").attr("transform", "rotate(-90)").attr("y", -margin.left + 15).attr("x", -height / 2).style("text-anchor", "middle").text("EVSI");
+            
+            g.append("path").datum(data).attr("class", "line-path").attr("d", d3.line().x(d => xScale(d.a)).y(d => yScale(d.evsi)));
+            
+            const focus = g.append("circle").style("fill", "steelblue").attr("r", 4).style("opacity", 0);
+            
+            const interactionRect = svg.append("rect")
+                .attr("transform", `translate(${margin.left},${margin.top})`)
+                .style("fill", "none").style("pointer-events", "all")
+                .attr("width", width).attr("height", height);
+
+            const bisect = d3.bisector(d => d.a).left;
+
+            function updateTooltip(event) {
+                const [tipX, tipY] = d3.pointer(event, svg.node().parentNode);
+                tooltip.style("left", tipX + "px").style("top", tipY + "px");
+
+                const [x_coord] = d3.pointer(event, interactionRect.node());
+                const x_val = xScale.invert(x_coord);
+                const index = bisect(data, x_val, 1);
+                const d0 = data[index - 1], d1 = data[index] || d0;
+                const d = (x_val - d0.a > d1.a - x_val) ? d1 : d0;
+                
+                focus.attr("cx", xScale(d.a)).attr("cy", yScale(d.evsi));
+                tooltip.html(`a: ${d.a.toFixed(2)}<br>EVSI: ${d.evsi.toFixed(4)}`);
+            }
+
+            interactionRect.on("mouseover", () => { focus.style("opacity", 1); tooltip.style("opacity", 1); })
+                .on("mouseout", () => { focus.style("opacity", 0); tooltip.style("opacity", 0); })
+                .on("mousemove", updateTooltip);
+        }
+
+        function addState() {
+            const newId = state.nextStateId++;
+            state.states.push({ id: newId, name: `S${state.states.length+1}`, prob: 0});
+            state.payoffs[newId] = {};
+            state.actions.forEach(a => state.payoffs[newId][a.id] = 0);
+            renderTable();
+            calculateAndRender();
+        }
+
+        function removeState() {
+            if (state.states.length <= 1) return;
+            const removed = state.states.pop();
+            delete state.payoffs[removed.id];
+            renderTable();
+            calculateAndRender();
+        }
+
+        function addAction() {
+            const newId = state.nextActionId++;
+            state.actions.push({ id: newId, name: `A${state.actions.length+1}` });
+            Object.values(state.payoffs).forEach(p => p[newId] = 0);
+            renderTable();
+            calculateAndRender();
+        }
+
+        function removeAction() {
+            if (state.actions.length <= 1) return;
+            const removed = state.actions.pop();
+            Object.values(state.payoffs).forEach(p => delete p[removed.id]);
+            renderTable();
+            calculateAndRender();
+        }
+
+        return {
+            init: () => {
+                document.getElementById('iv-add-state-btn').addEventListener('click', addState);
+                document.getElementById('iv-remove-state-btn').addEventListener('click', removeState);
+                document.getElementById('iv-add-action-btn').addEventListener('click', addAction);
+                document.getElementById('iv-remove-action-btn').addEventListener('click', removeAction);
+                renderTable();
+                calculateAndRender();
+
+                const resizeObserver = new ResizeObserver(() => {
+                    setTimeout(calculateAndRender, 0);
+                });
+                const plotContainer = document.getElementById('iv-plot-container');
+                if (plotContainer) {
+                    resizeObserver.observe(plotContainer);
+                }
+                renderMathInElement(document.getElementById('information-value-app'), {
+                    delimiters: [{left: '$$', right: '$$', display: true}, {left: '\\[', right: '\\]', display: true}, {left: '\\(', right: '\\)', display: false}],
+                });
+            },
+            updateFromURL: () => {}
+        };
+    })();
+
     let deferredPrompt;
     const installButton = document.getElementById('install-button');
 
@@ -3917,6 +4299,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'wiener-process': document.getElementById('wiener-process-app'),
         bernoulli: document.getElementById('bernoulli-app'),
         'expected-value': document.getElementById('expected-value-app'),
+        'information-value': document.getElementById('information-value-app'),
         about: document.getElementById('about-app'),
         install: document.getElementById('install-app')
     };
@@ -3926,9 +4309,10 @@ document.addEventListener('DOMContentLoaded', () => {
         'gaussian-copula': gaussianCopulaApp,
         'wiener-process': wienerProcessApp,
         bernoulli: bernoulliApp,
-        'expected-value': expectedValueApp
+        'expected-value': expectedValueApp,
+        'information-value': informationValueApp
     };
-    const initializedApps = { distributions: false, 'order-statistics': false, 'gaussian-copula': false, 'wiener-process': false, bernoulli: false, 'expected-value': false };
+    const initializedApps = { distributions: false, 'order-statistics': false, 'gaussian-copula': false, 'wiener-process': false, bernoulli: false, 'expected-value': false, 'information-value': false };
     const appTitles = {
         distributions: 'Distributions',
         'order-statistics': 'Order Statistics',
@@ -3936,6 +4320,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'wiener-process': 'Wiener Process',
         bernoulli: 'Correlated Bernoulli',
         'expected-value': 'Expected Value',
+        'information-value': 'Information Value',
         about: 'About',
         install: 'Install on device'
     };
