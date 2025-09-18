@@ -926,11 +926,12 @@
                 <p>This is a web app that helps you do quick probability calculations on your phone or computer.</p>
                 <h4>What the app can do:</h4>
                 <ul>
-                    <li>Plot probability distributions of widely used continuous and discrete distributions, and compute summary statistics.</li>
-                    <li>For any probability density graph, compute the area under the curve (click and move over the density graphs). Useful for e.g. estimating tail probabilities of conditional variables.</li>
+                    <li>Plot densities of widely used continuous and discrete probability distributions, and compute summary statistics.</li>
+                    <li>For any probability density graph, compute the area under the curve as well as conditional expectations (click and move over the density graphs). Useful for e.g. estimating tail probabilities of conditional variables, or for estimating a value given a lower/upper bound.</li>
                     <li>Compute the density of order statistics of i.i.d. variables (for example if you want to know what the 2nd largest of 10 samples is).</li>
                     <li>Plot, generate samples, and compute summary statistics of dependent variables (either continuous, or Bernoulli variables).</li>
                     <li>Compute Brownian Motion sample paths, first hitting time distributions, and hitting probabilities.</li>
+                    <li>Given a list of probability/outcome pairs, compute the expected value, and optionally fit a continuous distribution to the data.</li>
                 </ul>
                 <h4>How it works</h4>
                 <p>For all calculations there are either closed form solutions available, or some simple numeric calculations. The app uses <a href="https://ccc-js.github.io/numeric2/">numeric.js</a> and <a href="https://jstat.github.io/">jStat</a> for most calculations. The values you input never leave your device, all computation is done locally.</p>
