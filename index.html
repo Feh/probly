@@ -946,9 +946,7 @@
                 <p>Define states, actions, prior probabilities, and payoffs to calculate the value of information.</p>
                 <div class="controls">
                     <button id="iv-add-state-btn">Add State</button>
-                    <button id="iv-remove-state-btn">Remove State</button>
                     <button id="iv-add-action-btn">Add Action</button>
-                    <button id="iv-remove-action-btn">Remove Action</button>
                 </div>
                 <div id="iv-table-container"></div>
             </div>
@@ -3990,18 +3988,44 @@ document.addEventListener('DOMContentLoaded', () => {
             const thead = document.createElement('thead');
             const tbody = document.createElement('tbody');
             
+            // Actions header row
+            if (state.actions.length > 0) {
+                const trHeadActions = document.createElement('tr');
+                trHeadActions.innerHTML = '<th colspan="2"></th>';
+                const thActions = document.createElement('th');
+                thActions.colSpan = state.actions.length;
+                thActions.textContent = 'Actions';
+                thActions.style.textAlign = 'center';
+                trHeadActions.appendChild(thActions);
+                thead.appendChild(trHeadActions);
+            }
+
             // Header row
             const trHead = document.createElement('tr');
             trHead.innerHTML = '<th>State</th><th>P(S)</th>';
             state.actions.forEach(action => {
                 const th = document.createElement('th');
+                const container = document.createElement('div');
+                container.style.display = 'flex';
+                container.style.alignItems = 'center';
+
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.value = action.name;
+                input.style.textAlign = 'left';
                 input.addEventListener('change', e => {
                     action.name = e.target.value;
                 });
-                th.appendChild(input);
+                container.appendChild(input);
+
+                const removeBtn = document.createElement('button');
+                removeBtn.innerHTML = '&times;';
+                removeBtn.style.background = 'none';
+                removeBtn.style.border = 'none';
+                removeBtn.style.cursor = 'pointer';
+                removeBtn.addEventListener('click', () => removeAction(action.id));
+                container.appendChild(removeBtn);
+                th.appendChild(container);
                 trHead.appendChild(th);
             });
             thead.appendChild(trHead);
@@ -4011,13 +4035,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 const tr = document.createElement('tr');
                 // State name
                 let td = document.createElement('td');
+                const container = document.createElement('div');
+                container.style.display = 'flex';
+                container.style.alignItems = 'center';
+
                 let input = document.createElement('input');
                 input.type = 'text';
                 input.value = s.name;
+                input.style.textAlign = 'left';
                 input.addEventListener('change', e => {
                     s.name = e.target.value;
                 });
-                td.appendChild(input);
+                container.appendChild(input);
+
+                const removeBtn = document.createElement('button');
+                removeBtn.innerHTML = '&times;';
+                removeBtn.style.background = 'none';
+                removeBtn.style.border = 'none';
+                removeBtn.style.cursor = 'pointer';
+                removeBtn.addEventListener('click', () => removeState(s.id));
+                container.appendChild(removeBtn);
+                td.appendChild(container);
                 tr.appendChild(td);
 
                 // Probability
@@ -4201,10 +4239,10 @@ document.addEventListener('DOMContentLoaded', () => {
             calculateAndRender();
         }
 
-        function removeState() {
+        function removeState(id) {
             if (state.states.length <= 1) return;
-            const removed = state.states.pop();
-            delete state.payoffs[removed.id];
+            state.states = state.states.filter(s => s.id !== id);
+            delete state.payoffs[id];
             renderTable();
             calculateAndRender();
         }
@@ -4217,10 +4255,10 @@ document.addEventListener('DOMContentLoaded', () => {
             calculateAndRender();
         }
 
-        function removeAction() {
+        function removeAction(id) {
             if (state.actions.length <= 1) return;
-            const removed = state.actions.pop();
-            Object.values(state.payoffs).forEach(p => delete p[removed.id]);
+            state.actions = state.actions.filter(a => a.id !== id);
+            Object.values(state.payoffs).forEach(p => delete p[id]);
             renderTable();
             calculateAndRender();
         }
