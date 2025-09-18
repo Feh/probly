@@ -322,6 +322,7 @@
         #information-value-app .plot-container { min-height: 300px; border: 1px solid var(--border-color); }
         #information-value-app #iv-plot-svg { width: 100%; }
         #information-value-app .tooltip { position: absolute; background-color: rgba(0, 0, 0, 0.75); color: white; padding: 5px 10px; border-radius: 3px; pointer-events: none; opacity: 0; font-size: 0.9em; z-index: 10; transform: translate(-50%, -110%); }
+        #information-value-app .line-path { stroke: var(--accent-color); }
 
 
         .move-controls { position: absolute; top: 5px; right: 5px; z-index: 5; display: flex; flex-direction: row; }
@@ -977,33 +978,33 @@
                     <p>This model calculates the value of imperfect information (EVSI) under specific assumptions of uniform accuracy and symmetric error.</p>
                     <p><b>Inputs:</b>
                         <ul>
-                            <li><b>States ($S_i$):</b> A set of $n$ mutually exclusive states of nature, $\{S_1, ..., S_n\}$.</li>
-                            <li><b>Actions ($A_j$):</b> A set of $m$ possible actions, $\{A_1, ..., A_m\}$.</li>
-                            <li><b>Priors ($\pi$):</b> An $n \times 1$ vector of prior probabilities, where $\pi_i = P(S_i)$ and $\sum \pi_i = 1$.</li>
-                            <li><b>Payoffs ($V$):</b> An $m \times n$ matrix where $V_{ji}$ is the payoff of taking action $A_j$ if state $S_i$ occurs.</li>
-                            <li><b>Accuracy ($a$):</b> A scalar $a \in (0, 1)$ representing the probability that the information source correctly identifies the true state.</li>
+                            <li><b>States (\(S_i\)):</b> A set of \(n\) mutually exclusive states of nature, $\{S_1, ..., S_n\}$.</li>
+                            <li><b>Actions (\(A_j\)):</b> A set of \(m\) possible actions, $\{A_1, ..., A_m\}$.</li>
+                            <li><b>Priors (\(\pi\)):</b> An \(n \times 1\) vector of prior probabilities, where \(\pi_i = P(S_i)\) and \(\sum \pi_i = 1\).</li>
+                            <li><b>Payoffs (\(V\)):</b> An \(m \times n\) matrix where \(V_{ji}\) is the payoff of taking action \(A_j\) if state \(S_i\) occurs.</li>
+                            <li><b>Accuracy (\(a\)):</b> A scalar \(a \in (0, 1)\) representing the probability that the information source correctly identifies the true state.</li>
                         </ul>
                     </p>
                     <h4>The Update Steps</h4>
-                    <p>The update from prior beliefs ($\pi_i$) to posterior beliefs ($P(S_k|R_j)$) requires defining the information's reliability and then applying Bayes' theorem.</p>
-                    <p><b>1. Construct the Likelihood Matrix ($L$)</b></p>
-                    <p>The $n \times n$ likelihood matrix $L$, where $L_{ij} = P(R_j|S_i)$, formalizes the "uniform accuracy, symmetric error" assumption.
+                    <p>The update from prior beliefs (\(\pi_i\)) to posterior beliefs (\(P(S_k|R_j)\)) requires defining the information's reliability and then applying Bayes' theorem.</p>
+                    <p><b>1. Construct the Likelihood Matrix (\(L\))</b></p>
+                    <p>The \(n \times n\) likelihood matrix \(L\), where \(L_{ij} = P(R_j|S_i)\), formalizes the "uniform accuracy, symmetric error" assumption.
                         <ul>
-                            <li>The probability of a correct report is $P(R_i|S_i) = a$.</li>
-                            <li>The probability of an incorrect report is $1-a$, distributed evenly among the $n-1$ other possibilities. Thus, $P(R_j|S_i) = \frac{1-a}{n-1}$ for $i \neq j$.</li>
+                            <li>The probability of a correct report is \(P(R_i|S_i) = a\).</li>
+                            <li>The probability of an incorrect report is \(1-a\), distributed evenly among the \(n-1\) other possibilities. Thus, \(P(R_j|S_i) = \frac{1-a}{n-1}\) for \(i \neq j\).</li>
                         </ul>
                     </p>
-                    <p>Using the Kronecker delta, $\delta_{ij}$ (which is 1 if $i=j$ and 0 otherwise), the matrix elements are given by:
+                    <p>Using the Kronecker delta, \(\delta_{ij}\) (which is 1 if \(i=j\) and 0 otherwise), the matrix elements are given by:
                     $$L_{ij} = a \cdot \delta_{ij} + \frac{1-a}{n-1} \cdot (1-\delta_{ij})$$</p>
-                    <p><b>2. Calculate the Probability of Each Report ($P(R_j)$)</b></p>
-                    <p>For each possible report $R_j$ (where $j=1, ..., n$), its marginal probability is calculated using the law of total probability, summing over all possible true states:
+                    <p><b>2. Calculate the Probability of Each Report (\(P(R_j)\))</b></p>
+                    <p>For each possible report \(R_j\) (where \(j=1, ..., n\)), its marginal probability is calculated using the law of total probability, summing over all possible true states:
                     $$P(R_j) = \sum_{i=1}^{n} P(R_j|S_i)P(S_i) = \sum_{i=1}^{n} L_{ij} \pi_i$$</p>
-                    <p><b>3. Calculate the Posterior Probabilities ($P(S_k|R_j)$)</b></p>
-                    <p>This is the core update step. Given that the survey has returned report $R_j$, the updated (posterior) probability of the true state being $S_k$ is found using Bayes' theorem:
+                    <p><b>3. Calculate the Posterior Probabilities (\(P(S_k|R_j)\))</b></p>
+                    <p>This is the core update step. Given that the survey has returned report \(R_j\), the updated (posterior) probability of the true state being \(S_k\) is found using Bayes' theorem:
                     $$P(S_k|R_j) = \frac{P(R_j|S_k)P(S_k)}{P(R_j)}$$</p>
                     <p>Substituting the notation from the previous steps, the explicit update formula is:
                     $$P(S_k|R_j) = \frac{L_{kj} \cdot \pi_k}{\sum_{i=1}^{n} L_{ij} \pi_i}$$
-                    This calculation must be performed for each possible combination of true state $S_k$ and report $R_j$.</p>
+                    This calculation must be performed for each possible combination of true state \(S_k\) and report \(R_j\).</p>
                     <h4>Using the Updated Probabilities</h4>
                     <p>These posterior probabilities are then used to find the expected value with the information.</p>
                     <ol>
