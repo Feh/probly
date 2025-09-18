@@ -4016,6 +4016,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 input.style.textAlign = 'left';
                 input.addEventListener('change', e => {
                     action.name = e.target.value;
+                    calculateAndRender();
                 });
                 container.appendChild(input);
 
@@ -4046,6 +4047,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 input.style.textAlign = 'left';
                 input.addEventListener('change', e => {
                     s.name = e.target.value;
+                    calculateAndRender();
                 });
                 container.appendChild(input);
 
@@ -4110,7 +4112,16 @@ document.addEventListener('DOMContentLoaded', () => {
             tableContainer.appendChild(table);
         }
 
+        function updateURL() {
+            const stateString = JSON.stringify(state);
+            const encodedState = btoa(stateString);
+            const params = new URLSearchParams();
+            params.set('s', encodedState);
+            history.replaceState(null, '', '#information-value?' + params.toString());
+        }
+
         function calculateAndRender() {
+            updateURL();
             const priors = state.states.map(s => s.prob);
             const totalP = priors.reduce((sum, p) => sum + (isNaN(p) ? 0 : p), 0);
             const isSumInvalid = Math.abs(totalP - 1) > 1e-9 && totalP > 0;
@@ -4350,7 +4361,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     delimiters: [{left: '$$', right: '$$', display: true}, {left: '\\[', right: '\\]', display: true}, {left: '\\(', right: '\\)', display: false}],
                 });
             },
-            updateFromURL: () => {}
+            updateFromURL: (params) => {
+                if (params.has('s')) {
+                    try {
+                        const encodedState = params.get('s');
+                        const stateString = atob(encodedState);
+                        const loadedState = JSON.parse(stateString);
+                        if (loadedState.states && loadedState.actions && loadedState.payoffs) {
+                            state = loadedState;
+                            renderTable();
+                            calculateAndRender();
+                        }
+                    } catch (e) {
+                        console.error("Failed to load state from URL", e);
+                    }
+                }
+            }
         };
     })();
 
