@@ -4092,6 +4092,19 @@ document.addEventListener('DOMContentLoaded', () => {
             
             table.appendChild(thead);
             table.appendChild(tbody);
+            
+            const tfoot = document.createElement('tfoot');
+            const trFoot = document.createElement('tr');
+            trFoot.innerHTML = '<td colspan="2" style="text-align: right; font-weight: bold; padding-right: 5px;">Expected Value</td>';
+            state.actions.forEach(action => {
+                const td = document.createElement('td');
+                td.id = `iv-ev-action-${action.id}`;
+                td.style.textAlign = 'center';
+                trFoot.appendChild(td);
+            });
+            tfoot.appendChild(trFoot);
+            table.appendChild(tfoot);
+
             tableContainer.innerHTML = '';
             tableContainer.appendChild(table);
         }
@@ -4125,6 +4138,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const ev_without = Math.max(...ev_actions);
             const best_action_index = ev_actions.indexOf(ev_without);
             const best_action_name = state.actions[best_action_index].name;
+
+            // Update footer with expected values
+            state.actions.forEach((action, index) => {
+                const td = document.getElementById(`iv-ev-action-${action.id}`);
+                if (td) {
+                    td.textContent = ev_actions[index].toFixed(2);
+                    if (ev_actions[index] === ev_without) {
+                        td.style.fontWeight = 'bold';
+                    } else {
+                        td.style.fontWeight = 'normal';
+                    }
+                }
+            });
 
             // EV with perfect info
             const ev_perfect_info_per_state = state.states.map((s, i) => {
