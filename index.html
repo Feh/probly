@@ -4078,6 +4078,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     td = document.createElement('td');
                     input = document.createElement('input');
                     input.type = 'number';
+                    input.id = `iv-payoff-${s.id}-${a.id}`;
                     input.value = state.payoffs[s.id]?.[a.id] ?? 0;
                      input.addEventListener('input', e => {
                         if (!state.payoffs[s.id]) state.payoffs[s.id] = {};
@@ -4130,6 +4131,25 @@ document.addEventListener('DOMContentLoaded', () => {
             const V = state.actions.map(a => 
                 state.states.map(s => state.payoffs[s.id]?.[a.id] ?? 0)
             );
+
+            // Highlight max payoffs in each row
+            state.states.forEach(s => {
+                const payoffsForState = state.actions.map(a => state.payoffs[s.id]?.[a.id] ?? 0);
+                if (payoffsForState.length > 0) {
+                    const maxPayoff = Math.max(...payoffsForState);
+                    state.actions.forEach(a => {
+                        const input = document.getElementById(`iv-payoff-${s.id}-${a.id}`);
+                        if (input) {
+                            const payoff = state.payoffs[s.id]?.[a.id] ?? 0;
+                            if (payoff === maxPayoff) {
+                                input.style.backgroundColor = 'lightyellow';
+                            } else {
+                                input.style.backgroundColor = '';
+                            }
+                        }
+                    });
+                }
+            });
 
             // EV without info
             const ev_actions = state.actions.map((a, j) => {
