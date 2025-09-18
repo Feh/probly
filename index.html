@@ -968,7 +968,7 @@
                     <p>Assume there are multiple possible states of the world, and multiple actions you can take.</p>
                     <p>For example:
                         <ul>
-                            <li>Demand is low/high (unknown, but we have an idea), and</li>
+                            <li>Demand is low/high (unknown, but we have some prior idea), and</li>
                             <li>Actions are invest/not invest (or build/not build).</li>
                             <li>What is the value of reducing the uncertainty about the state of the world?</li>
                             <li>We could fully know the state of the world (“expected value of perfect information”) or have a somewhat unreliable report on the state of the world (“expected value of sample information”).</li>
@@ -978,8 +978,8 @@
                     <p>This model calculates the value of imperfect information (EVSI) under specific assumptions of uniform accuracy and symmetric error.</p>
                     <p><b>Inputs:</b>
                         <ul>
-                            <li><b>States (\(S_i\)):</b> A set of \(n\) mutually exclusive states of nature, $\{S_1, ..., S_n\}$.</li>
-                            <li><b>Actions (\(A_j\)):</b> A set of \(m\) possible actions, $\{A_1, ..., A_m\}$.</li>
+                            <li><b>States (\(S_i\)):</b> A set of \(n\) mutually exclusive states of nature, \(\{S_1, ..., S_n\}\).</li>
+                            <li><b>Actions (\(A_j\)):</b> A set of \(m\) possible actions, \(\{A_1, ..., A_m\}\).</li>
                             <li><b>Priors (\(\pi\)):</b> An \(n \times 1\) vector of prior probabilities, where \(\pi_i = P(S_i)\) and \(\sum \pi_i = 1\).</li>
                             <li><b>Payoffs (\(V\)):</b> An \(m \times n\) matrix where \(V_{ji}\) is the payoff of taking action \(A_j\) if state \(S_i\) occurs.</li>
                             <li><b>Accuracy (\(a\)):</b> A scalar \(a \in (0, 1)\) representing the probability that the information source correctly identifies the true state.</li>
@@ -994,7 +994,7 @@
                             <li>The probability of an incorrect report is \(1-a\), distributed evenly among the \(n-1\) other possibilities. Thus, \(P(R_j|S_i) = \frac{1-a}{n-1}\) for \(i \neq j\).</li>
                         </ul>
                     </p>
-                    <p>Using the Kronecker delta, \(\delta_{ij}\) (which is 1 if \(i=j\) and 0 otherwise), the matrix elements are given by:
+                    <p>Using the Kronecker delta \(\delta_{ij}\), the matrix elements are given by:
                     $$L_{ij} = a \cdot \delta_{ij} + \frac{1-a}{n-1} \cdot (1-\delta_{ij})$$</p>
                     <p><b>2. Calculate the Probability of Each Report (\(P(R_j)\))</b></p>
                     <p>For each possible report \(R_j\) (where \(j=1, ..., n\)), its marginal probability is calculated using the law of total probability, summing over all possible true states:
@@ -1004,7 +1004,7 @@
                     $$P(S_k|R_j) = \frac{P(R_j|S_k)P(S_k)}{P(R_j)}$$</p>
                     <p>Substituting the notation from the previous steps, the explicit update formula is:
                     $$P(S_k|R_j) = \frac{L_{kj} \cdot \pi_k}{\sum_{i=1}^{n} L_{ij} \pi_i}$$
-                    This calculation must be performed for each possible combination of true state \(S_k\) and report \(R_j\).</p>
+                    This calculation is performed for each possible combination of true state \(S_k\) and report \(R_j\).</p>
                     <h4>Using the Updated Probabilities</h4>
                     <p>These posterior probabilities are then used to find the expected value with the information.</p>
                     <ol>
