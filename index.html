@@ -948,6 +948,20 @@
                     <button id="iv-add-state-btn">Add State</button>
                     <button id="iv-add-action-btn">Add Action</button>
                     <button id="iv-normalize-probs-btn">Normalize State Probabilities</button>
+                    <div style="margin-left: auto; display: flex; align-items: center; gap: 5px;">
+                        <label for="iv-unit-select" style="margin-bottom: 0;">Payoff Unit</label>
+                        <select id="iv-unit-select" style="padding: 10px 15px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 3px;">
+                            <option value="">(no unit)</option>
+                            <option value="$" data-prefix="true">$</option>
+                            <option value="K$" data-prefix="true">K$</option>
+                            <option value="M$" data-prefix="true">M$</option>
+                            <option value="minutes">minutes</option>
+                            <option value="hours">hours</option>
+                            <option value="days">days</option>
+                            <option value="weeks">weeks</option>
+                            <option value="years">years</option>
+                        </select>
+                    </div>
                 </div>
                 <div id="iv-table-container"></div>
             </div>
@@ -3975,7 +3989,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 1: { 0: 0, 1: 20 }  // state 1, action 0 and 1
             },
             nextStateId: 2,
-            nextActionId: 2
+            nextActionId: 2,
+            unit: '',
+            unitIsPrefix: false
         };
 
         const tableContainer = document.getElementById('iv-table-container');
@@ -4078,6 +4094,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Payoffs
                 state.actions.forEach(a => {
                     td = document.createElement('td');
+                    const container = document.createElement('div');
+                    container.style.display = 'flex';
+                    container.style.alignItems = 'center';
+                    container.style.justifyContent = 'center';
+                    container.style.height = '100%';
+
                     input = document.createElement('input');
                     input.type = 'number';
                     input.id = `iv-payoff-${s.id}-${a.id}`;
@@ -4087,7 +4109,30 @@ document.addEventListener('DOMContentLoaded', () => {
                         state.payoffs[s.id][a.id] = e.target.value === '' ? NaN : parseFloat(e.target.value);
                         calculateAndRender();
                     });
-                    td.appendChild(input);
+                    
+                    if (state.unit) {
+                        const unitSpan = document.createElement('span');
+                        unitSpan.textContent = state.unit;
+                        unitSpan.style.color = '#555';
+                        unitSpan.style.whiteSpace = 'nowrap';
+                        
+                        if (state.unitIsPrefix) {
+                            unitSpan.style.paddingLeft = '8px';
+                            input.style.paddingLeft = '4px';
+                            input.style.textAlign = 'left';
+                            container.appendChild(unitSpan);
+                            container.appendChild(input);
+                        } else {
+                            unitSpan.style.paddingRight = '8px';
+                            input.style.paddingRight = '4px';
+                            input.style.textAlign = 'right';
+                            container.appendChild(input);
+                            container.appendChild(unitSpan);
+                        }
+                    } else {
+                        container.appendChild(input);
+                    }
+                    td.appendChild(container);
                     tr.appendChild(td);
                 });
                 tbody.appendChild(tr);
@@ -4110,6 +4155,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             tableContainer.innerHTML = '';
             tableContainer.appendChild(table);
+            document.getElementById('iv-unit-select').value = state.unit || '';
         }
 
         function updateURL() {
@@ -4171,10 +4217,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const best_action_name = state.actions[best_action_index].name;
 
             // Update footer with expected values
+            const unitStrFooter = state.unit ? (state.unitIsPrefix ? state.unit : ` ${state.unit}`) : '';
             state.actions.forEach((action, index) => {
                 const td = document.getElementById(`iv-ev-action-${action.id}`);
                 if (td) {
-                    td.textContent = ev_actions[index].toFixed(2);
+                    const value = ev_actions[index].toFixed(2);
+                    td.textContent = state.unitIsPrefix ? `${unitStrFooter}${value}` : `${value}${unitStrFooter}`;
                     if (ev_actions[index] === ev_without) {
                         td.style.fontWeight = 'bold';
                     } else {
@@ -4240,10 +4288,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         function renderResults(ev_without, ev_with_pi, evpi, best_action_name) {
+            const unitStr = state.unit ? (state.unitIsPrefix ? state.unit : ` ${state.unit}`) : '';
+            const formatted = val => state.unitIsPrefix ? `${unitStr}${val.toFixed(2)}` : `${val.toFixed(2)}${unitStr}`;
             resultsGrid.innerHTML = `
-                <div class="result-item"><h4>EV without Information</h4><em>The best action (column ${best_action_name}), in expectation, yields:</em><br /><strong>${ev_without.toFixed(2)}</strong></div>
-                <div class="result-item"><h4>EV with Perfect Info</h4><em>The best action if you know the true state (light yellow fields), yields in expectation:</em><br /><strong>${ev_with_pi.toFixed(2)}</strong></div>
-                <div class="result-item"><h4>Value of Perfect Info (EVPI)</h4><em>The delta between EV with and without perfect information:</em><br /><strong>${evpi.toFixed(2)}</strong></div>
+                <div class="result-item"><h4>EV without Information</h4><em>The best action (column ${best_action_name}), in expectation, yields:</em><br /><strong>${formatted(ev_without)}</strong></div>
+                <div class="result-item"><h4>EV with Perfect Info</h4><em>The best action if you know the true state (light yellow fields), yields in expectation:</em><br /><strong>${formatted(ev_with_pi)}</strong></div>
+                <div class="result-item"><h4>Value of Perfect Info (EVPI)</h4><em>The delta between EV with and without perfect information:</em><br /><strong>${formatted(evpi)}</strong></div>
             `;
         }
 
@@ -4288,7 +4338,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const d = (x_val - d0.a > d1.a - x_val) ? d1 : d0;
                 
                 focus.attr("cx", xScale(d.a)).attr("cy", yScale(d.evsi));
-                tooltip.html(`a: ${d.a.toFixed(2)}<br>EVSI: ${d.evsi.toFixed(4)}`);
+                
+                const unitStr = state.unit ? (state.unitIsPrefix ? state.unit : ` ${state.unit}`) : '';
+                const formattedEVSI = state.unitIsPrefix ? `${unitStr}${d.evsi.toFixed(4)}` : `${d.evsi.toFixed(4)}${unitStr}`;
+                tooltip.html(`a: ${d.a.toFixed(2)}<br>EVSI: ${formattedEVSI}`);
             }
 
             interactionRect.on("mouseover", () => { focus.style("opacity", 1); tooltip.style("opacity", 1); })
@@ -4347,6 +4400,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('iv-add-state-btn').addEventListener('click', addState);
                 document.getElementById('iv-add-action-btn').addEventListener('click', addAction);
                 document.getElementById('iv-normalize-probs-btn').addEventListener('click', normalizeProbabilities);
+                document.getElementById('iv-unit-select').addEventListener('change', (e) => {
+                    const selectedOption = e.target.options[e.target.selectedIndex];
+                    state.unit = e.target.value;
+                    state.unitIsPrefix = selectedOption.dataset.prefix === 'true';
+                    renderTable();
+                    calculateAndRender();
+                });
                 renderTable();
                 calculateAndRender();
 
@@ -4369,6 +4429,17 @@ document.addEventListener('DOMContentLoaded', () => {
                         const loadedState = JSON.parse(stateString);
                         if (loadedState.states && loadedState.actions && loadedState.payoffs) {
                             state = loadedState;
+                            if (typeof state.unit === 'undefined') {
+                                state.unit = '';
+                                state.unitIsPrefix = false;
+                            }
+                            if (typeof state.unitIsPrefix === 'undefined' && state.unit) {
+                                const unitSelect = document.getElementById('iv-unit-select');
+                                const selectedOption = unitSelect.querySelector(`option[value="${state.unit}"]`);
+                                state.unitIsPrefix = selectedOption ? selectedOption.dataset.prefix === 'true' : false;
+                            } else if (typeof state.unitIsPrefix === 'undefined') {
+                                state.unitIsPrefix = false;
+                            }
                             renderTable();
                             calculateAndRender();
                         }
