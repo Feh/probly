@@ -4178,9 +4178,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function renderResults(ev_without, ev_with_pi, evpi, best_action_name) {
             resultsGrid.innerHTML = `
-                <div class="result-item"><h4>EV without Information</h4><em>The best action (${best_action_name}), in expectation, yields:</em><br /><span>${ev_without.toFixed(4)}</span></div>
-                <div class="result-item"><h4>EV with Perfect Info</h4><em>The best action if you know the true state, yields in expectation:</em><br /><span>${ev_with_pi.toFixed(4)}</span></div>
-                <div class="result-item"><h4>Value of Perfect Info (EVPI)</h4><em>The delta between EV with and without perfect information:</em><br /><span>${evpi.toFixed(4)}</span></div>
+                <div class="result-item"><h4>EV without Information</h4><em>The best action (${best_action_name}), in expectation, yields:</em><br /><strong>${ev_without.toFixed(2)}</strong></div>
+                <div class="result-item"><h4>EV with Perfect Info</h4><em>The best action if you know the true state, yields in expectation:</em><br /><strong>${ev_with_pi.toFixed(2)}</strong></div>
+                <div class="result-item"><h4>Value of Perfect Info (EVPI)</h4><em>The delta between EV with and without perfect information:</em><br /><strong>${evpi.toFixed(2)}</strong></div>
             `;
         }
 
