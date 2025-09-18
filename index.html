@@ -4180,6 +4180,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const ev_with_pi = ev_perfect_info_per_state.reduce((sum, v) => sum + v, 0);
             const evpi = ev_with_pi - ev_without;
 
+            renderResults(ev_without, ev_with_pi, evpi, best_action_name);
+
+            if (evpi < 1e-9) {
+                svg.selectAll("*").remove();
+                return;
+            }
+
             // EVSI
             const accuracy_points = d3.range(0.5, 1.01, 0.01);
             const evsi_data = accuracy_points.map(a => {
@@ -4218,7 +4225,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 return {a, evsi};
             });
             
-            renderResults(ev_without, ev_with_pi, evpi, best_action_name);
             plotEVSI(evsi_data);
         }
 
