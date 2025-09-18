@@ -314,7 +314,7 @@
         #information-value-app table { border-collapse: collapse; width: 100%; margin-bottom: 1rem; }
         #information-value-app th, #information-value-app td { border: 1px solid #ccc; padding: 0; }
         #information-value-app th input, #information-value-app td input { width: 100%; height: 100%; border: none; padding: 8px; box-sizing: border-box; text-align: center; }
-        #information-value-app input[type="number"].prob-input.error { border-color: #d9534f; border-width: 2px; }
+        #information-value-app input[type="number"].prob-input.error { border-color: #d9534f; border-width: 3px; }
         #information-value-app th { background-color: #f7f7f7; }
         #information-value-app .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem; }
         #information-value-app .result-item { padding: 10px; border: 1px solid var(--border-color); border-radius: 3px; background-color: var(--panel-bg); }
@@ -948,6 +948,7 @@
                 <div class="controls">
                     <button id="iv-add-state-btn">Add State</button>
                     <button id="iv-add-action-btn">Add Action</button>
+                    <button id="iv-normalize-probs-btn">Normalize State Probabilities</button>
                 </div>
                 <div id="iv-table-container"></div>
             </div>
@@ -4264,10 +4265,24 @@ document.addEventListener('DOMContentLoaded', () => {
             calculateAndRender();
         }
 
+        function normalizeProbabilities() {
+            const totalP = state.states.reduce((sum, s) => sum + (isNaN(s.prob) ? 0 : s.prob), 0);
+            if (totalP > 0) {
+                state.states.forEach(s => {
+                    if (!isNaN(s.prob)) {
+                        s.prob = s.prob / totalP;
+                    }
+                });
+            }
+            renderTable();
+            calculateAndRender();
+        }
+
         return {
             init: () => {
                 document.getElementById('iv-add-state-btn').addEventListener('click', addState);
                 document.getElementById('iv-add-action-btn').addEventListener('click', addAction);
+                document.getElementById('iv-normalize-probs-btn').addEventListener('click', normalizeProbabilities);
                 renderTable();
                 calculateAndRender();
 
