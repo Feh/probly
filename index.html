@@ -646,13 +646,14 @@
                 <summary>Formulas</summary>
                 <div class="formulas">
                     <h4>The marginal density of the k-th order statistic</h4>
-                    <p>In a sample of size \(n\), the CDF and PDF of the \(k\)-th order statistic, \(X_{(k)}\), are:</p>
+                    <p>In an i.i.d. sample of size \(n\), the CDF and PDF of the \(k\)-th order statistic, \(X_{(k)}\), are:</p>
                     $$
                     \begin{aligned}
                     \mathbb{P}(X_{(k)} \le x) &= \sum_{i=k}^n {n \choose i} F(x)^i(1-F(x))^{n-i} \\
                     f_{X_{(k)}}(x) &= k{n\choose k}f(x)F(x)^{k-1}(1-F(x))^{n-k}
                     \end{aligned}
                     $$
+                    <p>Note that the case \(k=n\) is usually called maximum, and \(k=1\) is called minimum.</p>
                 </div>
             </details>
         </div>
