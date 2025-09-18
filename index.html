@@ -4123,6 +4123,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 return state.states.reduce((sum, s, i) => sum + (V[j][i] * s.prob), 0);
             });
             const ev_without = Math.max(...ev_actions);
+            const best_action_index = ev_actions.indexOf(ev_without);
+            const best_action_name = state.actions[best_action_index].name;
 
             // EV with perfect info
             const ev_perfect_info_per_state = state.states.map((s, i) => {
@@ -4170,13 +4172,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 return {a, evsi};
             });
             
-            renderResults(ev_without, ev_with_pi, evpi);
+            renderResults(ev_without, ev_with_pi, evpi, best_action_name);
             plotEVSI(evsi_data);
         }
 
-        function renderResults(ev_without, ev_with_pi, evpi) {
+        function renderResults(ev_without, ev_with_pi, evpi, best_action_name) {
             resultsGrid.innerHTML = `
-                <div class="result-item"><h4>EV without Information</h4><em>The best action (column), in expectation, yields:</em><br /><span>${ev_without.toFixed(4)}</span></div>
+                <div class="result-item"><h4>EV without Information</h4><em>The best action (${best_action_name}), in expectation, yields:</em><br /><span>${ev_without.toFixed(4)}</span></div>
                 <div class="result-item"><h4>EV with Perfect Info</h4><em>The best action if you know the true state, yields in expectation:</em><br /><span>${ev_with_pi.toFixed(4)}</span></div>
                 <div class="result-item"><h4>Value of Perfect Info (EVPI)</h4><em>The delta between EV with and without perfect information:</em><br /><span>${evpi.toFixed(4)}</span></div>
             `;
