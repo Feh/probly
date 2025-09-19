@@ -978,13 +978,12 @@
                 <summary>Formulas & Assumptions</summary>
                 <div class="formulas" style="padding-top: 1rem;">
                     <h4>Decision Making with (unreliable) information</h4>
-                    <p>Assume there are multiple possible states of the world, and multiple actions you can take.</p>
-                    <p>For example:
+                    <p>Assume there are multiple possible states of the world, and multiple actions you can take. The question is: How much effort/money should you invest into learning more about which state of the world you’re in before making a decision? How reliable would your information source need to be to make the investment worth it?</p>
+                    <p>Try out these examples:
                         <ul>
-                            <li>Demand is low/high (unknown, but we have some prior idea), and</li>
-                            <li>Actions are invest/not invest (or build/not build).</li>
-                            <li>What is the value of reducing the uncertainty about the state of the world?</li>
-                            <li>We could fully know the state of the world (“expected value of perfect information”) or have a somewhat unreliable report on the state of the world (“expected value of sample information”).</li>
+                            <li><a href="#information-value?s=eyJzdGF0ZXMiOlt7ImlkIjowLCJuYW1lIjoiTG93IGRlbWFuZCIsInByb2IiOjAuNX0seyJpZCI6MSwibmFtZSI6Ik1lZGl1bSBkZW1hbmQiLCJwcm9iIjowLjR9LHsiaWQiOjIsIm5hbWUiOiJIaWdoIGRlbWFuZCIsInByb2IiOjAuMX1dLCJhY3Rpb25zIjpbeyJpZCI6MCwibmFtZSI6IkJ1aWxkIGl0IHlvdXJzZWxmIn0seyJpZCI6MSwibmFtZSI6Ik91dHNvdXJjZSJ9LHsiaWQiOjIsIm5hbWUiOiJEbyBub3RoaW5nIn1dLCJwYXlvZmZzIjp7IjAiOnsiMCI6LTEwLCIxIjotMjUsIjIiOjB9LCIxIjp7IjAiOjQwLCIxIjoyNSwiMiI6MH0sIjIiOnsiMCI6MjUwLCIxIjozMDAsIjIiOjB9fSwibmV4dFN0YXRlSWQiOjMsIm5leHRBY3Rpb25JZCI6MywidW5pdCI6IkskIiwidW5pdElzUHJlZml4Ijp0cnVlfQ%3D%3D">Link</a>: In the face of low/medium/high demand, should you build a piece of software yourself, or outsource it? How much should you be willing to pay for a somewhat reliable survey that tells you something about the demand landscape?</li>
+                            <li><a href="#information-value?s=eyJzdGF0ZXMiOlt7ImlkIjowLCJuYW1lIjoiTm90IGRvbmUgb2Z0ZW4iLCJwcm9iIjowLjN9LHsiaWQiOjEsIm5hbWUiOiJEb25lIHNvbWV3aGF0IG9mdGVuIiwicHJvYiI6MC42fSx7ImlkIjozLCJuYW1lIjoiRG9uZSB2ZXJ5IG9mdGVuIiwicHJvYiI6MC4xfV0sImFjdGlvbnMiOlt7ImlkIjowLCJuYW1lIjoiQXV0b21hdGUgcHJvY2VzcyJ9LHsiaWQiOjEsIm5hbWUiOiJEbyBub3RoaW5nIn1dLCJwYXlvZmZzIjp7IjAiOnsiMCI6LTQsIjEiOjB9LCIxIjp7IjAiOjIwLCIxIjowfSwiMyI6eyIwIjoyMDAsIjEiOjB9fSwibmV4dFN0YXRlSWQiOjQsIm5leHRBY3Rpb25JZCI6MywidW5pdCI6ImhvdXJzIiwidW5pdElzUHJlZml4IjpmYWxzZX0%3D">Link</a>: With four hours time investment you could automate a business process that’ll save others some amount of time. How much time would you want to spend figuring out if this process is done often enough and your automation would actually save time? And how accurate would your information need to be to make this research worthwhile instead of just automating the process at the danger of wasting a little of your time?</li>
+                            <li><a href="#information-value?s=eyJzdGF0ZXMiOlt7ImlkIjowLCJuYW1lIjoiTWFjaGluZSBoYXMgYSBwcm9ibGVtIiwicHJvYiI6MC4xfSx7ImlkIjoxLCJuYW1lIjoiTm8gcHJvYmxlbSIsInByb2IiOjAuOX1dLCJhY3Rpb25zIjpbeyJpZCI6MCwibmFtZSI6IkRvIG1haW50YWluYW5jZSJ9LHsiaWQiOjEsIm5hbWUiOiJEbyBub3RoaW5nIn1dLCJwYXlvZmZzIjp7IjAiOnsiMCI6LTUwMCwiMSI6LTEwMDAwfSwiMSI6eyIwIjotNTAwLCIxIjowfX0sIm5leHRTdGF0ZUlkIjozLCJuZXh0QWN0aW9uSWQiOjMsInVuaXQiOiIkIiwidW5pdElzUHJlZml4Ijp0cnVlfQ%3D%3D">Link</a>: You have a machine that’s expensive to replace, and you can do maintainance if there’s a problem. Should you call an expert to come on site or just do maintainance?</li>
                         </ul>
                     </p>
                     <h4>Model Definition</h4>
@@ -999,30 +998,25 @@
                         </ul>
                     </p>
                     <h4>The Update Steps</h4>
-                    <p>The update from prior beliefs (\(\pi_i\)) to posterior beliefs (\(P(S_k\mid R_j)\)) requires defining the information's reliability and then applying Bayes' theorem.</p>
+                    <p>We assume there’s a report \(R\) that identifies the state of nature with some possibility of error. The update from prior beliefs (\(\pi_i=\mathbb{P}(S_i)\)) to posterior beliefs (\(P(S_k\mid R_j)\)) works through specifying the information's reliability and then applying Bayes' theorem.</p>
                     <p><b>1. Construct the Likelihood Matrix (\(L\))</b></p>
-                    <p>The \(n \times n\) likelihood matrix \(L\), where \(L_{ij} = P(R_j\mid S_i)\), formalizes the "uniform accuracy, symmetric error" assumption.
+                    <p>The \(n \times n\) likelihood matrix \(L\), where \(L_{ij} = P(R_j\mid S_i)\), formalizes the simplified “uniform accuracy \(a\), symmetric error” assumption:
                         <ul>
                             <li>The probability of a correct report is \(P(R_i\mid S_i) = a\).</li>
                             <li>The probability of an incorrect report is \(1-a\), distributed evenly among the \(n-1\) other possibilities. Thus, \(P(R_j\mid S_i) = \frac{1-a}{n-1}\) for \(i \neq j\).</li>
                         </ul>
                     </p>
-                    <p>Using the Kronecker delta \(\delta_{ij}\), the matrix elements are given by:
+                    <p>Using the Kronecker delta \(\delta_{ij}\), the matrix elements are then:
                     $$L_{ij} = a \cdot \delta_{ij} + \frac{1-a}{n-1} \cdot (1-\delta_{ij})$$</p>
-                    <p><b>2. Calculate the Probability of Each Report (\(P(R_j)\))</b></p>
-                    <p>For each possible report \(R_j\) (where \(j=1, ..., n\)), its marginal probability is calculated using the law of total probability, summing over all possible true states:
-                    $$P(R_j) = \sum_{i=1}^{n} P(R_j\mid S_i)P(S_i) = \sum_{i=1}^{n} L_{ij} \pi_i$$</p>
-                    <p><b>3. Calculate the Posterior Probabilities (\(P(S_k\mid R_j)\))</b></p>
-                    <p>This is the core update step. Given that the survey has returned report \(R_j\), the updated (posterior) probability of the true state being \(S_k\) is found using Bayes' theorem:
-                    $$P(S_k\mid R_j) = \frac{P(R_j\mid S_k)P(S_k)}{P(R_j)}$$</p>
-                    <p>Substituting the notation from the previous steps, the explicit update formula is:
-                    $$P(S_k\mid R_j) = \frac{L_{kj} \cdot \pi_k}{\sum_{i=1}^{n} L_{ij} \pi_i}$$
+                    <p><b>2. Calculate the Posterior Probabilities (\(P(S_k\mid R_j)\))</b></p>
+                    <p>Given that the survey has returned report \(R_j\), the updated (posterior) probability of the true state being \(S_k\) is found using Bayes' theorem:</p>
+                    $$\begin{aligned}P(S_k\mid R_j) &= \frac{P(R_j\mid S_k)P(S_k)}{P(R_j)}\\ &=\frac{L_{kj} \cdot \pi_k}{\sum_{i=1}^{n} L_{ij} \pi_i}\end{aligned}$$
                     This calculation is performed for each possible combination of true state \(S_k\) and report \(R_j\).</p>
                     <h4>Using the Updated Probabilities</h4>
                     <p>These posterior probabilities are then used to find the expected value with the information.</p>
                     <ol>
-                        <li><b>Expected Value without Information:</b> $$EV_{\text{without}} = \max_{j=1..m} \left( \sum_{i=1}^{n} V_{ji} \pi_i \right)$$</li>
-                        <li><b>Expected Value with Information:</b> $$EV_{\text{with}} = \sum_{j=1}^{n} \left[ \max_{l=1..m} \left( \sum_{k=1}^{n} V_{lk} P(S_k\mid R_j) \right) \right] P(R_j)$$</li>
+                        <li><b>Expected Value without Information:</b> $$EV_{\text{without}} = \max_{\text{action }a=1..m} \left( \sum_{i=1}^{n} V_{ai} \pi_i \right)$$</li>
+                        <li><b>Expected Value with Information:</b> $$EV_{\text{with}} = \sum_{j=1}^{n} \left[ \max_{\text{action }a=1..m} \left( \sum_{k=1}^{n} V_{ak} P(S_k\mid R_j) \right) \right] P(R_j)$$</li>
                         <li><b>EVSI:</b> $$EVSI = EV_{\text{with}} - EV_{\text{without}}$$</li>
                     </ol>
                 </div>
