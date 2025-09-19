@@ -1557,11 +1557,11 @@ document.addEventListener('DOMContentLoaded', () => {
         function calculateAndDisplayConditionalExpectations(lower, upper) {
             const grid = document.getElementById('conditional-expectations-grid');
             const config = DISTRIBUTIONS[currentState.distKey];
-            
+
             const { jstat, params } = currentState;
             const cdf = x => config.cdf(x, jstat, params);
             const xDomain = config.domain(params, jstat);
-            
+
             let E_lower, E_middle, E_upper;
 
             if (config.type === 'continuous') {
@@ -1597,7 +1597,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else { // Discrete
                 const lowerBound = Math.ceil(lower);
                 const upperBound = Math.floor(upper);
-                
+
                 const pmf = x => config.pdfpmf(x, jstat, params);
                 const domain_min_k = Math.ceil(xDomain[0]);
                 const domain_max_k = Math.floor(xDomain[1]);
@@ -1633,7 +1633,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (prob_middle > 1e-9) E_middle = sum_middle / prob_middle;
                 if (prob_upper > 1e-9) E_upper = sum_upper / prob_upper;
             }
-            
+
             const format = val => (val === undefined || !isFinite(val)) ? '\\text{N/A}' : val.toFixed(4);
 
             grid.innerHTML = `
@@ -3998,7 +3998,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const table = document.createElement('table');
             const thead = document.createElement('thead');
             const tbody = document.createElement('tbody');
-            
+
             // Actions header row
             if (state.actions.length > 0) {
                 const trHeadActions = document.createElement('tr');
@@ -4103,13 +4103,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         state.payoffs[s.id][a.id] = e.target.value === '' ? NaN : parseFloat(e.target.value);
                         calculateAndRender();
                     });
-                    
+
                     if (state.unit) {
                         const unitSpan = document.createElement('span');
                         unitSpan.textContent = state.unit;
                         unitSpan.style.color = '#555';
                         unitSpan.style.whiteSpace = 'nowrap';
-                        
+
                         if (state.unitIsPrefix) {
                             unitSpan.style.paddingLeft = '8px';
                             input.style.paddingLeft = '4px';
@@ -4131,10 +4131,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 tbody.appendChild(tr);
             });
-            
+
             table.appendChild(thead);
             table.appendChild(tbody);
-            
+
             const tfoot = document.createElement('tfoot');
             const trFoot = document.createElement('tr');
             trFoot.innerHTML = '<td colspan="2" style="text-align: right; font-weight: bold; padding-right: 5px;">Expected Value</td>';
@@ -4179,7 +4179,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const n = state.states.length;
             const m = state.actions.length;
 
-            const V = state.actions.map(a => 
+            const V = state.actions.map(a =>
                 state.states.map(s => state.payoffs[s.id]?.[a.id] ?? 0)
             );
 
@@ -4245,7 +4245,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const evsi_data = accuracy_points.map(a => {
                 if (a < 1 / n) return {a, evsi: 0}; // information is useless
                 if (Math.abs(a-1) < 1e-9) return {a, evsi: evpi};
-                
+
                 const L = new Array(n).fill(0).map(() => new Array(n).fill(0));
                 for(let i = 0; i < n; i++) {
                     for(let j = 0; j < n; j++) {
@@ -4259,7 +4259,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         p_reports[j] += L[i][j] * priors[i];
                     }
                 }
-                
+
                 let ev_with_si = 0;
                 for (let j = 0; j < n; j++) { // for each report R_j
                     if (p_reports[j] < 1e-9) continue;
@@ -4277,7 +4277,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const evsi = ev_with_si - ev_without;
                 return {a, evsi};
             });
-            
+
             plotEVSI(evsi_data);
         }
 
@@ -4309,11 +4309,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             g.append("text").attr("x", width / 2).attr("y", height + 35).style("text-anchor", "middle").text("Accuracy of information (a)");
             g.append("text").attr("transform", "rotate(-90)").attr("y", -margin.left + 15).attr("x", -height / 2).style("text-anchor", "middle").text("EVSI");
-            
+
             g.append("path").datum(data).attr("class", "line-path").attr("d", d3.line().x(d => xScale(d.a)).y(d => yScale(d.evsi)));
-            
+
             const focus = g.append("circle").style("fill", "steelblue").attr("r", 4).style("opacity", 0);
-            
+
             const interactionRect = svg.append("rect")
                 .attr("transform", `translate(${margin.left},${margin.top})`)
                 .style("fill", "none").style("pointer-events", "all")
@@ -4330,9 +4330,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const index = bisect(data, x_val, 1);
                 const d0 = data[index - 1], d1 = data[index] || d0;
                 const d = (x_val - d0.a > d1.a - x_val) ? d1 : d0;
-                
+
                 focus.attr("cx", xScale(d.a)).attr("cy", yScale(d.evsi));
-                
+
                 const unitStr = state.unit ? (state.unitIsPrefix ? state.unit : ` ${state.unit}`) : '';
                 const formattedEVSI = state.unitIsPrefix ? `${unitStr}${d.evsi.toFixed(4)}` : `${d.evsi.toFixed(4)}${unitStr}`;
                 tooltip.html(`a: ${d.a.toFixed(2)}<br>EVSI: ${formattedEVSI}`);
