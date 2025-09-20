@@ -977,7 +977,7 @@
             <details class="panel">
                 <summary>Formulas & Assumptions</summary>
                 <div class="formulas" style="padding-top: 1rem;">
-                    <h4>Decision Making with (unreliable) information</h4>
+                    <h4>Decision making with (unreliable) information</h4>
                     <p>Assume there are multiple possible states of the world, and multiple actions you can take. The question is: How much effort/money should you invest into learning more about which state of the world you’re in before making a decision? How reliable would your information source need to be to make the investment worth it?</p>
                     <p>Try out these examples:
                         <ul>
@@ -988,14 +988,14 @@
                         </ul>
                     </p>
                     <h4>Model Definition</h4>
-                    <p>This model calculates the value of imperfect information (EVSI) under specific assumptions of uniform accuracy and symmetric error.</p>
+                    <p>This model calculates the value of imperfect information under specific assumptions of uniform accuracy and symmetric error. This is a special case of the expected value of sample information (EVSI).</p>
                     <p><b>Inputs:</b>
                         <ul>
-                            <li><b>States (\(S_i\)):</b> A set of \(n\) mutually exclusive states of nature, \(\{S_1, ..., S_n\}\).</li>
-                            <li><b>Actions (\(A_j\)):</b> A set of \(m\) possible actions, \(\{A_1, ..., A_m\}\).</li>
-                            <li><b>Priors (\(\pi\)):</b> An \(n \times 1\) vector of prior probabilities, where \(\pi_i = \mathbb{P}(S_i)\) and \(\sum \pi_i = 1\).</li>
-                            <li><b>Payoffs (\(V\)):</b> An \(m \times n\) matrix where \(V_{ji}\) is the payoff of taking action \(A_j\) if state \(S_i\) occurs.</li>
-                            <li><b>Accuracy (\(a\)):</b> A scalar \(a \in (0, 1)\) representing the probability that the information source correctly identifies the true state.</li>
+                            <li><b>States \(S_i\):</b> A set of \(n\) mutually exclusive states of nature, \(\{S_1, \ldots, S_n\}\).</li>
+                            <li><b>Actions \(A_j\):</b> A set of \(m\) possible actions, \(\{A_1, \ldots, A_m\}\).</li>
+                            <li><b>Prior \(\pi\) over states:</b> A prior probability distribution, where \(\pi_i = \mathbb{P}(S_i)\) and \(\sum \pi_i = 1\).</li>
+                            <li><b>Payoffs \(V\):</b> An \(m \times n\) matrix where \(V_{ji}\) is the payoff of taking action \(A_j\) if state \(S_i\) occurs.</li>
+                            <li><b>Accuracy \(a\):</b> A scalar \(a \in (0, 1)\) representing the probability that the information source correctly identifies the true state.</li>
                         </ul>
                     </p>
                     <h4>The Update Steps</h4>
@@ -1017,8 +1017,8 @@
                     <p>These posterior probabilities are then used to find the expected value with the information.</p>
                     <ol>
                         <li><b>Expected Value without Information:</b> $$EV_{\text{without}} = \max_{\text{action }a=1..m} \left( \sum_{i=1}^{n} V_{ai} \pi_i \right)$$</li>
-                        <li><b>Expected Value with Information:</b> $$EV_{\text{with}} = \sum_{j=1}^{n} \left[ \max_{\text{action }a=1..m} \left( \sum_{k=1}^{n} V_{ak} \mathbb{P}(S_k\mid R_j) \right) \right] \mathbb{P}(R_j)$$</li>
-                        <li><b>EVSI:</b> $$EVSI = EV_{\text{with}} - EV_{\text{without}}$$</li>
+                        <li><b>Expected Value with Information:</b> $$EV_{\text{with}} = \sum_{j=1}^{n} \left[ \max_{\text{action }a=1..m} \left( \sum_{k=1}^{n} V_{ak} \mathbb{P}(S_k\mid R_j) \right) \right] \mathbb{P}(R_j)$$ Note that \(\mathbb{P}(R_j) = \sum_i L_{ij}\pi_i\), and the limiting case of “perfect information” is \(\mathbb{P}(R_j\mid S_i) = \delta_{ij}\).</li>
+                        <li><b>EVSI &amp; EVPI:</b> $$EV\!SI = EV_{\text{with}} - EV_{\text{without}}$$</li>
                     </ol>
                 </div>
             </details>
