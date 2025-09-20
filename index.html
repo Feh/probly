@@ -948,7 +948,8 @@
                 <div class="controls">
                     <button id="iv-add-state-btn">Add State</button>
                     <button id="iv-add-action-btn">Add Action</button>
-                    <button id="iv-normalize-probs-btn">Normalize State Probabilities</button>
+                    <button id="iv-normalize-probs-btn">Normalize probabilities</button>
+                    <button id="iv-reset-btn">Reset</button>
                     <div style="margin-left: auto; display: flex; align-items: center; gap: 5px;">
                         <label for="iv-unit-select" style="margin-bottom: 0;">Payoff Unit</label>
                         <select id="iv-unit-select" style="padding: 10px 15px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 3px;">
@@ -3972,7 +3973,7 @@ document.addEventListener('DOMContentLoaded', () => {
     })();
 
     const informationValueApp = (() => {
-        let state = {
+        const initialState = {
             states: [
                 { id: 0, name: 'S1', prob: 0.5 },
                 { id: 1, name: 'S2', prob: 0.5 }
@@ -3982,7 +3983,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 { id: 1, name: 'A2' }
             ],
             payoffs: {
-                0: { 0: 10, 1: 0 }, // state 0, action 0 and 1
+                0: { 0: 10, 1: -20 }, // state 0, action 0 and 1
                 1: { 0: 0, 1: 20 }  // state 1, action 0 and 1
             },
             nextStateId: 2,
@@ -3990,6 +3991,7 @@ document.addEventListener('DOMContentLoaded', () => {
             unit: '',
             unitIsPrefix: false
         };
+        let state = structuredClone(initialState);
 
         const tableContainer = document.getElementById('iv-table-container');
         const resultsGrid = document.getElementById('iv-results-grid');
@@ -4393,11 +4395,18 @@ document.addEventListener('DOMContentLoaded', () => {
             calculateAndRender();
         }
 
+        function resetToInitialState() {
+            state = structuredClone(initialState);
+            renderTable();
+            calculateAndRender();
+        }
+
         return {
             init: () => {
                 document.getElementById('iv-add-state-btn').addEventListener('click', addState);
                 document.getElementById('iv-add-action-btn').addEventListener('click', addAction);
                 document.getElementById('iv-normalize-probs-btn').addEventListener('click', normalizeProbabilities);
+                document.getElementById('iv-reset-btn').addEventListener('click', resetToInitialState);
                 document.getElementById('iv-unit-select').addEventListener('change', (e) => {
                     const selectedOption = e.target.options[e.target.selectedIndex];
                     state.unit = e.target.value;
