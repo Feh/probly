@@ -4310,7 +4310,8 @@ document.addEventListener('DOMContentLoaded', () => {
             g.append("g").attr("class", "y-axis axis").call(d3.axisLeft(yScale).ticks(5));
 
             g.append("text").attr("x", width / 2).attr("y", height + 35).style("text-anchor", "middle").text("Accuracy of information (a)");
-            g.append("text").attr("transform", "rotate(-90)").attr("y", -margin.left + 15).attr("x", -height / 2).style("text-anchor", "middle").text("EVSI");
+            const yAxisTitle = "Value of Information" + (state.unit ? ` [${state.unit}]` : "");
+            g.append("text").attr("transform", "rotate(-90)").attr("y", -margin.left + 15).attr("x", -height / 2).style("text-anchor", "middle").text(yAxisTitle);
 
             g.append("path").datum(data).attr("class", "line-path").attr("d", d3.line().x(d => xScale(d.a)).y(d => yScale(d.evsi)));
 
