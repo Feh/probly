@@ -992,31 +992,31 @@
                         <ul>
                             <li><b>States (\(S_i\)):</b> A set of \(n\) mutually exclusive states of nature, \(\{S_1, ..., S_n\}\).</li>
                             <li><b>Actions (\(A_j\)):</b> A set of \(m\) possible actions, \(\{A_1, ..., A_m\}\).</li>
-                            <li><b>Priors (\(\pi\)):</b> An \(n \times 1\) vector of prior probabilities, where \(\pi_i = P(S_i)\) and \(\sum \pi_i = 1\).</li>
+                            <li><b>Priors (\(\pi\)):</b> An \(n \times 1\) vector of prior probabilities, where \(\pi_i = \mathbb{P}(S_i)\) and \(\sum \pi_i = 1\).</li>
                             <li><b>Payoffs (\(V\)):</b> An \(m \times n\) matrix where \(V_{ji}\) is the payoff of taking action \(A_j\) if state \(S_i\) occurs.</li>
                             <li><b>Accuracy (\(a\)):</b> A scalar \(a \in (0, 1)\) representing the probability that the information source correctly identifies the true state.</li>
                         </ul>
                     </p>
                     <h4>The Update Steps</h4>
-                    <p>We assume there’s a report \(R\) that identifies the state of nature with some possibility of error. The update from prior beliefs (\(\pi_i=\mathbb{P}(S_i)\)) to posterior beliefs (\(P(S_k\mid R_j)\)) works through specifying the information's reliability and then applying Bayes' theorem.</p>
+                    <p>We assume there’s a report \(R\) that identifies the state of nature with some possibility of error. The update from prior beliefs (\(\pi_i=\mathbb{P}(S_i)\)) to posterior beliefs (\(\mathbb{P}(S_k\mid R_j)\)) works through specifying the information's reliability and then applying Bayes' theorem.</p>
                     <p><b>1. Construct the Likelihood Matrix (\(L\))</b></p>
-                    <p>The \(n \times n\) likelihood matrix \(L\), where \(L_{ij} = P(R_j\mid S_i)\), formalizes the simplified “uniform accuracy \(a\), symmetric error” assumption:
+                    <p>The \(n \times n\) likelihood matrix \(L\), where \(L_{ij} = \mathbb{P}(R_j\mid S_i)\), formalizes the simplified “uniform accuracy \(a\), symmetric error” assumption:
                         <ul>
-                            <li>The probability of a correct report is \(P(R_i\mid S_i) = a\).</li>
-                            <li>The probability of an incorrect report is \(1-a\), distributed evenly among the \(n-1\) other possibilities. Thus, \(P(R_j\mid S_i) = \frac{1-a}{n-1}\) for \(i \neq j\).</li>
+                            <li>The probability of a correct report is \(\mathbb{P}(R_i\mid S_i) = a\).</li>
+                            <li>The probability of an incorrect report is \(1-a\), distributed evenly among the \(n-1\) other possibilities. Thus, \(\mathbb{P}(R_j\mid S_i) = \frac{1-a}{n-1}\) for \(i \neq j\).</li>
                         </ul>
                     </p>
                     <p>Using the Kronecker delta \(\delta_{ij}\), the matrix elements are then:
                     $$L_{ij} = a \cdot \delta_{ij} + \frac{1-a}{n-1} \cdot (1-\delta_{ij})$$</p>
-                    <p><b>2. Calculate the Posterior Probabilities (\(P(S_k\mid R_j)\))</b></p>
+                    <p><b>2. Calculate the Posterior Probabilities (\(\mathbb{P}(S_k\mid R_j)\))</b></p>
                     <p>Given that the survey has returned report \(R_j\), the updated (posterior) probability of the true state being \(S_k\) is found using Bayes' theorem:</p>
-                    $$\begin{aligned}P(S_k\mid R_j) &= \frac{P(R_j\mid S_k)P(S_k)}{P(R_j)}\\ &=\frac{L_{kj} \cdot \pi_k}{\sum_{i=1}^{n} L_{ij} \pi_i}\end{aligned}$$
+                    $$\begin{aligned}\mathbb{P}(S_k\mid R_j) &= \frac{\mathbb{P}(R_j\mid S_k)\mathbb{P}(S_k)}{\mathbb{P}(R_j)}\\ &=\frac{L_{kj} \cdot \pi_k}{\sum_{i=1}^{n} L_{ij} \pi_i}\end{aligned}$$
                     This calculation is performed for each possible combination of true state \(S_k\) and report \(R_j\).</p>
                     <h4>Using the Updated Probabilities</h4>
                     <p>These posterior probabilities are then used to find the expected value with the information.</p>
                     <ol>
                         <li><b>Expected Value without Information:</b> $$EV_{\text{without}} = \max_{\text{action }a=1..m} \left( \sum_{i=1}^{n} V_{ai} \pi_i \right)$$</li>
-                        <li><b>Expected Value with Information:</b> $$EV_{\text{with}} = \sum_{j=1}^{n} \left[ \max_{\text{action }a=1..m} \left( \sum_{k=1}^{n} V_{ak} P(S_k\mid R_j) \right) \right] P(R_j)$$</li>
+                        <li><b>Expected Value with Information:</b> $$EV_{\text{with}} = \sum_{j=1}^{n} \left[ \max_{\text{action }a=1..m} \left( \sum_{k=1}^{n} V_{ak} \mathbb{P}(S_k\mid R_j) \right) \right] \mathbb{P}(R_j)$$</li>
                         <li><b>EVSI:</b> $$EVSI = EV_{\text{with}} - EV_{\text{without}}$$</li>
                     </ol>
                 </div>
