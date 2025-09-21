@@ -4770,6 +4770,63 @@ document.addEventListener('DOMContentLoaded', () => {
                     .style("fill", color(i))
                     .text(state.hypotheses[i].name);
             });
+
+            const focus = g.selectAll(".focus-dot")
+                .data(state.hypotheses)
+                .enter().append("circle")
+                .attr("class", "focus-dot")
+                .style("fill", (d, i) => color(i))
+                .attr("r", 4)
+                .style("opacity", 0);
+
+            const interactionRect = svg.append("rect")
+                .attr("transform", `translate(${margin.left},${margin.top})`)
+                .style("fill", "none")
+                .style("pointer-events", "all")
+                .attr("width", width)
+                .attr("height", height);
+
+            function updateTooltip(event) {
+                const [tipX, tipY] = d3.pointer(event, svg.node().parentNode);
+                tooltip.style("left", tipX + "px")
+                       .style("top", tipY + "px");
+
+                const [x_coord] = d3.pointer(event, interactionRect.node());
+                const x_val = xScale.invert(x_coord);
+                const step = Math.round(x_val);
+
+                if (step < 0 || step > state.evidence.length) {
+                    focus.style("opacity", 0);
+                    tooltip.style("opacity", 0);
+                    return;
+                }
+
+                focus.style("opacity", 1);
+                tooltip.style("opacity", 1)
+                       .style("transform", "translate(-50%, -110%)");
+
+                let tooltipContent = `<strong>${step === 0 ? 'Prior' : state.evidence[step - 1].name}</strong><br/>`;
+
+                trajectories.forEach((traj, i) => {
+                    const point = traj[step];
+                    if (point) {
+                        focus.filter((d, j) => i === j)
+                            .attr("cx", xScale(point.step))
+                            .attr("cy", yScale(point.prob));
+
+                        tooltipContent += `<span style="color:${color(i)};">■</span> ${state.hypotheses[i].name}: ${point.prob.toFixed(4)}<br/>`;
+                    }
+                });
+                tooltip.html(tooltipContent);
+            }
+
+            interactionRect.on("mouseover", () => {
+                focus.style("opacity", 1);
+                tooltip.style("opacity", 1);
+            }).on("mouseout", () => {
+                focus.style("opacity", 0);
+                tooltip.style("opacity", 0);
+            }).on("mousemove", updateTooltip);
         }
 
         function addHypothesis() {
