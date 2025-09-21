@@ -4731,14 +4731,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 .domain([0, 1])
                 .range([height, 0]);
 
+            const tickValues = d3.range(state.evidence.length + 1);
             g.append("g").attr("class", "x-axis axis")
                 .attr("transform", `translate(0, ${height})`)
-                .call(d3.axisBottom(xScale).ticks(Math.min(10, state.evidence.length + 1)).tickFormat(d => {
+                .call(d3.axisBottom(xScale).tickValues(tickValues).tickFormat(d => {
                     if (d === 0) return 'Prior';
                     if (d > 0 && d <= state.evidence.length && state.evidence[d - 1]) {
                         return state.evidence[d - 1].name;
                     }
-                    return d;
+                    return '';
                 }));
 
             g.append("g").attr("class", "y-axis axis")
