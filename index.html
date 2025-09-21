@@ -1066,6 +1066,21 @@
                     <div id="mht-tooltip" class="tooltip"></div>
                 </div>
             </div>
+            <details class="panel">
+                <summary>Formulas</summary>
+                <div class="formulas" style="padding-top: 1rem;">
+                    <h4>Bayesian Updating</h4>
+                    <p>This app performs sequential Bayesian updating. We start with a set of mutually exclusive hypotheses \(H_1, \dots, H_m\) and prior probabilities \(\mathbb{P}(H_i)\) for each.</p>
+                    <p>When a piece of evidence \(E\) is observed, we update our beliefs using Bayes' theorem. The posterior probability of hypothesis \(H_i\) given evidence \(E\) is calculated as:</p>
+                    $$ \mathbb{P}(H_i | E) = \frac{\mathbb{P}(E | H_i) \mathbb{P}(H_i)}{\sum_{j=1}^{m} \mathbb{P}(E | H_j) \mathbb{P}(H_j)} $$
+                    <p>Here, \(\mathbb{P}(E | H_i)\) is the likelihood of observing evidence \(E\) if hypothesis \(H_i\) is true.</p>
+                    <h4>Sequential Evidence</h4>
+                    <p>When multiple pieces of evidence \(E_1, E_2, \dots, E_n\) are observed sequentially, the posterior from one step becomes the prior for the next. Let \(\pi_i^{(k)} = \mathbb{P}(H_i | E_1, \dots, E_k)\). Then the update rule for evidence \(E_k\) is:</p>
+                    $$ \pi_i^{(k)} = \frac{\mathbb{P}(E_k | H_i) \pi_i^{(k-1)}}{\sum_{j=1}^{m} \mathbb{P}(E_k | H_j) \pi_j^{(k-1)}} $$
+                    <p>where \(\pi_i^{(0)}\) is the initial prior \(\mathbb{P}(H_i)\).</p>
+                    <p>This assumes that each piece of evidence \(E_k\) is conditionally independent of the previous evidence \(E_1, \dots, E_{k-1}\) given the hypothesis \(H_i\).</p>
+                </div>
+            </details>
         </div>
         <div id="about-app" class="app-container">
             <div class="panel">
@@ -4645,8 +4660,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             table.append(thead, tbody, tfoot);
             tableContainer.appendChild(table);
-            renderMathInElement(tableContainer, {
-                delimiters: [{left: '\\(', right: '\\)', display: false}],
+            renderMathInElement(document.getElementById('multiple-hypothesis-testing-app'), {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '\\[', right: '\\]', display: true},
+                    {left: '\\(', right: '\\)', display: false}
+                ],
             });
         }
 
