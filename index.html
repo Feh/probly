@@ -326,6 +326,25 @@
         #iv-results-grid { margin-bottom: 2rem; }
 
 
+        /* Scoped styles for Multiple Hypothesis Testing App */
+        #multiple-hypothesis-testing-app { grid-template-columns: 1fr; max-width: 900px; margin: 2rem auto; }
+        #multiple-hypothesis-testing-app .panel { grid-column: 1 / -1; margin-top: 1rem; }
+        #multiple-hypothesis-testing-app .controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 1rem; }
+        #multiple-hypothesis-testing-app .controls button { padding: 10px 15px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 3px; background-color: #f0f0f0; cursor: pointer; }
+        #multiple-hypothesis-testing-app .controls button:hover { background-color: #e0e0e0; }
+        #multiple-hypothesis-testing-app table { border-collapse: collapse; width: 100%; margin-bottom: 1rem; }
+        #multiple-hypothesis-testing-app th, #multiple-hypothesis-testing-app td { border: 1px solid #ccc; padding: 0; position: relative; }
+        #multiple-hypothesis-testing-app th input, #multiple-hypothesis-testing-app td input { width: 100%; height: 100%; border: none; padding: 8px; box-sizing: border-box; text-align: center; }
+        #multiple-hypothesis-testing-app input[type="number"].prob-input.error { border: 3px solid #d9534f; }
+        #multiple-hypothesis-testing-app th { background-color: #f7f7f7; }
+        #multiple-hypothesis-testing-app .hypothesis-header { padding: 8px; }
+        #multiple-hypothesis-testing-app .remove-btn { position: absolute; top: 2px; right: 2px; background: none; border: none; cursor: pointer; font-size: 1.2em; color: #888; padding: 2px; line-height: 1; }
+        #multiple-hypothesis-testing-app .remove-btn:hover { color: #333; }
+        #multiple-hypothesis-testing-app .plot-container { min-height: 300px; border: 1px solid var(--border-color); }
+        #multiple-hypothesis-testing-app #mht-plot-svg { width: 100%; }
+        #multiple-hypothesis-testing-app .tooltip { position: absolute; background-color: rgba(0, 0, 0, 0.75); color: white; padding: 5px 10px; border-radius: 3px; pointer-events: none; opacity: 0; font-size: 0.9em; z-index: 10; transform: translate(-50%, -110%); }
+
+
         .move-controls { position: absolute; top: 5px; right: 5px; z-index: 5; display: flex; flex-direction: row; }
         .move-btn { background: none; border: none; cursor: pointer; font-size: 0.8rem; padding: 0; line-height: 1; color: #888; }
         .move-btn:hover { color: #333; }
@@ -403,6 +422,7 @@
             <li><a href="#bernoulli">Correlated Bernoulli</a></li>
             <li><a href="#expected-value">Expected Value</a></li>
             <li><a href="#information-value">Information Value</a></li>
+            <li><a href="#multiple-hypothesis-testing">Multiple Hypothesis Testing</a></li>
             <div class="nav-divider"></div>
             <li class="nav-secondary-item"><a href="#about">About</a></li>
             <li class="nav-secondary-item"><a href="#install">Install on device</a></li>
@@ -1024,6 +1044,26 @@
                     </ol>
                 </div>
             </details>
+        </div>
+        <div id="multiple-hypothesis-testing-app" class="app-container">
+            <div class="panel">
+                <h3>Inputs</h3>
+                <p>Define hypotheses, priors, and enter evidence to see how probabilities update via Bayes' theorem.</p>
+                <div class="controls">
+                    <button id="mht-add-hypothesis-btn">Add Hypothesis</button>
+                    <button id="mht-add-evidence-btn">Add Evidence</button>
+                    <button id="mht-normalize-probs-btn">Normalize Priors</button>
+                    <button id="mht-reset-btn">Reset</button>
+                </div>
+                <div id="mht-table-container"></div>
+            </div>
+            <div class="panel">
+                <h3>Posterior Probability Trajectories</h3>
+                <div id="mht-plot-container" class="plot-container plot-svg-wrapper">
+                    <svg id="mht-plot-svg"></svg>
+                    <div id="mht-tooltip" class="tooltip"></div>
+                </div>
+            </div>
         </div>
         <div id="about-app" class="app-container">
             <div class="panel">
@@ -4458,6 +4498,296 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     })();
 
+    const multipleHypothesisTestingApp = (() => {
+        const initialState = {
+            hypotheses: [
+                { id: 0, name: 'Hypothesis 1', prior: 0.5 },
+                { id: 1, name: 'Hypothesis 2', prior: 0.5 }
+            ],
+            evidence: [],
+            nextHypothesisId: 2,
+            nextEvidenceId: 0,
+        };
+        let state = structuredClone(initialState);
+
+        const tableContainer = document.getElementById('mht-table-container');
+        const svg = d3.select("#mht-plot-svg");
+        const tooltip = d3.select("#mht-tooltip");
+        const margin = { top: 30, right: 100, bottom: 40, left: 50 };
+
+        function renderTable() {
+            tableContainer.innerHTML = '';
+            const table = document.createElement('table');
+            const thead = document.createElement('thead');
+            const tbody = document.createElement('tbody');
+            const tfoot = document.createElement('tfoot');
+
+            // Header row for names
+            let tr = document.createElement('tr');
+            tr.innerHTML = '<th></th>'; // Empty cell for row labels
+            state.hypotheses.forEach(h => {
+                const th = document.createElement('th');
+                const nameInput = document.createElement('input');
+                nameInput.type = 'text';
+                nameInput.value = h.name;
+                nameInput.addEventListener('change', e => {
+                    h.name = e.target.value;
+                    calculateAndRender();
+                });
+                th.appendChild(nameInput);
+                if (state.hypotheses.length > 1) {
+                    const removeBtn = document.createElement('button');
+                    removeBtn.className = 'remove-btn';
+                    removeBtn.innerHTML = '&times;';
+                    removeBtn.addEventListener('click', () => removeHypothesis(h.id));
+                    th.appendChild(removeBtn);
+                }
+                tr.appendChild(th);
+            });
+            thead.appendChild(tr);
+
+            // Header row for titles
+            tr = document.createElement('tr');
+            tr.innerHTML = '<th></th>';
+            state.hypotheses.forEach((h, i) => {
+                const th = document.createElement('th');
+                th.className = 'hypothesis-header';
+                th.textContent = `P(H${i+1})`;
+                tr.appendChild(th);
+            });
+            thead.appendChild(tr);
+
+            // Prior row
+            tr = document.createElement('tr');
+            tr.innerHTML = '<td>Prior</td>';
+            state.hypotheses.forEach(h => {
+                const td = document.createElement('td');
+                const priorInput = document.createElement('input');
+                priorInput.type = 'number';
+                priorInput.className = 'prob-input';
+                priorInput.min = 0; priorInput.max = 1; priorInput.step = 0.01;
+                priorInput.value = h.prior;
+                priorInput.addEventListener('input', e => {
+                    h.prior = e.target.value === '' ? NaN : parseFloat(e.target.value);
+                    calculateAndRender();
+                });
+                td.appendChild(priorInput);
+                tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+
+            // Evidence rows
+            state.evidence.forEach((e, i) => {
+                tr = document.createElement('tr');
+                const labelTd = document.createElement('td');
+                labelTd.innerHTML = `Evidence ${i+1}`;
+                if (state.evidence.length > 0) {
+                    const removeBtn = document.createElement('button');
+                    removeBtn.className = 'remove-btn';
+                    removeBtn.innerHTML = '&times;';
+                    removeBtn.addEventListener('click', () => removeEvidence(e.id));
+                    labelTd.appendChild(removeBtn);
+                }
+                tr.appendChild(labelTd);
+
+                state.hypotheses.forEach(h => {
+                    const td = document.createElement('td');
+                    const likelihoodInput = document.createElement('input');
+                    likelihoodInput.type = 'number';
+                    likelihoodInput.min = 0; likelihoodInput.max = 1; likelihoodInput.step = 0.01;
+                    likelihoodInput.placeholder = `P(E${i+1}|H${state.hypotheses.indexOf(h)+1})`;
+                    likelihoodInput.value = e.likelihoods[h.id] || '';
+                    likelihoodInput.addEventListener('input', ev => {
+                        e.likelihoods[h.id] = ev.target.value === '' ? NaN : parseFloat(ev.target.value);
+                        calculateAndRender();
+                    });
+                    td.appendChild(likelihoodInput);
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+
+            // Posterior row
+            tr = document.createElement('tr');
+            tr.innerHTML = '<td>Posterior</td>';
+            state.hypotheses.forEach(h => {
+                const td = document.createElement('td');
+                td.id = `mht-posterior-${h.id}`;
+                tr.appendChild(td);
+            });
+            tfoot.appendChild(tr);
+
+            table.append(thead, tbody, tfoot);
+            tableContainer.appendChild(table);
+        }
+
+        function calculateAndRender() {
+            // updateURL(); // Not implemented yet
+            const priors = state.hypotheses.map(h => h.prior);
+            const totalP = priors.reduce((sum, p) => sum + (isNaN(p) ? 0 : p), 0);
+            const isSumInvalid = Math.abs(totalP - 1) > 1e-9 && totalP > 0;
+
+            tableContainer.querySelectorAll('.prob-input').forEach(input => {
+                input.classList.toggle('error', isSumInvalid);
+            });
+
+            if (isSumInvalid || state.hypotheses.length === 0) {
+                state.hypotheses.forEach(h => {
+                    const postEl = document.getElementById(`mht-posterior-${h.id}`);
+                    if (postEl) postEl.textContent = '';
+                });
+                svg.selectAll("*").remove();
+                return;
+            }
+
+            let currentProbs = [...priors];
+            const trajectories = state.hypotheses.map((h, i) => [{ step: 0, prob: priors[i] }]);
+
+            state.evidence.forEach((evidence, step) => {
+                const likelihoods = state.hypotheses.map(h => evidence.likelihoods[h.id] || 0);
+                const p_evidence = currentProbs.reduce((sum, p, i) => sum + p * likelihoods[i], 0);
+
+                if (p_evidence > 0) {
+                    const newProbs = currentProbs.map((p, i) => (p * likelihoods[i]) / p_evidence);
+                    currentProbs = newProbs;
+                }
+                state.hypotheses.forEach((h, i) => {
+                    trajectories[i].push({ step: step + 1, prob: currentProbs[i] });
+                });
+            });
+
+            state.hypotheses.forEach((h, i) => {
+                const postEl = document.getElementById(`mht-posterior-${h.id}`);
+                if (postEl) {
+                    postEl.textContent = isNaN(currentProbs[i]) ? 'N/A' : currentProbs[i].toFixed(4);
+                    postEl.style.fontWeight = 'bold';
+                }
+            });
+
+            plotTrajectories(trajectories);
+        }
+
+        function plotTrajectories(trajectories) {
+            svg.selectAll("*").remove();
+            const rect = svg.node().getBoundingClientRect();
+            const width = rect.width - margin.left - margin.right;
+            const height = rect.height - margin.top - margin.bottom;
+            if (width <= 0 || height <= 0) return;
+
+            const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+            const xScale = d3.scaleLinear()
+                .domain([0, state.evidence.length])
+                .range([0, width]);
+
+            const yScale = d3.scaleLinear()
+                .domain([0, 1])
+                .range([height, 0]);
+
+            g.append("g").attr("class", "x-axis axis")
+                .attr("transform", `translate(0, ${height})`)
+                .call(d3.axisBottom(xScale).ticks(Math.min(10, state.evidence.length)).tickFormat(d3.format("d")));
+
+            g.append("g").attr("class", "y-axis axis")
+                .call(d3.axisLeft(yScale));
+
+            g.append("text").attr("x", width / 2).attr("y", height + 35).style("text-anchor", "middle").text("Evidence Step");
+            g.append("text").attr("transform", "rotate(-90)").attr("y", -margin.left + 15).attr("x", -height / 2).style("text-anchor", "middle").text("Probability");
+
+            const line = d3.line()
+                .x(d => xScale(d.step))
+                .y(d => yScale(d.prob));
+
+            const color = d3.scaleOrdinal(d3.schemeCategory10);
+
+            trajectories.forEach((traj, i) => {
+                g.append("path")
+                    .datum(traj)
+                    .attr("fill", "none")
+                    .attr("stroke", color(i))
+                    .attr("stroke-width", 2)
+                    .attr("d", line);
+
+                const lastPoint = traj[traj.length - 1];
+                g.append("text")
+                    .attr("x", xScale(lastPoint.step) + 5)
+                    .attr("y", yScale(lastPoint.prob))
+                    .attr("dy", "0.35em")
+                    .style("fill", color(i))
+                    .text(state.hypotheses[i].name);
+            });
+        }
+
+        function addHypothesis() {
+            const newId = state.nextHypothesisId++;
+            state.hypotheses.push({ id: newId, name: `Hypothesis ${state.hypotheses.length + 1}`, prior: 0 });
+            state.evidence.forEach(e => e.likelihoods[newId] = NaN);
+            renderTable();
+            calculateAndRender();
+        }
+
+        function removeHypothesis(id) {
+            if (state.hypotheses.length <= 1) return;
+            state.hypotheses = state.hypotheses.filter(h => h.id !== id);
+            state.evidence.forEach(e => delete e.likelihoods[id]);
+            renderTable();
+            calculateAndRender();
+        }
+
+        function addEvidence() {
+            const newId = state.nextEvidenceId++;
+            const newEvidence = { id: newId, likelihoods: {} };
+            state.hypotheses.forEach(h => newEvidence.likelihoods[h.id] = NaN);
+            state.evidence.push(newEvidence);
+            renderTable();
+            calculateAndRender();
+        }
+        
+        function removeEvidence(id) {
+            state.evidence = state.evidence.filter(e => e.id !== id);
+            renderTable();
+            calculateAndRender();
+        }
+
+        function normalizePriors() {
+            const totalP = state.hypotheses.reduce((sum, h) => sum + (isNaN(h.prior) ? 0 : h.prior), 0);
+            if (totalP > 0) {
+                state.hypotheses.forEach(h => {
+                    if (!isNaN(h.prior)) {
+                        h.prior /= totalP;
+                    }
+                });
+            }
+            renderTable();
+            calculateAndRender();
+        }
+
+        function reset() {
+            state = structuredClone(initialState);
+            renderTable();
+            calculateAndRender();
+        }
+
+        return {
+            init: () => {
+                document.getElementById('mht-add-hypothesis-btn').addEventListener('click', addHypothesis);
+                document.getElementById('mht-add-evidence-btn').addEventListener('click', addEvidence);
+                document.getElementById('mht-normalize-probs-btn').addEventListener('click', normalizePriors);
+                document.getElementById('mht-reset-btn').addEventListener('click', reset);
+                renderTable();
+                calculateAndRender();
+                 const resizeObserver = new ResizeObserver(() => {
+                    setTimeout(calculateAndRender, 0);
+                });
+                const plotContainer = document.getElementById('mht-plot-container');
+                if (plotContainer) {
+                    resizeObserver.observe(plotContainer);
+                }
+            },
+            updateFromURL: () => { /* Not implemented yet */ }
+        };
+    })();
+
     let deferredPrompt;
     const installButton = document.getElementById('install-button');
 
@@ -4510,6 +4840,7 @@ document.addEventListener('DOMContentLoaded', () => {
         bernoulli: document.getElementById('bernoulli-app'),
         'expected-value': document.getElementById('expected-value-app'),
         'information-value': document.getElementById('information-value-app'),
+        'multiple-hypothesis-testing': document.getElementById('multiple-hypothesis-testing-app'),
         about: document.getElementById('about-app'),
         install: document.getElementById('install-app')
     };
@@ -4520,9 +4851,10 @@ document.addEventListener('DOMContentLoaded', () => {
         'wiener-process': wienerProcessApp,
         bernoulli: bernoulliApp,
         'expected-value': expectedValueApp,
-        'information-value': informationValueApp
+        'information-value': informationValueApp,
+        'multiple-hypothesis-testing': multipleHypothesisTestingApp
     };
-    const initializedApps = { distributions: false, 'order-statistics': false, 'gaussian-copula': false, 'wiener-process': false, bernoulli: false, 'expected-value': false, 'information-value': false };
+    const initializedApps = { distributions: false, 'order-statistics': false, 'gaussian-copula': false, 'wiener-process': false, bernoulli: false, 'expected-value': false, 'information-value': false, 'multiple-hypothesis-testing': false };
     const appTitles = {
         distributions: 'Distributions',
         'order-statistics': 'Order Statistics',
@@ -4531,6 +4863,7 @@ document.addEventListener('DOMContentLoaded', () => {
         bernoulli: 'Correlated Bernoulli',
         'expected-value': 'Expected Value',
         'information-value': 'Information Value',
+        'multiple-hypothesis-testing': 'Multiple Hypothesis Testing',
         about: 'About',
         install: 'Install on device'
     };
