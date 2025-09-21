@@ -334,10 +334,12 @@
         #multiple-hypothesis-testing-app .controls button:hover { background-color: #e0e0e0; }
         #multiple-hypothesis-testing-app table { border-collapse: collapse; width: 100%; margin-bottom: 1rem; }
         #multiple-hypothesis-testing-app th, #multiple-hypothesis-testing-app td { border: 1px solid #ccc; padding: 0; position: relative; }
-        #multiple-hypothesis-testing-app th input, #multiple-hypothesis-testing-app td input { width: 100%; height: 100%; border: none; padding: 8px; box-sizing: border-box; text-align: center; }
+        #multiple-hypothesis-testing-app th input, #multiple-hypothesis-testing-app td input { width: 100%; height: 100%; border: none; padding: 8px; box-sizing: border-box; text-align: left; }
+        #multiple-hypothesis-testing-app td .input-container { display: flex; align-items: center; padding: 0 8px; height: 100%; }
+        #multiple-hypothesis-testing-app td .input-container .katex-prefix { margin-right: 5px; white-space: nowrap; }
         #multiple-hypothesis-testing-app input[type="number"].prob-input.error { border: 3px solid #d9534f; }
         #multiple-hypothesis-testing-app th { background-color: #f7f7f7; }
-        #multiple-hypothesis-testing-app .hypothesis-header { padding: 8px; }
+        #multiple-hypothesis-testing-app .hypothesis-header { padding: 8px; text-align: center; }
         #multiple-hypothesis-testing-app .remove-btn { position: absolute; top: 2px; right: 2px; background: none; border: none; cursor: pointer; font-size: 1.2em; color: #888; padding: 2px; line-height: 1; }
         #multiple-hypothesis-testing-app .remove-btn:hover { color: #333; }
         #multiple-hypothesis-testing-app .plot-container { min-height: 300px; border: 1px solid var(--border-color); }
@@ -4560,8 +4562,11 @@ document.addEventListener('DOMContentLoaded', () => {
             // Prior row
             tr = document.createElement('tr');
             tr.innerHTML = '<td>Prior</td>';
-            state.hypotheses.forEach(h => {
+            state.hypotheses.forEach((h, i) => {
                 const td = document.createElement('td');
+                const container = document.createElement('div');
+                container.className = 'input-container';
+                container.innerHTML = `<span class="katex-prefix">\\(\\mathbb{P}(H_{${i+1}})=\\)</span>`;
                 const priorInput = document.createElement('input');
                 priorInput.type = 'number';
                 priorInput.className = 'prob-input';
@@ -4571,7 +4576,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     h.prior = e.target.value === '' ? NaN : parseFloat(e.target.value);
                     calculateAndRender();
                 });
-                td.appendChild(priorInput);
+                container.appendChild(priorInput);
+                td.appendChild(container);
                 tr.appendChild(td);
             });
             tbody.appendChild(tr);
@@ -4580,7 +4586,19 @@ document.addEventListener('DOMContentLoaded', () => {
             state.evidence.forEach((e, i) => {
                 tr = document.createElement('tr');
                 const labelTd = document.createElement('td');
-                labelTd.innerHTML = `Evidence ${i+1}`;
+                const nameContainer = document.createElement('div');
+                nameContainer.className = 'input-container';
+                nameContainer.innerHTML = `<span class="katex-prefix">\\(E_{${i+1}}:\\)</span>`;
+                const nameInput = document.createElement('input');
+                nameInput.type = 'text';
+                nameInput.value = e.name;
+                nameInput.addEventListener('change', ev => {
+                    e.name = ev.target.value;
+                    calculateAndRender();
+                });
+                nameContainer.appendChild(nameInput);
+                labelTd.appendChild(nameContainer);
+
                 if (state.evidence.length > 0) {
                     const removeBtn = document.createElement('button');
                     removeBtn.className = 'remove-btn';
@@ -4590,18 +4608,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 tr.appendChild(labelTd);
 
-                state.hypotheses.forEach(h => {
+                state.hypotheses.forEach((h, j) => {
                     const td = document.createElement('td');
+                    const container = document.createElement('div');
+                    container.className = 'input-container';
+                    container.innerHTML = `<span class="katex-prefix">\\(\\mathbb{P}(E_{${i+1}}|H_{${j+1}})=\\)</span>`;
                     const likelihoodInput = document.createElement('input');
                     likelihoodInput.type = 'number';
                     likelihoodInput.min = 0; likelihoodInput.max = 1; likelihoodInput.step = 0.01;
-                    likelihoodInput.placeholder = `P(E${i+1}|H${state.hypotheses.indexOf(h)+1})`;
                     likelihoodInput.value = e.likelihoods[h.id] || '';
                     likelihoodInput.addEventListener('input', ev => {
                         e.likelihoods[h.id] = ev.target.value === '' ? NaN : parseFloat(ev.target.value);
                         calculateAndRender();
                     });
-                    td.appendChild(likelihoodInput);
+                    container.appendChild(likelihoodInput);
+                    td.appendChild(container);
                     tr.appendChild(td);
                 });
                 tbody.appendChild(tr);
@@ -4610,15 +4631,23 @@ document.addEventListener('DOMContentLoaded', () => {
             // Posterior row
             tr = document.createElement('tr');
             tr.innerHTML = '<td>Posterior</td>';
-            state.hypotheses.forEach(h => {
+            state.hypotheses.forEach((h, i) => {
                 const td = document.createElement('td');
-                td.id = `mht-posterior-${h.id}`;
+                const n_evidence = state.evidence.length;
+                const evidence_str = n_evidence > 0 ? `|E_1, \\dots, E_{${n_evidence}}` : '';
+                td.innerHTML = `<div class="input-container">
+                    <span class="katex-prefix">\\(\\mathbb{P}(H_{${i+1}}${evidence_str})=\\)</span>
+                    <span id="mht-posterior-${h.id}" style="font-weight: bold;"></span>
+                </div>`;
                 tr.appendChild(td);
             });
             tfoot.appendChild(tr);
 
             table.append(thead, tbody, tfoot);
             tableContainer.appendChild(table);
+            renderMathInElement(tableContainer, {
+                delimiters: [{left: '\\(', right: '\\)', display: false}],
+            });
         }
 
         function calculateAndRender() {
@@ -4660,7 +4689,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const postEl = document.getElementById(`mht-posterior-${h.id}`);
                 if (postEl) {
                     postEl.textContent = isNaN(currentProbs[i]) ? 'N/A' : currentProbs[i].toFixed(4);
-                    postEl.style.fontWeight = 'bold';
                 }
             });
 
@@ -4686,7 +4714,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             g.append("g").attr("class", "x-axis axis")
                 .attr("transform", `translate(0, ${height})`)
-                .call(d3.axisBottom(xScale).ticks(Math.min(10, state.evidence.length)).tickFormat(d3.format("d")));
+                .call(d3.axisBottom(xScale).ticks(Math.min(10, state.evidence.length + 1)).tickFormat(d => {
+                    if (d === 0) return 'Prior';
+                    if (d > 0 && d <= state.evidence.length && state.evidence[d - 1]) {
+                        return state.evidence[d - 1].name;
+                    }
+                    return d;
+                }));
 
             g.append("g").attr("class", "y-axis axis")
                 .call(d3.axisLeft(yScale));
@@ -4736,7 +4770,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function addEvidence() {
             const newId = state.nextEvidenceId++;
-            const newEvidence = { id: newId, likelihoods: {} };
+            const newEvidence = { id: newId, name: `Evidence ${state.evidence.length + 1}`, likelihoods: {} };
             state.hypotheses.forEach(h => newEvidence.likelihoods[h.id] = NaN);
             state.evidence.push(newEvidence);
             renderTable();
