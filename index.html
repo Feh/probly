@@ -5091,7 +5091,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
             
             const k_max = N;
-            const k_values = d3.range(0, k_max + 1);
+            let k_values;
+            if (N > 1000) {
+                k_values = [];
+                const step = k_max / 199; // 200 points
+                for (let i = 0; i < 200; i++) {
+                    k_values.push(Math.round(i * step));
+                }
+            } else {
+                k_values = d3.range(0, k_max + 1);
+            }
 
             const data = [
                 { name: 'P(N, k) [Permutation]', katexName: '\\(P(N, k)\\)', values: k_values.map(k => {
@@ -5159,9 +5168,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 tooltip.style("opacity", 1).style("left", tipX + "px").style("top", tipY + "px");
 
                 let tooltipContent = `<strong>k = ${k}</strong><br>`;
+                const logVals_for_k = [
+                    logFactorial(N) - logFactorial(N - k),
+                    logFactorial(N) - logFactorial(k) - logFactorial(N - k),
+                    k * Math.log(N),
+                    logFactorial(N + k - 1) - logFactorial(k) - logFactorial(N - 1)
+                ];
+
                 data.forEach((d, i) => {
-                    const point = d.values[k];
-                    const valStr = useLog10 ? `\\(\\log_{10}\\): ${point.val.toFixed(2)}` : formatResult(point.val);
+                    const logVal = logVals_for_k[i];
+                    const val = useLog10 ? logVal / LOG10 : Math.exp(logVal);
+                    const valStr = useLog10 ? `\\(\\log_{10}\\): ${val.toFixed(2)}` : formatResult(val);
                     tooltipContent += `<span style="color:${color(i)};">■</span> ${d.katexName}: ${valStr}<br>`;
                 });
                 tooltip.html(tooltipContent);
