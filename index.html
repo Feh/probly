@@ -72,7 +72,7 @@
         #menu a:hover { background-color: #f0f0f0; }
         .app-container { display: none; }
         .app-container.active { display: block; }
-        #distributions-app.active, #order-statistics-app.active, #gaussian-copula-app.active, #wiener-process-app.active { display: grid; }
+        #distributions-app.active, #order-statistics-app.active, #gaussian-copula-app.active, #wiener-process-app.active, #combinatorics-app.active { display: grid; }
 
         .slider-group { display: flex; align-items: center; gap: 10px; }
         .slider-group input[type="range"] { flex-grow: 1; margin: 0; }
@@ -352,12 +352,14 @@
             grid-template-areas: "controls arrangements" "controls selections" "controls probability";
             grid-template-columns: 320px 1fr;
             grid-template-rows: auto auto 1fr;
+            gap: 15px;
         }
+        #combinatorics-app .panel { display: flex; flex-direction: column; }
         #combinatorics-app #co-controls-panel { grid-area: controls; }
         #combinatorics-app #co-arrangements-panel { grid-area: arrangements; }
         #combinatorics-app #co-selections-panel { grid-area: selections; }
         #combinatorics-app #co-probability-panel { grid-area: probability; }
-        #combinatorics-app .plot-container { min-height: 300px; border: 1px solid var(--border-color); }
+        #combinatorics-app .plot-container { min-height: 300px; border: 1px solid var(--border-color); flex-grow: 1; }
         #combinatorics-app .result-grid { display: grid; grid-template-columns: auto 1fr; gap: 5px 10px; align-items: center; margin-top: 1rem; }
         #combinatorics-app .result-grid strong { font-family: monospace; }
         #combinatorics-app .tooltip { position: absolute; background-color: rgba(0, 0, 0, 0.75); color: white; padding: 5px 10px; border-radius: 3px; pointer-events: none; opacity: 0; font-size: 0.9em; z-index: 10; transform: translate(-50%, -110%); }
@@ -5109,7 +5111,7 @@ document.addEventListener('DOMContentLoaded', () => {
             svg.selectAll("*").remove();
             
             const rect = svg.node().getBoundingClientRect();
-            const margin = { top: 30, right: 120, bottom: 40, left: 60 };
+            const margin = { top: 30, right: 160, bottom: 40, left: 60 };
             const width = rect.width - margin.left - margin.right;
             const height = rect.height - margin.top - margin.bottom;
             if (width <= 0 || height <= 0) return;
@@ -5229,6 +5231,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             calculateAndRender();
+            renderMathInElement(document.getElementById('combinatorics-app'), {
+                delimiters: [{left: '$$', right: '$$', display: true}, {left: '\\[', right: '\\]', display: true}, {left: '\\(', right: '\\)', display: false}],
+            });
         }
 
         return {
