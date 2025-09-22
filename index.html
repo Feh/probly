@@ -4518,10 +4518,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const multipleHypothesisTestingApp = (() => {
         const initialState = {
             hypotheses: [
-                { id: 0, name: 'Hypothesis 1', prior: 0.5 },
-                { id: 1, name: 'Hypothesis 2', prior: 0.5 }
+                { id: 0, name: 'Hypothesis 1', prior: 0.6 },
+                { id: 1, name: 'Hypothesis 2', prior: 0.4 }
             ],
-            evidence: [],
+            evidence: [
+                { id: 1, name: 'Evidence 1', likelihoods: [0.2, 0.4] }
+            ],
             nextHypothesisId: 2,
             nextEvidenceId: 0,
         };
