@@ -1078,7 +1078,7 @@
                     <p>When multiple pieces of evidence \(E_1, E_2, \dots, E_n\) are observed sequentially, the posterior from one step becomes the prior for the next. Let \(\pi_i^{(k)} = \mathbb{P}(H_i | E_1, \dots, E_k)\). Then the update rule for evidence \(E_k\) is:</p>
                     $$ \pi_i^{(k)} = \frac{\mathbb{P}(E_k | H_i) \pi_i^{(k-1)}}{\sum_{j=1}^{m} \mathbb{P}(E_k | H_j) \pi_j^{(k-1)}} $$
                     <p>where \(\pi_i^{(0)}\) is the initial prior \(\mathbb{P}(H_i)\).</p>
-                    <p>This assumes that each piece of evidence \(E_k\) is conditionally independent of the previous evidence \(E_1, \dots, E_{k-1}\) given the hypothesis \(H_i\).</p>
+                    <p>This assumes that each piece of evidence \(E_k\) is conditionally independent of the previous evidence \(E_1, \dots, E_{k-1}\) given the hypothesis \(H_i\). (This is the “naive Bayes” assumption, and will lead to overconfident probabilities if the pieces of evidence are correlated.)</p>
                 </div>
             </details>
         </div>
@@ -1095,6 +1095,7 @@
                     <li>Compute Brownian Motion sample paths, first hitting time distributions, and hitting probabilities.</li>
                     <li>Given a list of probability/outcome pairs, compute the expected value, and optionally fit a continuous distribution to the data.</li>
                     <li>Given a decision under uncertainty, calculate the value of additional information through repeated application of Bayes’ theorem.</li>
+                    <li>Compute the (naive) Bayesian update steps for judging multiple hypotheses as evidence emerges.</li>
                 </ul>
                 <h4>How it works</h4>
                 <p>For all calculations there are either closed form solutions available, or some simple numeric calculations. The app uses <a href="https://ccc-js.github.io/numeric2/">numeric.js</a> and <a href="https://jstat.github.io/">jStat</a> for most calculations. The values you input never leave your device, all computation is done locally.</p>
