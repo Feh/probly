@@ -5220,13 +5220,18 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const data = k_values.map(k => {
-                let log_p_no_match = 0;
-                if (k > N) {
-                    log_p_no_match = -Infinity;
-                } else if (k > 1) {
-                    log_p_no_match = logFactorial(N) - logFactorial(N - k) - k * Math.log(N);
+                let p_match;
+                if (N > 100000000000) {
+                    p_match = 1 - Math.exp(-k*k / (2*N));
+                } else {
+                    let log_p_no_match = 0;
+                    if (k > N) {
+                        log_p_no_match = -Infinity;
+                    } else if (k > 1) {
+                        log_p_no_match = logFactorial(N) - logFactorial(N - k) - k * Math.log(N);
+                    }
+                    p_match = 1 - Math.exp(log_p_no_match);
                 }
-                const p_match = 1 - Math.exp(log_p_no_match);
                 return { k, p_match };
             });
 
@@ -5247,13 +5252,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 const k = Math.round(xScale.invert(x_coord));
                 if (k < 0 || k > k_max) return;
 
-                let log_p_no_match = 0;
-                if (k > N) {
-                    log_p_no_match = -Infinity;
-                } else if (k > 1) {
-                    log_p_no_match = logFactorial(N) - logFactorial(N - k) - k * Math.log(N);
+                let p_match;
+                if (N > 100000000000) {
+                    p_match = 1 - Math.exp(-k*k / (2*N));
+                } else {
+                    let log_p_no_match = 0;
+                    if (k > N) {
+                        log_p_no_match = -Infinity;
+                    } else if (k > 1) {
+                        log_p_no_match = logFactorial(N) - logFactorial(N - k) - k * Math.log(N);
+                    }
+                    p_match = 1 - Math.exp(log_p_no_match);
                 }
-                const p_match = 1 - Math.exp(log_p_no_match);
 
                 const [tipX, tipY] = d3.pointer(event, container.node());
                 tooltip.style("opacity", 1).style("left", tipX + "px").style("top", tipY + "px")
