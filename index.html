@@ -5075,6 +5075,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function plotSelections() {
             const N = state.N;
+            const useLog10 = N > 100;
+            const LOG10 = Math.log(10);
             const container = d3.select("#co-selections-plot-container");
             const svg = container.select("svg");
             const tooltip = container.select(".tooltip");
@@ -5092,19 +5094,48 @@ document.addEventListener('DOMContentLoaded', () => {
             const k_values = d3.range(0, k_max + 1);
 
             const data = [
-                { name: 'P(N, k) [Permutation]', katexName: '\\(P(N, k)\\)', values: k_values.map(k => ({k, val: Math.exp(logFactorial(N) - logFactorial(N-k))})) },
-                { name: 'C(N, k) [Combination]', katexName: '\\(C(N, k)\\)', values: k_values.map(k => ({k, val: Math.exp(logFactorial(N) - logFactorial(k) - logFactorial(N-k))})) },
-                { name: 'N^k [Sequence]', katexName: '\\(N^k\\)', values: k_values.map(k => ({k, val: Math.pow(N,k)})) },
-                { name: 'C(N+k-1, k) [Multiset]', katexName: '\\(C(N+k-1, k)\\)', values: k_values.map(k => ({k, val: Math.exp(logFactorial(N+k-1) - logFactorial(k) - logFactorial(N-1))})) },
+                { name: 'P(N, k) [Permutation]', katexName: '\\(P(N, k)\\)', values: k_values.map(k => {
+                    const logVal = logFactorial(N) - logFactorial(N - k);
+                    return { k, val: useLog10 ? logVal / LOG10 : Math.exp(logVal) };
+                })},
+                { name: 'C(N, k) [Combination]', katexName: '\\(C(N, k)\\)', values: k_values.map(k => {
+                    const logVal = logFactorial(N) - logFactorial(k) - logFactorial(N - k);
+                    return { k, val: useLog10 ? logVal / LOG10 : Math.exp(logVal) };
+                })},
+                { name: 'N^k [Sequence]', katexName: '\\(N^k\\)', values: k_values.map(k => {
+                    const logVal = k * Math.log(N);
+                    return { k, val: useLog10 ? logVal / LOG10 : Math.exp(logVal) };
+                })},
+                { name: 'C(N+k-1, k) [Multiset]', katexName: '\\(C(N+k-1, k)\\)', values: k_values.map(k => {
+                    const logVal = logFactorial(N+k-1) - logFactorial(k) - logFactorial(N-1);
+                    return { k, val: useLog10 ? logVal / LOG10 : Math.exp(logVal) };
+                })},
             ];
 
             const yMax = d3.max(data.flatMap(d => d.values), d => d.val);
 
             const xScale = d3.scaleLinear().domain([0, k_max]).range([0, width]);
-            const yScale = d3.scaleLog().domain([1, yMax > 1 ? yMax : 10]).range([height, 0]).clamp(true);
+            let yScale;
+            if (useLog10) {
+                yScale = d3.scaleLinear().domain([0, yMax > 0 ? yMax : 10]).range([height, 0]);
+            } else {
+                yScale = d3.scaleLog().domain([1, yMax > 1 ? yMax : 10]).range([height, 0]).clamp(true);
+            }
 
             g.append("g").attr("class", "x-axis axis").attr("transform", `translate(0, ${height})`).call(d3.axisBottom(xScale).ticks(Math.min(10, k_max)));
-            g.append("g").attr("class", "y-axis axis").call(d3.axisLeft(yScale).ticks(5, d3.format(".1e")));
+            const yAxisGroup = g.append("g").attr("class", "y-axis axis");
+
+            if (useLog10) {
+                yAxisGroup.call(d3.axisLeft(yScale));
+                g.append("text")
+                    .attr("transform", "rotate(-90)")
+                    .attr("y", 0 - margin.left + 15)
+                    .attr("x", 0 - (height / 2))
+                    .style("text-anchor", "middle")
+                    .text("Log10 of selections");
+            } else {
+                yAxisGroup.call(d3.axisLeft(yScale).ticks(5, d3.format(".1e")));
+            }
 
             const color = d3.scaleOrdinal(d3.schemeCategory10);
             const line = d3.line().x(d => xScale(d.k)).y(d => yScale(d.val));
@@ -5130,7 +5161,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 let tooltipContent = `<strong>k = ${k}</strong><br>`;
                 data.forEach((d, i) => {
                     const point = d.values[k];
-                    tooltipContent += `<span style="color:${color(i)};">■</span> ${d.katexName}: ${formatResult(point.val)}<br>`;
+                    const valStr = useLog10 ? `\\(\\log_{10}\\): ${point.val.toFixed(2)}` : formatResult(point.val);
+                    tooltipContent += `<span style="color:${color(i)};">■</span> ${d.katexName}: ${valStr}<br>`;
                 });
                 tooltip.html(tooltipContent);
                 renderMathInElement(tooltip.node());
