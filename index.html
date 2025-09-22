@@ -4534,6 +4534,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const tooltip = d3.select("#mht-tooltip");
         const margin = { top: 30, right: 100, bottom: 40, left: 50 };
 
+        function updateURL() {
+            const stateString = JSON.stringify(state);
+            const encodedState = btoa(stateString);
+            const params = new URLSearchParams();
+            params.set('s', encodedState);
+            history.replaceState(null, '', '#multiple-hypothesis-testing?' + params.toString());
+        }
+
         function renderTable() {
             tableContainer.innerHTML = '';
             const table = document.createElement('table');
@@ -4661,7 +4669,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         function calculateAndRender() {
-            // updateURL(); // Not implemented yet
+            updateURL();
             const priors = state.hypotheses.map(h => h.prior);
             const totalP = priors.reduce((sum, p) => sum + (isNaN(p) ? 0 : p), 0);
             const isSumInvalid = Math.abs(totalP - 1) > 1e-9 && totalP > 0;
@@ -4886,7 +4894,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     resizeObserver.observe(plotContainer);
                 }
             },
-            updateFromURL: () => { /* Not implemented yet */ }
+            updateFromURL: (params) => {
+                if (params.has('s')) {
+                    try {
+                        const encodedState = params.get('s');
+                        const stateString = atob(encodedState);
+                        const loadedState = JSON.parse(stateString);
+                        if (loadedState.hypotheses && loadedState.evidence) {
+                            state = loadedState;
+                            renderTable();
+                            calculateAndRender();
+                        }
+                    } catch (e) {
+                        console.error("Failed to load state from URL for MHT app", e);
+                    }
+                }
+            }
         };
     })();
 
