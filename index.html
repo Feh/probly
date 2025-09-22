@@ -357,7 +357,7 @@
         #combinatorics-app .panel { display: flex; flex-direction: column; }
         #combinatorics-app #co-controls-panel { grid-area: controls; }
         #combinatorics-app #co-selections-panel { grid-area: selections; }
-        #combinatorics-app #co-probability-panel { grid-area: probability; }
+        #combinatorics-app #co-selections-plot-container { margin-bottom: 2rem; }
         #combinatorics-app .plot-container { min-height: 300px; border: 1px solid var(--border-color); flex-grow: 1; }
         #combinatorics-app .result-grid { display: grid; grid-template-columns: auto 1fr; gap: 5px 10px; align-items: center; margin-top: 1rem; }
         #combinatorics-app .result-grid strong { font-family: monospace; }
@@ -422,7 +422,7 @@
             #order-statistics-app { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: "controls" "stats" "plot"; }
             #gaussian-copula-app { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: "controls" "plots" "formulas"; }
             #wiener-process-app { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: "params" "plots"; }
-            #combinatorics-app { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: "controls" "selections" "probability"; }
+            #combinatorics-app { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: "controls" "selections"; }
             .panel { padding: 5px; border: 0; }
             .param-group, .control-group { margin-bottom: 3px; }
             label { margin-bottom: 1px; }
@@ -1141,11 +1141,8 @@
                     <svg id="co-selections-plot-svg"></svg>
                     <div id="co-selections-tooltip" class="tooltip"></div>
                 </div>
-            </div>
 
-            <div id="co-probability-panel" class="panel">
-                <h3>Classic Probability Problems</h3>
-                <h4>Birthday Problem</h4>
+                <h3>Birthday Problem / Collision Probability</h3>
                 <p>Probability of at least one collision in a group of \(k\) items chosen from \(N\) possibilities (with replacement).</p>
                 <div id="co-birthday-plot-container" class="plot-container plot-svg-wrapper">
                     <svg id="co-birthday-plot-svg"></svg>
