@@ -347,6 +347,21 @@
         #multiple-hypothesis-testing-app .tooltip { position: absolute; background-color: rgba(0, 0, 0, 0.75); color: white; padding: 5px 10px; border-radius: 3px; pointer-events: none; opacity: 0; font-size: 0.9em; z-index: 10; transform: translate(-50%, -110%); }
 
 
+        /* Scoped styles for Combinatorics App */
+        #combinatorics-app {
+            grid-template-areas: "controls arrangements" "controls selections" "controls probability";
+            grid-template-columns: 320px 1fr;
+            grid-template-rows: auto auto 1fr;
+        }
+        #combinatorics-app #co-controls-panel { grid-area: controls; }
+        #combinatorics-app #co-arrangements-panel { grid-area: arrangements; }
+        #combinatorics-app #co-selections-panel { grid-area: selections; }
+        #combinatorics-app #co-probability-panel { grid-area: probability; }
+        #combinatorics-app .plot-container { min-height: 300px; border: 1px solid var(--border-color); }
+        #combinatorics-app .result-grid { display: grid; grid-template-columns: auto 1fr; gap: 5px 10px; align-items: center; margin-top: 1rem; }
+        #combinatorics-app .result-grid strong { font-family: monospace; }
+        #combinatorics-app .tooltip { position: absolute; background-color: rgba(0, 0, 0, 0.75); color: white; padding: 5px 10px; border-radius: 3px; pointer-events: none; opacity: 0; font-size: 0.9em; z-index: 10; transform: translate(-50%, -110%); }
+
         .move-controls { position: absolute; top: 5px; right: 5px; z-index: 5; display: flex; flex-direction: row; }
         .move-btn { background: none; border: none; cursor: pointer; font-size: 0.8rem; padding: 0; line-height: 1; color: #888; }
         .move-btn:hover { color: #333; }
@@ -402,6 +417,7 @@
             #order-statistics-app { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: "controls" "stats" "plot"; }
             #gaussian-copula-app { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: "controls" "plots" "formulas"; }
             #wiener-process-app { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: "params" "plots"; }
+            #combinatorics-app { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: "controls" "arrangements" "selections" "probability"; }
             .panel { padding: 5px; border: 0; }
             .param-group, .control-group { margin-bottom: 3px; }
             label { margin-bottom: 1px; }
@@ -425,6 +441,7 @@
             <li><a href="#expected-value">Expected Value</a></li>
             <li><a href="#information-value">Information Value</a></li>
             <li><a href="#multiple-hypothesis-testing">Multiple Hypothesis Testing</a></li>
+            <li><a href="#combinatorics">Combinatorics</a></li>
             <div class="nav-divider"></div>
             <li class="nav-secondary-item"><a href="#about">About</a></li>
             <li class="nav-secondary-item"><a href="#install">Install on device</a></li>
@@ -1081,6 +1098,52 @@
                     <p>This assumes that each piece of evidence \(E_k\) is conditionally independent of the previous evidence \(E_1, \dots, E_{k-1}\) given the hypothesis \(H_i\). (This is the “naive Bayes” assumption, and will lead to overconfident probabilities if the pieces of evidence are correlated.)</p>
                 </div>
             </details>
+        </div>
+        <div id="combinatorics-app" class="app-container">
+            <div id="co-controls-panel" class="panel">
+                <h3>Inputs</h3>
+                <div class="control-group">
+                    <label for="co-n-input">Number of items (N)</label>
+                    <input type="number" id="co-n-input" value="10" min="1" step="1">
+                </div>
+                <div class="control-group">
+                    <label for="co-multinomial-input">Groups for Multinomial (n₁, n₂, ...)</label>
+                    <input type="text" id="co-multinomial-input" placeholder="e.g. 2, 3, 5">
+                    <small>Sum of groups must equal N.</small>
+                </div>
+            </div>
+
+            <div id="co-arrangements-panel" class="panel">
+                <h3>Arrangements of N items</h3>
+                <div class="result-grid">
+                    <span>Permutations (N!):</span><strong id="co-permutations-result"></strong>
+                    <span>Derangements (!N):</span><strong id="co-derangements-result"></strong>
+                    <span>Multinomial Coefficient:</span><strong id="co-multinomial-result"></strong>
+                </div>
+            </div>
+
+            <div id="co-selections-panel" class="panel">
+                <h3>Selections of k items from N</h3>
+                <div id="co-selections-plot-container" class="plot-container plot-svg-wrapper">
+                    <svg id="co-selections-plot-svg"></svg>
+                    <div id="co-selections-tooltip" class="tooltip"></div>
+                </div>
+            </div>
+
+            <div id="co-probability-panel" class="panel">
+                <h3>Classic Probability Problems</h3>
+                <h4>Birthday Problem</h4>
+                <p>Probability of at least one match in a group of k items chosen from N possibilities.</p>
+                <div id="co-birthday-plot-container" class="plot-container plot-svg-wrapper">
+                    <svg id="co-birthday-plot-svg"></svg>
+                    <div id="co-birthday-tooltip" class="tooltip"></div>
+                </div>
+                <h4>Matching Problem</h4>
+                <p>Probability that no item ends up in its original position.</p>
+                <div class="result-grid">
+                    <span>P(no match):</span><strong id="co-matching-result"></strong>
+                </div>
+            </div>
         </div>
         <div id="about-app" class="app-container">
             <div class="panel">
@@ -4928,6 +4991,225 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     })();
 
+    const combinatoricsApp = (() => {
+        let state = { N: 10, multinomialGroups: [] };
+
+        const nInput = document.getElementById('co-n-input');
+        const multinomialInput = document.getElementById('co-multinomial-input');
+
+        const logFactorial = n => jStat.gammaln(n + 1);
+
+        function formatResult(value) {
+            if (isNaN(value)) return 'Invalid';
+            if (value === Infinity) return 'Infinity';
+            if (value > 1e6) {
+                let s;
+                try {
+                    s = value.toLocaleString('en-US');
+                } catch(e) { s = String(value); }
+                if (s.length > 40) s = s.substring(0, 40) + '...';
+                return `${value.toExponential(3)}<br><small style="word-break: break-all;">(${s})</small>`;
+            }
+            return value.toLocaleString();
+        }
+
+        function derangements(n) {
+            if (n < 0 || n !== Math.round(n)) return NaN;
+            if (n === 0) return 1;
+            if (n === 1) return 0;
+            // For large n, !n is the nearest integer to n!/e
+            if (n > 20) return Math.round(Math.exp(logFactorial(n) - 1));
+
+            let d_prev2 = 1; // D_0
+            let d_prev1 = 0; // D_1
+            let d_curr;
+            for (let i = 2; i <= n; i++) {
+                d_curr = (i - 1) * (d_prev1 + d_prev2);
+                d_prev2 = d_prev1;
+                d_prev1 = d_curr;
+            }
+            return d_prev1;
+        }
+
+        function calculateAndRender() {
+            try {
+                state.N = parseInt(nInput.value);
+                const multinomialStr = multinomialInput.value;
+                state.multinomialGroups = multinomialStr ? multinomialStr.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n)) : [];
+
+                if (isNaN(state.N) || state.N < 0) {
+                    // clear all results
+                    return;
+                }
+
+                // Arrangements
+                const N = state.N;
+                document.getElementById('co-permutations-result').innerHTML = formatResult(Math.exp(logFactorial(N)));
+                document.getElementById('co-derangements-result').innerHTML = formatResult(derangements(N));
+                
+                const sumGroups = state.multinomialGroups.reduce((a, b) => a + b, 0);
+                if (state.multinomialGroups.length > 0 && sumGroups === N) {
+                    const logNFactorial = logFactorial(N);
+                    const sumLogDenomFactorials = state.multinomialGroups.reduce((sum, k) => sum + logFactorial(k), 0);
+                    const multinomialCoeff = Math.exp(logNFactorial - sumLogDenomFactorials);
+                    document.getElementById('co-multinomial-result').innerHTML = formatResult(Math.round(multinomialCoeff));
+                    multinomialInput.style.borderColor = '';
+                } else if (state.multinomialGroups.length > 0) {
+                    document.getElementById('co-multinomial-result').textContent = 'Sum of groups != N';
+                    multinomialInput.style.borderColor = 'red';
+                } else {
+                    document.getElementById('co-multinomial-result').textContent = '';
+                     multinomialInput.style.borderColor = '';
+                }
+
+                // Probability problems
+                const matchProb = derangements(N) / Math.exp(logFactorial(N));
+                document.getElementById('co-matching-result').innerHTML = isNaN(matchProb) ? 'N/A' : matchProb.toFixed(5) + ` (≈1/e=${(1/Math.E).toFixed(5)})`;
+                
+                plotSelections();
+                plotBirthday();
+
+            } catch (e) {
+                console.error("Combinatorics calculation error:", e);
+            }
+        }
+
+        function plotSelections() {
+            const N = state.N;
+            const container = d3.select("#co-selections-plot-container");
+            const svg = container.select("svg");
+            const tooltip = container.select(".tooltip");
+            svg.selectAll("*").remove();
+            
+            const rect = svg.node().getBoundingClientRect();
+            const margin = { top: 30, right: 120, bottom: 40, left: 60 };
+            const width = rect.width - margin.left - margin.right;
+            const height = rect.height - margin.top - margin.bottom;
+            if (width <= 0 || height <= 0) return;
+
+            const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+            
+            const k_max = N;
+            const k_values = d3.range(0, k_max + 1);
+
+            const data = [
+                { name: 'P(N, k)', values: k_values.map(k => ({k, val: Math.exp(logFactorial(N) - logFactorial(N-k))})) },
+                { name: 'C(N, k)', values: k_values.map(k => ({k, val: Math.exp(logFactorial(N) - logFactorial(k) - logFactorial(N-k))})) },
+                { name: 'N^k', values: k_values.map(k => ({k, val: Math.pow(N,k)})) },
+                { name: 'C(N+k-1, k)', values: k_values.map(k => ({k, val: Math.exp(logFactorial(N+k-1) - logFactorial(k) - logFactorial(N-1))})) },
+            ];
+
+            const yMax = d3.max(data.flatMap(d => d.values), d => d.val);
+
+            const xScale = d3.scaleLinear().domain([0, k_max]).range([0, width]);
+            const yScale = d3.scaleLog().domain([1, yMax > 1 ? yMax : 10]).range([height, 0]).clamp(true);
+
+            g.append("g").attr("class", "x-axis axis").attr("transform", `translate(0, ${height})`).call(d3.axisBottom(xScale).ticks(Math.min(10, k_max)));
+            g.append("g").attr("class", "y-axis axis").call(d3.axisLeft(yScale).ticks(5, d3.format(".1e")));
+
+            const color = d3.scaleOrdinal(d3.schemeCategory10);
+            const line = d3.line().x(d => xScale(d.k)).y(d => yScale(d.val));
+            
+            data.forEach((d, i) => {
+                g.append("path").datum(d.values).attr("fill", "none").attr("stroke", color(i)).attr("stroke-width", 2).attr("d", line);
+                const lastPoint = d.values[d.values.length - 1];
+                g.append("text").attr("x", xScale(lastPoint.k) + 5).attr("y", yScale(lastPoint.val)).attr("dy", "0.35em").style("fill", color(i)).text(d.name);
+            });
+            
+            // Interaction layer
+            const bisect = d3.bisector(d => d.k).left;
+            const interactionRect = svg.append("rect").attr("transform", `translate(${margin.left},${margin.top})`).style("fill", "none").style("pointer-events", "all").attr("width", width).attr("height", height);
+
+            interactionRect.on("mousemove", function(event) {
+                const [x_coord] = d3.pointer(event, this);
+                const k = Math.round(xScale.invert(x_coord));
+                if (k < 0 || k > k_max) return;
+
+                const [tipX, tipY] = d3.pointer(event, container.node());
+                tooltip.style("opacity", 1).style("left", tipX + "px").style("top", tipY + "px");
+
+                let tooltipContent = `<strong>k = ${k}</strong><br>`;
+                data.forEach((d, i) => {
+                    const point = d.values[k];
+                    tooltipContent += `<span style="color:${color(i)};">■</span> ${d.name}: ${formatResult(point.val)}<br>`;
+                });
+                tooltip.html(tooltipContent);
+            }).on("mouseout", () => tooltip.style("opacity", 0));
+        }
+
+        function plotBirthday() {
+            const N = state.N;
+            const container = d3.select("#co-birthday-plot-container");
+            const svg = container.select("svg");
+            const tooltip = container.select(".tooltip");
+            svg.selectAll("*").remove();
+            
+            const rect = svg.node().getBoundingClientRect();
+            const margin = { top: 30, right: 30, bottom: 40, left: 50 };
+            const width = rect.width - margin.left - margin.right;
+            const height = rect.height - margin.top - margin.bottom;
+            if (width <= 0 || height <= 0) return;
+
+            const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+            
+            const k_max = Math.min(N + 1, 2 * N);
+            const k_values = d3.range(0, k_max + 1);
+
+            const data = k_values.map(k => {
+                let log_p_no_match = 0;
+                if (k > N) {
+                    log_p_no_match = -Infinity;
+                } else if (k > 1) {
+                    log_p_no_match = logFactorial(N) - logFactorial(N - k) - k * Math.log(N);
+                }
+                const p_match = 1 - Math.exp(log_p_no_match);
+                return { k, p_match };
+            });
+
+            const xScale = d3.scaleLinear().domain([0, k_max]).range([0, width]);
+            const yScale = d3.scaleLinear().domain([0, 1]).range([height, 0]);
+
+            g.append("g").attr("class", "x-axis axis").attr("transform", `translate(0, ${height})`).call(d3.axisBottom(xScale));
+            g.append("g").attr("class", "y-axis axis").call(d3.axisLeft(yScale));
+
+            g.append("path").datum(data).attr("fill", "none").attr("stroke", "steelblue").attr("stroke-width", 2)
+                .attr("d", d3.line().x(d => xScale(d.k)).y(d => yScale(d.p_match)));
+            
+            const bisect = d3.bisector(d => d.k).left;
+            const interactionRect = svg.append("rect").attr("transform", `translate(${margin.left},${margin.top})`).style("fill", "none").style("pointer-events", "all").attr("width", width).attr("height", height);
+
+            interactionRect.on("mousemove", function(event) {
+                const [x_coord] = d3.pointer(event, this);
+                const k = Math.round(xScale.invert(x_coord));
+                if (k < 0 || k > k_max) return;
+
+                const d = data[k];
+                const [tipX, tipY] = d3.pointer(event, container.node());
+                tooltip.style("opacity", 1).style("left", tipX + "px").style("top", tipY + "px")
+                    .html(`k = ${k}<br>P(match) = ${d.p_match.toFixed(4)}`);
+            }).on("mouseout", () => tooltip.style("opacity", 0));
+        }
+
+        function init() {
+            nInput.addEventListener('input', calculateAndRender);
+            multinomialInput.addEventListener('input', calculateAndRender);
+            
+            const resizeObserver = new ResizeObserver(() => {
+                setTimeout(calculateAndRender, 0);
+            });
+            document.querySelectorAll('#combinatorics-app .plot-container').forEach(el => {
+                resizeObserver.observe(el);
+            });
+
+            calculateAndRender();
+        }
+
+        return {
+            init: init,
+            updateFromURL: () => {}
+        };
+    })();
+
     let deferredPrompt;
     const installButton = document.getElementById('install-button');
 
@@ -4981,6 +5263,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'expected-value': document.getElementById('expected-value-app'),
         'information-value': document.getElementById('information-value-app'),
         'multiple-hypothesis-testing': document.getElementById('multiple-hypothesis-testing-app'),
+        combinatorics: document.getElementById('combinatorics-app'),
         about: document.getElementById('about-app'),
         install: document.getElementById('install-app')
     };
@@ -4992,9 +5275,10 @@ document.addEventListener('DOMContentLoaded', () => {
         bernoulli: bernoulliApp,
         'expected-value': expectedValueApp,
         'information-value': informationValueApp,
-        'multiple-hypothesis-testing': multipleHypothesisTestingApp
+        'multiple-hypothesis-testing': multipleHypothesisTestingApp,
+        combinatorics: combinatoricsApp
     };
-    const initializedApps = { distributions: false, 'order-statistics': false, 'gaussian-copula': false, 'wiener-process': false, bernoulli: false, 'expected-value': false, 'information-value': false, 'multiple-hypothesis-testing': false };
+    const initializedApps = { distributions: false, 'order-statistics': false, 'gaussian-copula': false, 'wiener-process': false, bernoulli: false, 'expected-value': false, 'information-value': false, 'multiple-hypothesis-testing': false, combinatorics: false };
     const appTitles = {
         distributions: 'Distributions',
         'order-statistics': 'Order Statistics',
@@ -5004,6 +5288,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'expected-value': 'Expected Value',
         'information-value': 'Information Value',
         'multiple-hypothesis-testing': 'Multiple Hypothesis Testing',
+        combinatorics: 'Combinatorics',
         about: 'About',
         install: 'Install on device'
     };
