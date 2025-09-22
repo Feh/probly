@@ -5018,6 +5018,12 @@ document.addEventListener('DOMContentLoaded', () => {
             return value.toLocaleString();
         }
 
+        function updateURL() {
+            const params = new URLSearchParams();
+            params.set('N', state.N);
+            history.replaceState(null, '', '#combinatorics?' + params.toString());
+        }
+
         function calculateAndRender() {
             try {
                 state.N = parseInt(nInput.value);
@@ -5030,6 +5036,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 plotSelections();
                 plotBirthday();
 
+                updateURL();
             } catch (e) {
                 console.error("Combinatorics calculation error:", e);
             }
@@ -5171,7 +5178,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         return {
             init: init,
-            updateFromURL: () => {}
+            updateFromURL: (params) => {
+                if (params.has('N')) {
+                    const nVal = parseInt(params.get('N'));
+                    if (!isNaN(nVal) && nVal > 0) {
+                        nInput.value = nVal;
+                    }
+                }
+                calculateAndRender();
+            }
         };
     })();
 
