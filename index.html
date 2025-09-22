@@ -361,6 +361,7 @@
         #combinatorics-app .result-grid { display: grid; grid-template-columns: auto 1fr; gap: 5px 10px; align-items: center; margin-top: 1rem; }
         #combinatorics-app .result-grid strong { font-family: monospace; }
         #combinatorics-app .tooltip { position: absolute; background-color: rgba(0, 0, 0, 0.75); color: white; padding: 5px 10px; border-radius: 3px; pointer-events: none; opacity: 0; font-size: 0.9em; z-index: 10; transform: translate(-50%, -110%); }
+        #combinatorics-app .plot-container svg { width: 100%; height: 100%; }
 
         .move-controls { position: absolute; top: 5px; right: 5px; z-index: 5; display: flex; flex-direction: row; }
         .move-btn { background: none; border: none; cursor: pointer; font-size: 0.8rem; padding: 0; line-height: 1; color: #888; }
@@ -1103,27 +1104,25 @@
             <div id="co-controls-panel" class="panel">
                 <h3>Inputs</h3>
                 <div class="control-group">
-                    <label for="co-n-input">Number of items (N)</label>
+                    <label for="co-n-input">Number of items (\(N\))</label>
                     <input type="number" id="co-n-input" value="10" min="1" step="1">
-                </div>
-                <div class="control-group">
-                    <label for="co-multinomial-input">Groups for Multinomial (n₁, n₂, ...)</label>
-                    <input type="text" id="co-multinomial-input" placeholder="e.g. 2, 3, 5">
-                    <small>Sum of groups must equal N.</small>
                 </div>
             </div>
 
             <div id="co-arrangements-panel" class="panel">
-                <h3>Arrangements of N items</h3>
+                <h3>Arrangements of \(N\) items</h3>
                 <div class="result-grid">
-                    <span>Permutations (N!):</span><strong id="co-permutations-result"></strong>
-                    <span>Derangements (!N):</span><strong id="co-derangements-result"></strong>
-                    <span>Multinomial Coefficient:</span><strong id="co-multinomial-result"></strong>
+                    <span>Permutations (\(N!\)):</span><strong id="co-permutations-result"></strong>
+                </div>
+                <h4>Derangements</h4>
+                <div id="co-derangements-plot-container" class="plot-container plot-svg-wrapper">
+                    <svg id="co-derangements-plot-svg"></svg>
+                    <div id="co-derangements-tooltip" class="tooltip"></div>
                 </div>
             </div>
 
             <div id="co-selections-panel" class="panel">
-                <h3>Selections of k items from N</h3>
+                <h3>Selections of \(k\) items from \(N\)</h3>
                 <div id="co-selections-plot-container" class="plot-container plot-svg-wrapper">
                     <svg id="co-selections-plot-svg"></svg>
                     <div id="co-selections-tooltip" class="tooltip"></div>
@@ -1133,7 +1132,7 @@
             <div id="co-probability-panel" class="panel">
                 <h3>Classic Probability Problems</h3>
                 <h4>Birthday Problem</h4>
-                <p>Probability of at least one match in a group of k items chosen from N possibilities.</p>
+                <p>Probability of at least one match in a group of \(k\) items chosen from \(N\) possibilities.</p>
                 <div id="co-birthday-plot-container" class="plot-container plot-svg-wrapper">
                     <svg id="co-birthday-plot-svg"></svg>
                     <div id="co-birthday-tooltip" class="tooltip"></div>
@@ -1141,7 +1140,7 @@
                 <h4>Matching Problem</h4>
                 <p>Probability that no item ends up in its original position.</p>
                 <div class="result-grid">
-                    <span>P(no match):</span><strong id="co-matching-result"></strong>
+                    <span>\(P(\text{no match})\):</span><strong id="co-matching-result"></strong>
                 </div>
             </div>
         </div>
@@ -4992,10 +4991,9 @@ document.addEventListener('DOMContentLoaded', () => {
     })();
 
     const combinatoricsApp = (() => {
-        let state = { N: 10, multinomialGroups: [] };
+        let state = { N: 10 };
 
         const nInput = document.getElementById('co-n-input');
-        const multinomialInput = document.getElementById('co-multinomial-input');
 
         const logFactorial = n => jStat.gammaln(n + 1);
 
@@ -5034,8 +5032,6 @@ document.addEventListener('DOMContentLoaded', () => {
         function calculateAndRender() {
             try {
                 state.N = parseInt(nInput.value);
-                const multinomialStr = multinomialInput.value;
-                state.multinomialGroups = multinomialStr ? multinomialStr.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n)) : [];
 
                 if (isNaN(state.N) || state.N < 0) {
                     // clear all results
@@ -5045,33 +5041,64 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Arrangements
                 const N = state.N;
                 document.getElementById('co-permutations-result').innerHTML = formatResult(Math.exp(logFactorial(N)));
-                document.getElementById('co-derangements-result').innerHTML = formatResult(derangements(N));
-                
-                const sumGroups = state.multinomialGroups.reduce((a, b) => a + b, 0);
-                if (state.multinomialGroups.length > 0 && sumGroups === N) {
-                    const logNFactorial = logFactorial(N);
-                    const sumLogDenomFactorials = state.multinomialGroups.reduce((sum, k) => sum + logFactorial(k), 0);
-                    const multinomialCoeff = Math.exp(logNFactorial - sumLogDenomFactorials);
-                    document.getElementById('co-multinomial-result').innerHTML = formatResult(Math.round(multinomialCoeff));
-                    multinomialInput.style.borderColor = '';
-                } else if (state.multinomialGroups.length > 0) {
-                    document.getElementById('co-multinomial-result').textContent = 'Sum of groups != N';
-                    multinomialInput.style.borderColor = 'red';
-                } else {
-                    document.getElementById('co-multinomial-result').textContent = '';
-                     multinomialInput.style.borderColor = '';
-                }
 
                 // Probability problems
                 const matchProb = derangements(N) / Math.exp(logFactorial(N));
                 document.getElementById('co-matching-result').innerHTML = isNaN(matchProb) ? 'N/A' : matchProb.toFixed(5) + ` (≈1/e=${(1/Math.E).toFixed(5)})`;
                 
+                plotDerangements();
                 plotSelections();
                 plotBirthday();
 
             } catch (e) {
                 console.error("Combinatorics calculation error:", e);
             }
+        }
+
+        function plotDerangements() {
+            const N = state.N;
+            const container = d3.select("#co-derangements-plot-container");
+            const svg = container.select("svg");
+            const tooltip = container.select(".tooltip");
+            svg.selectAll("*").remove();
+            
+            const rect = svg.node().getBoundingClientRect();
+            const margin = { top: 30, right: 30, bottom: 40, left: 60 };
+            const width = rect.width - margin.left - margin.right;
+            const height = rect.height - margin.top - margin.bottom;
+            if (width <= 0 || height <= 0) return;
+
+            const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+            
+            const k_max = N;
+            const k_values = d3.range(0, k_max + 1);
+
+            const data = k_values.map(k => ({ k, val: derangements(k) }));
+            
+            const yMax = d3.max(data, d => d.val);
+
+            const xScale = d3.scaleLinear().domain([0, k_max]).range([0, width]);
+            const yScale = d3.scaleLog().domain([1, yMax > 1 ? yMax : 10]).range([height, 0]).clamp(true);
+
+            g.append("g").attr("class", "x-axis axis").attr("transform", `translate(0, ${height})`).call(d3.axisBottom(xScale).ticks(Math.min(10, k_max)));
+            g.append("g").attr("class", "y-axis axis").call(d3.axisLeft(yScale).ticks(5, d3.format(".1e")));
+
+            g.append("path").datum(data).attr("fill", "none").attr("stroke", "steelblue").attr("stroke-width", 2)
+                .attr("d", d3.line().x(d => xScale(d.k)).y(d => yScale(d.val)));
+            
+            const bisect = d3.bisector(d => d.k).left;
+            const interactionRect = svg.append("rect").attr("transform", `translate(${margin.left},${margin.top})`).style("fill", "none").style("pointer-events", "all").attr("width", width).attr("height", height);
+
+            interactionRect.on("mousemove", function(event) {
+                const [x_coord] = d3.pointer(event, this);
+                const k = Math.round(xScale.invert(x_coord));
+                if (k < 0 || k > k_max) return;
+
+                const d = data[k];
+                const [tipX, tipY] = d3.pointer(event, container.node());
+                tooltip.style("opacity", 1).style("left", tipX + "px").style("top", tipY + "px")
+                    .html(`k = ${k}<br>Derangements = ${formatResult(d.val)}`);
+            }).on("mouseout", () => tooltip.style("opacity", 0));
         }
 
         function plotSelections() {
@@ -5093,10 +5120,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const k_values = d3.range(0, k_max + 1);
 
             const data = [
-                { name: 'P(N, k)', values: k_values.map(k => ({k, val: Math.exp(logFactorial(N) - logFactorial(N-k))})) },
-                { name: 'C(N, k)', values: k_values.map(k => ({k, val: Math.exp(logFactorial(N) - logFactorial(k) - logFactorial(N-k))})) },
-                { name: 'N^k', values: k_values.map(k => ({k, val: Math.pow(N,k)})) },
-                { name: 'C(N+k-1, k)', values: k_values.map(k => ({k, val: Math.exp(logFactorial(N+k-1) - logFactorial(k) - logFactorial(N-1))})) },
+                { name: 'P(N, k) [Permutation]', katexName: '\\(P(N, k)\\)', values: k_values.map(k => ({k, val: Math.exp(logFactorial(N) - logFactorial(N-k))})) },
+                { name: 'C(N, k) [Combination]', katexName: '\\(C(N, k)\\)', values: k_values.map(k => ({k, val: Math.exp(logFactorial(N) - logFactorial(k) - logFactorial(N-k))})) },
+                { name: 'N^k [Sequence]', katexName: '\\(N^k\\)', values: k_values.map(k => ({k, val: Math.pow(N,k)})) },
+                { name: 'C(N+k-1, k) [Multiset]', katexName: '\\(C(N+k-1, k)\\)', values: k_values.map(k => ({k, val: Math.exp(logFactorial(N+k-1) - logFactorial(k) - logFactorial(N-1))})) },
             ];
 
             const yMax = d3.max(data.flatMap(d => d.values), d => d.val);
@@ -5131,9 +5158,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 let tooltipContent = `<strong>k = ${k}</strong><br>`;
                 data.forEach((d, i) => {
                     const point = d.values[k];
-                    tooltipContent += `<span style="color:${color(i)};">■</span> ${d.name}: ${formatResult(point.val)}<br>`;
+                    tooltipContent += `<span style="color:${color(i)};">■</span> ${d.katexName}: ${formatResult(point.val)}<br>`;
                 });
                 tooltip.html(tooltipContent);
+                renderMathInElement(tooltip.node());
             }).on("mouseout", () => tooltip.style("opacity", 0));
         }
 
@@ -5192,7 +5220,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function init() {
             nInput.addEventListener('input', calculateAndRender);
-            multinomialInput.addEventListener('input', calculateAndRender);
             
             const resizeObserver = new ResizeObserver(() => {
                 setTimeout(calculateAndRender, 0);
