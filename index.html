@@ -5118,7 +5118,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
             
-            const k_max = Math.min(N + 1, 2 * N);
+            const k_max = Math.min(N + 1, Math.ceil(Math.sqrt(-Math.log(0.0001) * 2 * N)));
             const k_values = d3.range(0, k_max + 1);
 
             const data = k_values.map(k => {
