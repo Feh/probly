@@ -1149,6 +1149,33 @@
                     <div id="co-birthday-tooltip" class="tooltip"></div>
                 </div>
             </div>
+            <details class="panel">
+                <summary>Formulas</summary>
+                <div class="formulas" style="padding-top: 1rem;">
+                    <h4>Selections of \(k\) items from \(N\)</h4>
+                    <p>The number of ways to select \(k\) items from a set of \(N\) items depends on whether order matters and whether replacement is allowed.</p>
+                    <ul>
+                        <li><b>Permutations (without replacement, order matters):</b> The number of ways to choose and arrange \(k\) items from \(N\).
+                            $$P(N, k) = \frac{N!}{(N-k)!}$$
+                        </li>
+                        <li><b>Choices/Combinations (without replacement, order doesn't matter):</b> The number of ways to choose \(k\) items from \(N\).
+                            $$C(N, k) = \binom{N}{k} = \frac{N!}{k!(N-k)!}$$
+                        </li>
+                        <li><b>Sequences (with replacement, order matters):</b> The number of sequences of length \(k\) from \(N\) items.
+                            $$N^k$$
+                        </li>
+                        <li><b>Multisets (with replacement, order doesn't matter):</b> The number of ways to choose \(k\) items from \(N\) with replacement, also known as "stars and bars".
+                            $$\binom{N+k-1}{k} = \frac{(N+k-1)!}{k!(N-1)!}$$
+                        </li>
+                    </ul>
+
+                    <h4>Birthday Problem / Collision Probability</h4>
+                    <p>The probability that in a group of \(k\) items chosen from \(N\) possibilities with replacement, at least two are the same.</p>
+                    <p>The probability of no matches is given by:</p>
+                    $$ P(\text{no match}) = \frac{P(N, k)}{N^k} = \frac{N!}{(N-k)! N^k} $$
+                    <p>The probability of at least one match is then \(1 - P(\text{no match})\).</p>
+                </div>
+            </details>
         </div>
         <div id="about-app" class="app-container">
             <div class="panel">
