@@ -334,7 +334,7 @@
         #multiple-hypothesis-testing-app .controls button:hover { background-color: #e0e0e0; }
         #multiple-hypothesis-testing-app table { border-collapse: collapse; width: 100%; margin-bottom: 1rem; }
         #multiple-hypothesis-testing-app th, #multiple-hypothesis-testing-app td { border: 1px solid #ccc; padding: 0; position: relative; }
-        #multiple-hypothesis-testing-app th input, #multiple-hypothesis-testing-app td input { width: 100%; height: 100%; border: none; padding: 8px; box-sizing: border-box; text-align: left; }
+        #multiple-hypothesis-testing-app th input, #multiple-hypothesis-testing-app td input { width: 100%; min-width: 3rem; height: 100%; border: none; padding: 8px; box-sizing: border-box; text-align: left; }
         #multiple-hypothesis-testing-app td .input-container { display: flex; align-items: center; padding: 0 8px; height: 100%; }
         #multiple-hypothesis-testing-app td .input-container .katex-prefix { margin-right: 5px; white-space: nowrap; }
         #multiple-hypothesis-testing-app input[type="number"].prob-input.error { border: 3px solid #d9534f; }
@@ -4649,7 +4649,21 @@ document.addEventListener('DOMContentLoaded', () => {
             state.hypotheses.forEach((h, i) => {
                 const td = document.createElement('td');
                 const n_evidence = state.evidence.length;
-                const evidence_str = n_evidence > 0 ? `|E_1, \\dots, E_{${n_evidence}}` : '';
+                evidence_str = '';
+                switch (n_evidence) {
+                    case 0:
+                        evidence_str = "";
+                        break;
+                    case 1:
+                        evidence_str = "|E_1";
+                        break;
+                    case 2:
+                        evidence_str = "|E_{1,2}";
+                        break;
+                    default:
+                        evidence_str = `|E_{1, \\dots, ${n_evidence}}`;
+                        break;
+                }
                 td.innerHTML = `<div class="input-container">
                     <span class="katex-prefix">\\(\\mathbb{P}(H_{${i+1}}${evidence_str})=\\)</span>
                     <span id="mht-posterior-${h.id}" style="font-weight: bold;"></span>
