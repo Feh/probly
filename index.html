@@ -1134,7 +1134,7 @@
             <div id="co-probability-panel" class="panel">
                 <h3>Classic Probability Problems</h3>
                 <h4>Birthday Problem</h4>
-                <p>Probability of at least one match in a group of \(k\) items chosen from \(N\) possibilities.</p>
+                <p>Probability of at least one collision in a group of \(k\) items chosen from \(N\) possibilities (with replacement).</p>
                 <div id="co-birthday-plot-container" class="plot-container plot-svg-wrapper">
                     <svg id="co-birthday-plot-svg"></svg>
                     <div id="co-birthday-tooltip" class="tooltip"></div>
@@ -5216,7 +5216,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const d = data[k];
                 const [tipX, tipY] = d3.pointer(event, container.node());
                 tooltip.style("opacity", 1).style("left", tipX + "px").style("top", tipY + "px")
-                    .html(`k = ${k}<br>P(match) = ${d.p_match.toFixed(4)}`);
+                    .html(`k = ${k}<br>P(collision) = ${d.p_match.toFixed(3)}`);
             }).on("mouseout", () => tooltip.style("opacity", 0));
         }
 
