@@ -3433,7 +3433,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const yScale = d3.scaleLinear().domain(yDomain).range([height, 0]);
 
             g.append("g").attr("class", "x-axis axis").attr("transform", `translate(0, ${height})`).call(d3.axisBottom(xScale));
+            g.append("text").attr("x", width / 2).attr("y", height + margin.bottom - 5).style("text-anchor", "middle").text("k");
+
             g.append("g").attr("class", "y-axis axis").call(d3.axisLeft(yScale));
+            g.append("text").attr("transform", "rotate(-90)").attr("y", 0 - margin.left + 15).attr("x", 0 - (height / 2)).style("text-anchor", "middle").text("Collision probability");
 
             if (z_score > 0) {
                 const coneData = timePoints.map((t, i) => ({ t, lower: lowerBound[i], upper: upperBound[i] }));
@@ -5122,6 +5125,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
             
+            g.append("text")
+                .attr("x", width / 2)
+                .attr("y", 0 - (margin.top / 2))
+                .attr("text-anchor", "middle")
+                .text(`Birthday Problem for N = ${N}`);
+
             const k_max = Math.min(N + 1, Math.ceil(Math.sqrt(-Math.log(0.0001) * 2 * N)));
             const k_values = d3.range(0, k_max + 1);
 
