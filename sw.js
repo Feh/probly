@@ -1,4 +1,4 @@
-const CACHE_NAME = 'probly-app-cache-v7';
+const CACHE_NAME = 'probly-app-cache-v8';
 const urlsToCache = [
   '/',
   '/index.html',
