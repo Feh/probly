@@ -4543,7 +4543,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Header row for names
             let tr = document.createElement('tr');
-            tr.innerHTML = '<th></th>'; // Empty cell for row labels
+            tr.innerHTML = '<th style="border: 0;"></th>'; // Empty cell for row labels
             state.hypotheses.forEach(h => {
                 const th = document.createElement('th');
                 const nameInput = document.createElement('input');
@@ -4565,20 +4565,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             thead.appendChild(tr);
 
-            // Header row for titles
-            tr = document.createElement('tr');
-            tr.innerHTML = '<th></th>';
-            state.hypotheses.forEach((h, i) => {
-                const th = document.createElement('th');
-                th.className = 'hypothesis-header';
-                th.textContent = `P(H${i+1})`;
-                tr.appendChild(th);
-            });
-            thead.appendChild(tr);
-
             // Prior row
             tr = document.createElement('tr');
-            tr.innerHTML = '<td>Prior</td>';
+            tr.innerHTML = '<td style="padding-left: .5rem;"><strong>Prior</strong></td>';
             state.hypotheses.forEach((h, i) => {
                 const td = document.createElement('td');
                 const container = document.createElement('div');
@@ -4647,7 +4636,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Posterior row
             tr = document.createElement('tr');
-            tr.innerHTML = '<td>Posterior</td>';
+            tr.innerHTML = '<td style="padding-left: .5rem;"><strong>Posterior</strong></td>';
             state.hypotheses.forEach((h, i) => {
                 const td = document.createElement('td');
                 const n_evidence = state.evidence.length;
@@ -4709,7 +4698,7 @@ document.addEventListener('DOMContentLoaded', () => {
             state.hypotheses.forEach((h, i) => {
                 const postEl = document.getElementById(`mht-posterior-${h.id}`);
                 if (postEl) {
-                    postEl.textContent = isNaN(currentProbs[i]) ? 'N/A' : currentProbs[i].toFixed(4);
+                    postEl.textContent = isNaN(currentProbs[i]) ? 'N/A' : currentProbs[i].toFixed(3);
                 }
             });
 
