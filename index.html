@@ -5191,7 +5191,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 .text(`Birthday Problem for N = ${N}`);
 
             const k_max = Math.min(N + 1, Math.ceil(Math.sqrt(-Math.log(0.0001) * 2 * N)));
-            const k_values = d3.range(0, k_max + 1);
+            let k_values;
+            if (N > 10000 && k_max > 200) {
+                k_values = [];
+                const step = k_max / 199; // 200 points
+                for (let i = 0; i < 200; i++) {
+                    k_values.push(Math.round(i * step));
+                }
+            } else {
+                k_values = d3.range(0, k_max + 1);
+            }
 
             const data = k_values.map(k => {
                 let log_p_no_match = 0;
@@ -5221,10 +5230,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 const k = Math.round(xScale.invert(x_coord));
                 if (k < 0 || k > k_max) return;
 
-                const d = data[k];
+                let log_p_no_match = 0;
+                if (k > N) {
+                    log_p_no_match = -Infinity;
+                } else if (k > 1) {
+                    log_p_no_match = logFactorial(N) - logFactorial(N - k) - k * Math.log(N);
+                }
+                const p_match = 1 - Math.exp(log_p_no_match);
+
                 const [tipX, tipY] = d3.pointer(event, container.node());
                 tooltip.style("opacity", 1).style("left", tipX + "px").style("top", tipY + "px")
-                    .html(`k = ${k}<br>P(collision) = ${d.p_match.toFixed(4)}`);
+                    .html(`k = ${k}<br>P(collision) = ${p_match.toFixed(4)}`);
             }).on("mouseout", () => tooltip.style("opacity", 0));
         }
 
