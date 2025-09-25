@@ -1289,6 +1289,22 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
+    const integrate = (f, a, b, n_steps = 1000) => {
+        if (a >= b) return 0;
+        if (!isFinite(a) || !isFinite(b)) return NaN;
+        n_steps = n_steps % 2 === 0 ? n_steps : n_steps + 1;
+        let h = (b - a) / n_steps;
+        if (h === 0) return 0;
+        let sum = f(a) + f(b);
+        for (let i = 1; i < n_steps; i += 2) {
+            sum += 4 * f(a + i * h);
+        }
+        for (let i = 2; i < n_steps - 1; i += 2) {
+            sum += 2 * f(a + i * h);
+        }
+        return sum * h / 3;
+    };
+
     const mixtureApp = (() => {
         const initialState = {
             components: [
@@ -2091,22 +2107,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const distributionsApp = (() => {
 
-        const integrate = (f, a, b, n_steps = 1000) => {
-            if (a >= b) return 0;
-            if (!isFinite(a) || !isFinite(b)) return NaN;
-            n_steps = n_steps % 2 === 0 ? n_steps : n_steps + 1;
-            let h = (b - a) / n_steps;
-            if (h === 0) return 0;
-            let sum = f(a) + f(b);
-            for (let i = 1; i < n_steps; i += 2) {
-                sum += 4 * f(a + i * h);
-            }
-            for (let i = 2; i < n_steps - 1; i += 2) {
-                sum += 2 * f(a + i * h);
-            }
-            return sum * h / 3;
-        };
-
         const distSelect = document.getElementById('dist-select');
         const paramInputs = document.getElementById('param-inputs');
         const paramSliders = document.getElementById('param-sliders');
@@ -2618,20 +2618,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return distConfig.inv(u, j, params);
         }
 
-        function integrate(f, a, b, n_steps) {
-            if (a >= b) return 0;
-            n_steps = n_steps % 2 === 0 ? n_steps : n_steps + 1;
-            let h = (b - a) / n_steps;
-            let sum = f(a) + f(b);
-            for (let i = 1; i < n_steps; i += 2) {
-                sum += 4 * f(a + i * h);
-            }
-            for (let i = 2; i < n_steps - 1; i += 2) {
-                sum += 2 * f(a + i * h);
-            }
-            return sum * h / 3;
-        }
-
         function update() {
             const distKey = distSelect.value;
             const config = CONTINUOUS_DISTRIBUTIONS[distKey];
@@ -3125,20 +3111,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             slider.addEventListener('change', updateSliderBounds);
             quickSliderContainer.appendChild(slider);
-        }
-
-        function integrate(f, a, b, n_steps = 200) {
-            if (a >= b) return 0;
-            n_steps = n_steps % 2 === 0 ? n_steps : n_steps + 1;
-            let h = (b - a) / n_steps;
-            let sum = f(a) + f(b);
-            for (let i = 1; i < n_steps; i += 2) {
-                sum += 4 * f(a + i * h);
-            }
-            for (let i = 2; i < n_steps - 1; i += 2) {
-                sum += 2 * f(a + i * h);
-            }
-            return sum * h / 3;
         }
 
         const margin = { joint: { top: 10, right: 10, bottom: 40, left: 50 }, marginalX: { top: 10, right: 10, bottom: 5, left: 50 }, marginalY: { top: 10, right: 30, bottom: 40, left: 5 }, density: { top: 20, right: 30, bottom: 40, left: 50 } };
