@@ -377,6 +377,8 @@
         #mixture-app table { border-collapse: collapse; width: 100%; margin-bottom: 1rem; }
         #mixture-app th, #mixture-app td { border: 1px solid var(--border-color); padding: 2px; vertical-align: top; }
         #mixture-app th { background-color: #f7f7f7; text-align: left; }
+        #mixture-app .name-cell-container { display: flex; align-items: center; gap: 4px; }
+        #mixture-app .name-cell-container input { flex-grow: 1; }
         #mixture-app .param-cell { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
         #mixture-app .param-cell .param-group { margin-bottom: 0; display: flex; align-items: center; gap: 5px; }
         #mixture-app table input, #mixture-app table select { border: none; }
@@ -1340,6 +1342,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Name
                 const nameTd = document.createElement('td');
+                const container = document.createElement('div');
+                container.className = 'name-cell-container';
+
                 const nameInput = document.createElement('input');
                 nameInput.type = 'text';
                 nameInput.value = comp.name;
@@ -1347,14 +1352,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     comp.name = e.target.value;
                     calculateAndRender();
                 });
-                nameTd.appendChild(nameInput);
+                container.appendChild(nameInput);
+
                 if (state.components.length > 1) {
                     const removeBtn = document.createElement('button');
                     removeBtn.innerHTML = '&times;';
-                    removeBtn.style.cssText = 'background:none; border:none; cursor:pointer; float:right;';
+                    removeBtn.style.cssText = 'background:none; border:none; cursor:pointer;';
                     removeBtn.onclick = () => removeComponent(comp.id);
-                    nameTd.appendChild(removeBtn);
+                    container.appendChild(removeBtn);
                 }
+                nameTd.appendChild(container);
                 tr.appendChild(nameTd);
 
                 // Prior
