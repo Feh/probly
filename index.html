@@ -373,7 +373,7 @@
             max-width: 1200px;
             margin: 2rem auto;
         }
-        #mixture-app .panel { grid-column: 1 / -1; }
+        #mixture-app .panel { grid-column: 1 / -1; margin-bottom: 2rem; }
         #mixture-app table { border-collapse: collapse; width: 100%; margin-bottom: 1rem; }
         #mixture-app th, #mixture-app td { border: 1px solid var(--border-color); padding: 8px; vertical-align: top; }
         #mixture-app th { background-color: #f7f7f7; text-align: left; }
@@ -384,7 +384,8 @@
         #mixture-app .controls { display: flex; gap: 10px; margin-bottom: 1rem; }
         #mixture-app .controls button { padding: 10px 15px; background-color: #f0f0f0; border: 1px solid var(--border-color); border-radius: 3px; cursor: pointer; }
         #mixture-app .controls button:hover { background-color: #e0e0e0; }
-        #mixture-app .plot-container { min-height: 350px; border: 1px solid var(--border-color); margin-top: 1rem; }
+        #mixture-app .plot-container { min-height: 350px; border: 1px solid var(--border-color); margin-top: 1rem; margin-bottom: 2rem; }
+        #mix-density-plot-svg, #mix-posterior-plot-svg { width: 100%; }
         #mixture-app .plot-svg-wrapper { position: relative; }
         #mixture-app .tooltip { position: absolute; background-color: rgba(0, 0, 0, 0.75); color: white; padding: 5px 10px; border-radius: 3px; pointer-events: none; opacity: 0; font-size: 0.9em; z-index: 10; transform: translate(-50%, -110%); }
         #mixture-app .line-path { stroke-width: 2px; }
@@ -1155,8 +1156,6 @@
                     <svg id="mix-density-plot-svg"></svg>
                     <div id="mix-density-tooltip" class="tooltip"></div>
                 </div>
-            </div>
-            <div class="panel">
                 <h4>Posterior Probabilities P(Component | X=x)</h4>
                 <div id="mix-posterior-plot-container" class="plot-container plot-svg-wrapper">
                     <svg id="mix-posterior-plot-svg"></svg>
