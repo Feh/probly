@@ -1157,6 +1157,7 @@
                     <svg id="mix-density-plot-svg"></svg>
                     <div id="mix-density-tooltip" class="tooltip"></div>
                 </div>
+                <div id="mix-conditional-expectations-grid" style="display: flex; flex-wrap: wrap; gap: 5px 2em; align-items: center; margin-top: 1em;"></div>
                 <h4>Posterior Probabilities \(\mathbb{P}(\text{Component} | X=x)\)</h4>
                 <div id="mix-posterior-plot-container" class="plot-container plot-svg-wrapper">
                     <svg id="mix-posterior-plot-svg"></svg>
@@ -1468,6 +1469,198 @@ document.addEventListener('DOMContentLoaded', () => {
             plotPosterior(domain, jstats);
         }
 
+        function calculateAndDisplayConditionalExpectations(lower, upper, domain, jstats) {
+            const grid = document.getElementById('mix-conditional-expectations-grid');
+            grid.innerHTML = '';
+
+            const mixturePdf = x => state.components.reduce((sum, c, i) => {
+                const config = CONTINUOUS_DISTRIBUTIONS[c.dist];
+                return sum + c.prior * config.pdfpmf(x, jstats[i], c.params);
+            }, 0);
+            
+            const mixtureCdf = x => state.components.reduce((sum, c, i) => {
+                const config = CONTINUOUS_DISTRIBUTIONS[c.dist];
+                return sum + c.prior * config.cdf(x, jstats[i], c.params);
+            }, 0);
+
+            const domain_min = domain[0];
+            const domain_max = domain[1];
+            const prob_lower = mixtureCdf(lower) - mixtureCdf(domain_min);
+            const prob_middle = mixtureCdf(upper) - mixtureCdf(lower);
+            const prob_upper = mixtureCdf(domain_max) - mixtureCdf(upper);
+
+            const integrand = x => x * mixturePdf(x);
+            let E_lower, E_middle, E_upper;
+
+            if (prob_lower > 1e-9) {
+                const integral = integrate(integrand, domain_min, lower);
+                E_lower = integral / prob_lower;
+            }
+            if (prob_middle > 1e-9) {
+                const integral = integrate(integrand, lower, upper);
+                E_middle = integral / prob_middle;
+            }
+            if (prob_upper > 1e-9) {
+                const integral = integrate(integrand, upper, domain_max);
+                E_upper = integral / prob_upper;
+            }
+
+            const format = val => (val === undefined || !isFinite(val)) ? '\\text{N/A}' : val.toFixed(4);
+
+            grid.innerHTML = `
+                <div>\\(\\mathbb{E}[X \\mid X < ${lower.toFixed(2)}] = ${format(E_lower)}\\)</div>
+                <div>\\(\\mathbb{E}[X \\mid ${lower.toFixed(2)} \\le X \\le ${upper.toFixed(2)}] = ${format(E_middle)}\\)</div>
+                <div>\\(\\mathbb{E}[X \\mid X > ${upper.toFixed(2)}] = ${format(E_upper)}\\)</div>
+            `;
+            renderMathInElement(grid);
+        }
+
+        function setupInteractionLayer(svg, g, width, height, xScale, yScale, domain, jstats) {
+            const tooltip = densityTooltip;
+            const dragLayer = g.append("g").attr("class", "drag-layer");
+
+            const mixturePdf = x => state.components.reduce((sum, c, i) => {
+                const config = CONTINUOUS_DISTRIBUTIONS[c.dist];
+                return sum + c.prior * config.pdfpmf(x, jstats[i], c.params);
+            }, 0);
+            
+            const focus = g.append("circle").style("fill", "none").attr("stroke", "black").attr("r", 4).style("opacity", 0);
+            let dragState = { startX: null, isDragging: false };
+            let touchDragState = {};
+            const interactionRect = svg.append("rect").attr("transform", `translate(${margin.left},${margin.top})`).style("fill", "none").style("pointer-events", "all").style("touch-action", "none").attr("width", width).attr("height", height);
+            
+            function calculateAndDisplayArea(pixel1, pixel2) {
+                if (Math.abs(pixel1 - pixel2) < 5) {
+                    dragLayer.selectAll("*").remove();
+                    document.getElementById('mix-conditional-expectations-grid').innerHTML = '';
+                    return;
+                }
+                const x0 = xScale.invert(pixel1), x1 = xScale.invert(pixel2);
+                const lower = Math.min(x0, x1), upper = Math.max(x0, x1);
+                
+                const mixtureCdf = x => state.components.reduce((sum, c, i) => {
+                    const config = CONTINUOUS_DISTRIBUTIONS[c.dist];
+                    return sum + c.prior * config.cdf(x, jstats[i], c.params);
+                }, 0);
+
+                const area = mixtureCdf(upper) - mixtureCdf(lower);
+                const text = `P(${lower.toFixed(2)} < X < ${upper.toFixed(2)}) = ${area.toFixed(4)}`;
+                
+                dragLayer.append("text").attr("class", "drag-text").attr("x", (pixel1 + pixel2) / 2).attr("y", -5).text(text);
+                calculateAndDisplayConditionalExpectations(lower, upper, domain, jstats);
+            }
+            
+            const drag = d3.drag().filter(event => !event.touches).on("start", (event) => {
+                const [x_coord] = d3.pointer(event, interactionRect.node());
+                dragState.isDragging = true;
+                dragState.startX = x_coord;
+                dragLayer.selectAll("*").remove();
+                document.getElementById('mix-conditional-expectations-grid').innerHTML = '';
+                dragLayer.append("rect").attr("class", "drag-selection").attr("y", 0).attr("height", height);
+                tooltip.style("opacity", 0);
+            }).on("drag", (event) => {
+                const [currentX] = d3.pointer(event, interactionRect.node());
+                const x = Math.min(dragState.startX, currentX),
+                    w = Math.abs(currentX - dragState.startX);
+                dragLayer.select(".drag-selection").attr("x", x).attr("width", w);
+            }).on("end", (event) => {
+                dragState.isDragging = false;
+                const [endX, endY] = d3.pointer(event, interactionRect.node());
+                if (endX >= 0 && endX <= width && endY >= 0 && endY <= height) {
+                    tooltip.style("opacity", 1);
+                }
+                calculateAndDisplayArea(dragState.startX, endX);
+            });
+            
+            interactionRect.call(drag);
+            
+            function updateTooltip(event) {
+                const [tipX, tipY] = d3.pointer(event, svg.node().parentNode);
+                tooltip.style("left", tipX + "px").style("top", tipY + "px");
+                const [x_coord] = d3.pointer(event, interactionRect.node());
+                const x_val = xScale.invert(x_coord);
+                const y_val = mixturePdf(x_val);
+                focus.attr("cx", xScale(x_val)).attr("cy", yScale(y_val));
+                
+                let content = `<strong>x = ${x_val.toFixed(3)}</strong><br>`;
+                const totalDensity = y_val;
+                content += `<span style="color:black;">■</span> Mixture: ${totalDensity.toFixed(4)}<br>`;
+                const color = d3.scaleOrdinal(d3.schemeCategory10);
+                state.components.forEach((c, i) => {
+                     const config = CONTINUOUS_DISTRIBUTIONS[c.dist];
+                     const density = c.prior * config.pdfpmf(x_val, jstats[i], c.params);
+                     content += `<span style="color:${color(i)};">■</span> ${c.name}: ${density.toFixed(4)}<br>`;
+                });
+                tooltip.html(content);
+            }
+            
+            interactionRect.on("mouseover", () => {
+                if (!dragState.isDragging) {
+                    focus.style("opacity", 1);
+                    tooltip.style("opacity", 1);
+                }
+            }).on("mouseout", () => {
+                if (!dragState.isDragging) {
+                    focus.style("opacity", 0);
+                    tooltip.style("opacity", 0);
+                }
+            }).on("mousemove", (event) => {
+                if (dragState.isDragging) return;
+                updateTooltip(event);
+            });
+
+            const node = interactionRect.node();
+            node.addEventListener('touchstart', (event) => {
+                if (event.touches.length === 2) {
+                    event.preventDefault();
+                    touchDragState.isDragging = true;
+                    const pointers = d3.pointers(event, node);
+                    touchDragState.x1 = pointers[0][0];
+                    touchDragState.x2 = pointers[1][0];
+                    dragLayer.selectAll("*").remove();
+                    document.getElementById('mix-conditional-expectations-grid').innerHTML = '';
+                    dragLayer.append("rect").attr("class", "drag-selection").attr("y", 0).attr("height", height);
+                    tooltip.style("opacity", 0);
+                    focus.style("opacity", 0);
+                    const x = Math.min(touchDragState.x1, touchDragState.x2),
+                        w = Math.abs(touchDragState.x1 - touchDragState.x2);
+                    dragLayer.select(".drag-selection").attr("x", x).attr("width", w);
+                } else if (event.touches.length === 1) {
+                    event.preventDefault();
+                    dragLayer.selectAll("*").remove();
+                    document.getElementById('mix-conditional-expectations-grid').innerHTML = '';
+                    updateTooltip(event.touches[0]);
+                    focus.style("opacity", 1);
+                    tooltip.style("opacity", 1);
+                }
+            });
+            node.addEventListener('touchmove', (event) => {
+                if (event.touches.length === 2 && touchDragState.isDragging) {
+                    event.preventDefault();
+                    const pointers = d3.pointers(event, node);
+                    touchDragState.x1 = pointers[0][0];
+                    touchDragState.x2 = pointers[1][0];
+                    const x = Math.min(touchDragState.x1, touchDragState.x2),
+                        w = Math.abs(touchDragState.x1 - touchDragState.x2);
+                    dragLayer.select(".drag-selection").attr("x", x).attr("width", w);
+                } else if (event.touches.length === 1 && !touchDragState.isDragging) {
+                    event.preventDefault();
+                    updateTooltip(event.touches[0]);
+                }
+            });
+            node.addEventListener('touchend', (event) => {
+                if (touchDragState.isDragging) {
+                    event.preventDefault();
+                    calculateAndDisplayArea(touchDragState.x1, touchDragState.x2);
+                    touchDragState = {};
+                }
+                if (event.touches.length === 0) {
+                    focus.style("opacity", 0);
+                    tooltip.style("opacity", 0);
+                }
+            });
+        }
+
         function plotDensity(domain, jstats) {
             const svg = densitySvg;
             const tooltip = densityTooltip;
@@ -1512,24 +1705,7 @@ document.addEventListener('DOMContentLoaded', () => {
             g.append("text").attr("x", width + 5).attr("y", 20 + state.components.length*20).attr("dy", "0.35em").style("fill", "black").text("Mixture");
 
             // Interaction
-            const interactionRect = svg.append("rect").attr("transform", `translate(${margin.left},${margin.top})`).style("fill", "none").style("pointer-events", "all").attr("width", width).attr("height", height);
-            interactionRect.on("mousemove", (event) => {
-                 const [tipX, tipY] = d3.pointer(event, svg.node().parentNode);
-                 tooltip.style("opacity", 1).style("left", tipX + "px").style("top", tipY + "px");
-                 const [x_coord] = d3.pointer(event, interactionRect.node());
-                 const x = xScale.invert(x_coord);
-                 let content = `<strong>x = ${x.toFixed(3)}</strong><br>`;
-                 const totalDensity = state.components.reduce((sum, c, i) => {
-                    return sum + c.prior * CONTINUOUS_DISTRIBUTIONS[c.dist].pdfpmf(x, jstats[i], c.params);
-                }, 0);
-                 content += `<span style="color:black;">■</span> Mixture: ${totalDensity.toFixed(4)}<br>`;
-                 state.components.forEach((c, i) => {
-                     const config = CONTINUOUS_DISTRIBUTIONS[c.dist];
-                     const density = c.prior * config.pdfpmf(x, jstats[i], c.params);
-                     content += `<span style="color:${color(i)};">■</span> ${c.name}: ${density.toFixed(4)}<br>`;
-                 });
-                 tooltip.html(content);
-            }).on("mouseout", () => tooltip.style("opacity", 0));
+            setupInteractionLayer(svg, g, width, height, xScale, yScale, domain, jstats);
         }
 
         function plotPosterior(domain, jstats) {
