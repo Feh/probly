@@ -1564,6 +1564,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     return { x, y };
                 });
                 g.append("path").datum(posteriorData).attr("fill", "none").attr("stroke", color(i)).attr("class", "line-path").attr("d", line);
+
+                g.append("line")
+                    .attr("x1", 0)
+                    .attr("y1", yScale(c.prior))
+                    .attr("x2", width)
+                    .attr("y2", yScale(c.prior))
+                    .attr("stroke", color(i))
+                    .style("stroke-dasharray", "4")
+                    .style("opacity", 0.4);
+
                 g.append("text").attr("x", width + 5).attr("y", 20 + i*20).attr("dy", "0.35em").style("fill", color(i)).text(c.name);
             });
             
