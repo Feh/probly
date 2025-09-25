@@ -377,13 +377,14 @@
         #mixture-app table { border-collapse: collapse; width: 100%; margin-bottom: 1rem; }
         #mixture-app th, #mixture-app td { border: 1px solid var(--border-color); padding: 2px; vertical-align: top; }
         #mixture-app th { background-color: #f7f7f7; text-align: left; }
-        #mixture-app .name-cell-container { display: flex; align-items: center; gap: 4px; }
-        #mixture-app .name-cell-container input { flex-grow: 1; }
+        #mixture-app .name-cell-container { display: flex; align-items: left; gap: 4px; }
+        #mixture-app .name-cell-container input { flex-grow: 3; width: 6rem; }
         #mixture-app .param-cell { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
         #mixture-app .param-cell .param-group { margin-bottom: 0; display: flex; align-items: center; gap: 5px; }
-        #mixture-app .param-cell .param-group input[type="number"] { width: 4em; }
+        #mixture-app .param-cell .param-group input[type="number"] { min-width: 3rem; width: 6rem; }
         #mixture-app table input, #mixture-app table select { border: none; }
         #mixture-app input, #mixture-app select { padding: 8px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 3px; }
+        #mixture-app input[type="number"].prob-input { width: 100%; min-width: 3rem; }
         #mixture-app input[type="number"].prob-input.error { border: 3px solid #d9534f; }
         #mixture-app .controls { display: flex; gap: 10px; margin-bottom: 1rem; }
         #mixture-app .controls button { padding: 10px 15px; background-color: #f0f0f0; border: 1px solid var(--border-color); border-radius: 3px; cursor: pointer; }
@@ -1145,8 +1146,8 @@
                 <table id="mix-components-table">
                     <thead>
                         <tr>
-                            <th style="max-width: 30%;">Component Name</th>
-                            <th style="max-width: 15%;">Prior/Weight</th>
+                            <th style="min-width: 10%; max-width: 30%;">Component Name</th>
+                            <th style="min-width: 5%; max-width: 15%;">Prior/Weight</th>
                             <th>Distribution &amp; Parameters</th>
                         </tr>
                     </thead>
