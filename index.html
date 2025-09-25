@@ -1325,7 +1325,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const densityTooltip = d3.select("#mix-density-tooltip");
         const posteriorSvg = d3.select("#mix-posterior-plot-svg");
         const posteriorTooltip = d3.select("#mix-posterior-tooltip");
-        const margin = { top: 30, right: 150, bottom: 40, left: 50 };
+        const margin = { top: 30, right: 30, bottom: 40, left: 50 };
 
         function updateURL() {
             const stateString = JSON.stringify(state);
@@ -1717,12 +1717,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const config = CONTINUOUS_DISTRIBUTIONS[c.dist];
                 const componentData = xValues.map(x => ({ x, y: c.prior * config.pdfpmf(x, jstats[i], c.params) }));
                 g.append("path").datum(componentData).attr("fill", "none").attr("stroke", color(i)).attr("class", "component-path").attr("d", line);
-                g.append("text").attr("x", width + 5).attr("y", 20 + i*20).attr("dy", "0.35em").style("fill", color(i)).text(c.name);
+                g.append("text").attr("x", width - 10).attr("y", 10 + i*20).attr("dy", "0.35em").style("text-anchor", "end").style("fill", color(i)).text(c.name);
             });
 
             // Mixture density
             g.append("path").datum(mixtureData).attr("fill", "none").attr("stroke", "black").attr("class", "line-path").attr("d", line);
-            g.append("text").attr("x", width + 5).attr("y", 20 + state.components.length*20).attr("dy", "0.35em").style("fill", "black").text("Mixture");
+            g.append("text").attr("x", width - 10).attr("y", 10 + state.components.length*20).attr("dy", "0.35em").style("text-anchor", "end").style("fill", "black").text("Mixture");
 
             // Interaction
             setupInteractionLayer(svg, g, width, height, xScale, yScale, domain, jstats);
@@ -1770,7 +1770,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     .style("stroke-dasharray", "4")
                     .style("opacity", 0.4);
 
-                g.append("text").attr("x", width + 5).attr("y", 20 + i*20).attr("dy", "0.35em").style("fill", color(i)).text(c.name);
+                g.append("text").attr("x", width - 10).attr("y", 10 + i * 20).attr("dy", "0.35em").style("text-anchor", "end").style("fill", color(i)).text(c.name);
             });
             
             const interactionRect = svg.append("rect").attr("transform", `translate(${margin.left},${margin.top})`).style("fill", "none").style("pointer-events", "all").attr("width", width).attr("height", height);
