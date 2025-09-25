@@ -375,10 +375,11 @@
         }
         #mixture-app .panel { grid-column: 1 / -1; margin-bottom: 2rem; }
         #mixture-app table { border-collapse: collapse; width: 100%; margin-bottom: 1rem; }
-        #mixture-app th, #mixture-app td { border: 1px solid var(--border-color); padding: 8px; vertical-align: top; }
+        #mixture-app th, #mixture-app td { border: 1px solid var(--border-color); padding: 2px; vertical-align: top; }
         #mixture-app th { background-color: #f7f7f7; text-align: left; }
         #mixture-app .param-cell { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
         #mixture-app .param-cell .param-group { margin-bottom: 0; display: flex; align-items: center; gap: 5px; }
+        #mixture-app table input, #mixture-app table select { border: none; }
         #mixture-app input, #mixture-app select { padding: 8px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 3px; }
         #mixture-app input[type="number"].prob-input.error { border: 3px solid #d9534f; }
         #mixture-app .controls { display: flex; gap: 10px; margin-bottom: 1rem; }
@@ -1156,12 +1157,24 @@
                     <svg id="mix-density-plot-svg"></svg>
                     <div id="mix-density-tooltip" class="tooltip"></div>
                 </div>
-                <h4>Posterior Probabilities P(Component | X=x)</h4>
+                <h4>Posterior Probabilities \(\mathbb{P}(\text{Component} | X=x)\)</h4>
                 <div id="mix-posterior-plot-container" class="plot-container plot-svg-wrapper">
                     <svg id="mix-posterior-plot-svg"></svg>
                     <div id="mix-posterior-tooltip" class="tooltip"></div>
                 </div>
             </div>
+            <details class="panel">
+                <summary>Formulas</summary>
+                <div class="formulas" style="padding-top: 1rem;">
+                    <h4>Mixture Density</h4>
+                    <p>The probability density function (PDF) of a mixture model is a weighted sum of the PDFs of its component distributions.</p>
+                    $$ f_{\text{mixture}}(x) = \sum_{i=1}^k w_i f_i(x; \theta_i) $$
+                    <p>where \(w_i\) is the weight (prior probability) of the i-th component, and \(f_i(x; \theta_i)\) is its PDF with parameters \(\theta_i\).</p>
+                    <h4>Posterior Probability</h4>
+                    <p>Given an observation \(x\), the posterior probability of it belonging to component \(C_i\) is given by Bayes' theorem:</p>
+                    $$ \mathbb{P}(C_i | X=x) = \frac{w_i f_i(x; \theta_i)}{\sum_{j=1}^k w_j f_j(x; \theta_j)} $$
+                </div>
+            </details>
         </div>
         <div id="combinatorics-app" class="app-container">
             <div id="co-controls-panel" class="panel">
