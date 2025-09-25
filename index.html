@@ -1308,6 +1308,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const posteriorTooltip = d3.select("#mix-posterior-tooltip");
         const margin = { top: 30, right: 150, bottom: 40, left: 50 };
 
+        function updateURL() {
+            const stateString = JSON.stringify(state);
+            const encodedState = btoa(stateString);
+            const params = new URLSearchParams();
+            params.set('s', encodedState);
+            history.replaceState(null, '', '#mixture?' + params.toString());
+        }
+
         function renderTable() {
             tableBody.innerHTML = '';
             state.components.forEach(comp => {
@@ -1420,6 +1428,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         function calculateAndRender() {
+            updateURL();
             const priors = state.components.map(c => c.prior);
             const totalP = priors.reduce((sum, p) => sum + (isNaN(p) ? 0 : p), 0);
             const isSumInvalid = Math.abs(totalP - 1) > 1e-9 && totalP > 0;
@@ -1600,7 +1609,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     ]
                 });
             },
-            updateFromURL: () => { /* Not implemented yet */ }
+            updateFromURL: (params) => {
+                if (params.has('s')) {
+                    try {
+                        const encodedState = params.get('s');
+                        const stateString = atob(encodedState);
+                        const loadedState = JSON.parse(stateString);
+                        if (loadedState.components && typeof loadedState.nextId !== 'undefined') {
+                            state = loadedState;
+                            renderTable();
+                            calculateAndRender();
+                        }
+                    } catch (e) {
+                        console.error("Failed to load state from URL for Mixture app", e);
+                    }
+                }
+            }
         };
     })();
 
