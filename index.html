@@ -367,6 +367,30 @@
         #combinatorics-app th, #combinatorics-app td { border: 1px solid var(--border-color); padding: 8px; text-align: center; }
         #combinatorics-app th { background-color: #f7f7f7; }
 
+        /* Scoped styles for Mixture App */
+        #mixture-app {
+            grid-template-columns: 1fr;
+            max-width: 1200px;
+            margin: 2rem auto;
+        }
+        #mixture-app .panel { grid-column: 1 / -1; }
+        #mixture-app table { border-collapse: collapse; width: 100%; margin-bottom: 1rem; }
+        #mixture-app th, #mixture-app td { border: 1px solid var(--border-color); padding: 8px; vertical-align: top; }
+        #mixture-app th { background-color: #f7f7f7; text-align: left; }
+        #mixture-app .param-cell { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        #mixture-app .param-cell .param-group { margin-bottom: 0; display: flex; align-items: center; gap: 5px; }
+        #mixture-app input, #mixture-app select { padding: 8px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 3px; }
+        #mixture-app input[type="number"].prob-input.error { border: 3px solid #d9534f; }
+        #mixture-app .controls { display: flex; gap: 10px; margin-bottom: 1rem; }
+        #mixture-app .controls button { padding: 10px 15px; background-color: #f0f0f0; border: 1px solid var(--border-color); border-radius: 3px; cursor: pointer; }
+        #mixture-app .controls button:hover { background-color: #e0e0e0; }
+        #mixture-app .plot-container { min-height: 350px; border: 1px solid var(--border-color); margin-top: 1rem; }
+        #mixture-app .plot-svg-wrapper { position: relative; }
+        #mixture-app .tooltip { position: absolute; background-color: rgba(0, 0, 0, 0.75); color: white; padding: 5px 10px; border-radius: 3px; pointer-events: none; opacity: 0; font-size: 0.9em; z-index: 10; transform: translate(-50%, -110%); }
+        #mixture-app .line-path { stroke-width: 2px; }
+        #mixture-app .component-path { stroke-width: 1.5px; opacity: 0.4; }
+
+
         .move-controls { position: absolute; top: 5px; right: 5px; z-index: 5; display: flex; flex-direction: row; }
         .move-btn { background: none; border: none; cursor: pointer; font-size: 0.8rem; padding: 0; line-height: 1; color: #888; }
         .move-btn:hover { color: #333; }
@@ -443,6 +467,7 @@
             <li><a href="#expected-value">Expected Value</a></li>
             <li><a href="#gaussian-copula">Gaussian Copula</a></li>
             <li><a href="#information-value">Information Value</a></li>
+            <li><a href="#mixture">Mixture Model</a></li>
             <li><a href="#multiple-hypothesis-testing">Multiple Hypothesis Testing</a></li>
             <li><a href="#order-statistics">Order Statistics</a></li>
             <li><a href="#combinatorics">Selection Combinatorics</a></li>
@@ -1104,6 +1129,41 @@
                 </div>
             </details>
         </div>
+        <div id="mixture-app" class="app-container">
+            <div class="panel">
+                <h3>Mixture Model</h3>
+                <p>Define a mixture of probability distributions. Priors must sum to 1.</p>
+                <div class="controls">
+                    <button id="mix-add-component-btn">Add Component</button>
+                    <button id="mix-normalize-btn">Normalize Priors</button>
+                </div>
+                <table id="mix-components-table">
+                    <thead>
+                        <tr>
+                            <th>Component Name</th>
+                            <th>Prior/Weight</th>
+                            <th>Distribution</th>
+                            <th>Parameters</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="panel">
+                <h4>Mixture Density</h4>
+                <div id="mix-density-plot-container" class="plot-container plot-svg-wrapper">
+                    <svg id="mix-density-plot-svg"></svg>
+                    <div id="mix-density-tooltip" class="tooltip"></div>
+                </div>
+            </div>
+            <div class="panel">
+                <h4>Posterior Probabilities P(Component | X=x)</h4>
+                <div id="mix-posterior-plot-container" class="plot-container plot-svg-wrapper">
+                    <svg id="mix-posterior-plot-svg"></svg>
+                    <div id="mix-posterior-tooltip" class="tooltip"></div>
+                </div>
+            </div>
+        </div>
         <div id="combinatorics-app" class="app-container">
             <div id="co-controls-panel" class="panel">
                 <h3>Inputs</h3>
@@ -1215,6 +1275,314 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+
+    const mixtureApp = (() => {
+        const initialState = {
+            components: [
+                { id: 0, name: 'Component 1', prior: 0.5, dist: 'normal', params: { mu: -2, sigma: 1 } },
+                { id: 1, name: 'Component 2', prior: 0.5, dist: 'normal', params: { mu: 2, sigma: 1 } }
+            ],
+            nextId: 2
+        };
+        let state = structuredClone(initialState);
+
+        const tableBody = document.querySelector('#mix-components-table tbody');
+        const addComponentBtn = document.getElementById('mix-add-component-btn');
+        const normalizeBtn = document.getElementById('mix-normalize-btn');
+        
+        const densitySvg = d3.select("#mix-density-plot-svg");
+        const densityTooltip = d3.select("#mix-density-tooltip");
+        const posteriorSvg = d3.select("#mix-posterior-plot-svg");
+        const posteriorTooltip = d3.select("#mix-posterior-tooltip");
+        const margin = { top: 30, right: 150, bottom: 40, left: 50 };
+
+        function renderTable() {
+            tableBody.innerHTML = '';
+            state.components.forEach(comp => {
+                const tr = document.createElement('tr');
+                tr.dataset.id = comp.id;
+
+                // Name
+                const nameTd = document.createElement('td');
+                const nameInput = document.createElement('input');
+                nameInput.type = 'text';
+                nameInput.value = comp.name;
+                nameInput.addEventListener('change', e => {
+                    comp.name = e.target.value;
+                    calculateAndRender();
+                });
+                nameTd.appendChild(nameInput);
+                if (state.components.length > 1) {
+                    const removeBtn = document.createElement('button');
+                    removeBtn.innerHTML = '&times;';
+                    removeBtn.style.cssText = 'background:none; border:none; cursor:pointer; float:right;';
+                    removeBtn.onclick = () => removeComponent(comp.id);
+                    nameTd.appendChild(removeBtn);
+                }
+                tr.appendChild(nameTd);
+
+                // Prior
+                const priorTd = document.createElement('td');
+                const priorInput = document.createElement('input');
+                priorInput.type = 'number';
+                priorInput.className = 'prob-input';
+                priorInput.min = 0; priorInput.max = 1; priorInput.step = 0.01;
+                priorInput.value = comp.prior;
+                priorInput.addEventListener('input', e => {
+                    comp.prior = e.target.value === '' ? NaN : parseFloat(e.target.value);
+                    calculateAndRender();
+                });
+                priorTd.appendChild(priorInput);
+                tr.appendChild(priorTd);
+                
+                // Distribution
+                const distTd = document.createElement('td');
+                const distSelect = document.createElement('select');
+                Object.keys(CONTINUOUS_DISTRIBUTIONS).forEach(key => {
+                    distSelect.appendChild(new Option(CONTINUOUS_DISTRIBUTIONS[key].name, key));
+                });
+                distSelect.value = comp.dist;
+                distSelect.addEventListener('change', e => {
+                    comp.dist = e.target.value;
+                    const newConfig = CONTINUOUS_DISTRIBUTIONS[comp.dist];
+                    comp.params = {};
+                    newConfig.params.forEach(p => comp.params[p.id] = p.default);
+                    renderTable();
+                    calculateAndRender();
+                });
+                distTd.appendChild(distSelect);
+                tr.appendChild(distTd);
+
+                // Parameters
+                const paramTd = document.createElement('td');
+                paramTd.className = 'param-cell';
+                const distConfig = CONTINUOUS_DISTRIBUTIONS[comp.dist];
+                distConfig.params.forEach(p => {
+                    const group = document.createElement('div');
+                    group.className = 'param-group';
+                    const label = document.createElement('label');
+                    label.textContent = p.name;
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.step = p.step || 0.1;
+                    if (p.min !== undefined) input.min = p.min;
+                    if (p.max !== undefined) input.max = p.max;
+                    input.value = comp.params[p.id];
+                    input.addEventListener('input', e => {
+                        comp.params[p.id] = parseFloat(e.target.value);
+                        calculateAndRender();
+                    });
+                    group.appendChild(label);
+                    group.appendChild(input);
+                    paramTd.appendChild(group);
+                });
+                tr.appendChild(paramTd);
+
+                tableBody.appendChild(tr);
+            });
+        }
+        
+        function addComponent() {
+            const newId = state.nextId++;
+            state.components.push({
+                id: newId, name: `Component ${state.components.length + 1}`, prior: 0,
+                dist: 'normal', params: { mu: 0, sigma: 1 }
+            });
+            renderTable();
+            calculateAndRender();
+        }
+
+        function removeComponent(id) {
+            state.components = state.components.filter(c => c.id !== id);
+            renderTable();
+            calculateAndRender();
+        }
+
+        function normalizePriors() {
+            const total = state.components.reduce((sum, c) => sum + (c.prior || 0), 0);
+            if (total > 0) {
+                state.components.forEach(c => c.prior /= total);
+            }
+            renderTable();
+            calculateAndRender();
+        }
+
+        function calculateAndRender() {
+            const priors = state.components.map(c => c.prior);
+            const totalP = priors.reduce((sum, p) => sum + (isNaN(p) ? 0 : p), 0);
+            const isSumInvalid = Math.abs(totalP - 1) > 1e-9 && totalP > 0;
+            
+            tableBody.querySelectorAll('.prob-input').forEach(input => {
+                input.classList.toggle('error', isSumInvalid);
+            });
+            normalizeBtn.disabled = !isSumInvalid;
+
+            if (isSumInvalid || state.components.length === 0) {
+                densitySvg.selectAll("*").remove();
+                posteriorSvg.selectAll("*").remove();
+                return;
+            }
+
+            const jstats = state.components.map(c => CONTINUOUS_DISTRIBUTIONS[c.dist].jStat(c.params));
+
+            // Determine plot domain
+            let lower = Infinity, upper = -Infinity;
+            state.components.forEach((c, i) => {
+                const config = CONTINUOUS_DISTRIBUTIONS[c.dist];
+                const j = jstats[i];
+                if (c.prior > 1e-9) {
+                    const l = config.inv(0.001, j, c.params);
+                    const u = config.inv(0.999, j, c.params);
+                    if (isFinite(l)) lower = Math.min(lower, l);
+                    if (isFinite(u)) upper = Math.max(upper, u);
+                }
+            });
+            if (!isFinite(lower) || !isFinite(upper)) {
+                lower = -5; upper = 5;
+            }
+            const padding = (upper - lower) * 0.1;
+            const domain = [lower - padding, upper + padding];
+            
+            plotDensity(domain, jstats);
+            plotPosterior(domain, jstats);
+        }
+
+        function plotDensity(domain, jstats) {
+            const svg = densitySvg;
+            const tooltip = densityTooltip;
+            svg.selectAll("*").remove();
+
+            const rect = svg.node().getBoundingClientRect();
+            const width = rect.width - margin.left - margin.right;
+            const height = rect.height - margin.top - margin.bottom;
+            if (width <= 0 || height <= 0) return;
+            const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+            
+            const xScale = d3.scaleLinear().domain(domain).range([0, width]);
+            const xValues = d3.range(domain[0], domain[1], (domain[1] - domain[0]) / 500);
+
+            const mixtureData = xValues.map(x => {
+                const y = state.components.reduce((sum, c, i) => {
+                    const config = CONTINUOUS_DISTRIBUTIONS[c.dist];
+                    return sum + c.prior * config.pdfpmf(x, jstats[i], c.params);
+                }, 0);
+                return { x, y };
+            });
+
+            const yMax = d3.max(mixtureData, d => d.y);
+            const yScale = d3.scaleLinear().domain([0, yMax > 0 ? yMax * 1.1 : 1]).range([height, 0]);
+
+            g.append("g").attr("class", "x-axis axis").attr("transform", `translate(0, ${height})`).call(d3.axisBottom(xScale));
+            g.append("g").attr("class", "y-axis axis").call(d3.axisLeft(yScale).ticks(5));
+
+            const color = d3.scaleOrdinal(d3.schemeCategory10);
+            const line = d3.line().x(d => xScale(d.x)).y(d => yScale(d.y));
+
+            // Component densities
+            state.components.forEach((c, i) => {
+                const config = CONTINUOUS_DISTRIBUTIONS[c.dist];
+                const componentData = xValues.map(x => ({ x, y: c.prior * config.pdfpmf(x, jstats[i], c.params) }));
+                g.append("path").datum(componentData).attr("fill", "none").attr("stroke", color(i)).attr("class", "component-path").attr("d", line);
+                g.append("text").attr("x", width + 5).attr("y", 20 + i*20).attr("dy", "0.35em").style("fill", color(i)).text(c.name);
+            });
+
+            // Mixture density
+            g.append("path").datum(mixtureData).attr("fill", "none").attr("stroke", "black").attr("class", "line-path").attr("d", line);
+            g.append("text").attr("x", width + 5).attr("y", 20 + state.components.length*20).attr("dy", "0.35em").style("fill", "black").text("Mixture");
+
+            // Interaction
+            const interactionRect = svg.append("rect").attr("transform", `translate(${margin.left},${margin.top})`).style("fill", "none").style("pointer-events", "all").attr("width", width).attr("height", height);
+            interactionRect.on("mousemove", (event) => {
+                 const [tipX, tipY] = d3.pointer(event, svg.node().parentNode);
+                 tooltip.style("opacity", 1).style("left", tipX + "px").style("top", tipY + "px");
+                 const [x_coord] = d3.pointer(event, interactionRect.node());
+                 const x = xScale.invert(x_coord);
+                 let content = `<strong>x = ${x.toFixed(3)}</strong><br>`;
+                 const totalDensity = state.components.reduce((sum, c, i) => {
+                    return sum + c.prior * CONTINUOUS_DISTRIBUTIONS[c.dist].pdfpmf(x, jstats[i], c.params);
+                }, 0);
+                 content += `<span style="color:black;">■</span> Mixture: ${totalDensity.toFixed(4)}<br>`;
+                 state.components.forEach((c, i) => {
+                     const config = CONTINUOUS_DISTRIBUTIONS[c.dist];
+                     const density = c.prior * config.pdfpmf(x, jstats[i], c.params);
+                     content += `<span style="color:${color(i)};">■</span> ${c.name}: ${density.toFixed(4)}<br>`;
+                 });
+                 tooltip.html(content);
+            }).on("mouseout", () => tooltip.style("opacity", 0));
+        }
+
+        function plotPosterior(domain, jstats) {
+            const svg = posteriorSvg;
+            const tooltip = posteriorTooltip;
+            svg.selectAll("*").remove();
+
+            const rect = svg.node().getBoundingClientRect();
+            const width = rect.width - margin.left - margin.right;
+            const height = rect.height - margin.top - margin.bottom;
+            if (width <= 0 || height <= 0) return;
+            const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+            const xScale = d3.scaleLinear().domain(domain).range([0, width]);
+            const yScale = d3.scaleLinear().domain([0, 1]).range([height, 0]);
+
+            g.append("g").attr("class", "x-axis axis").attr("transform", `translate(0, ${height})`).call(d3.axisBottom(xScale));
+            g.append("g").attr("class", "y-axis axis").call(d3.axisLeft(yScale).ticks(5));
+
+            const xValues = d3.range(domain[0], domain[1], (domain[1] - domain[0]) / 500);
+            const color = d3.scaleOrdinal(d3.schemeCategory10);
+            const line = d3.line().x(d => xScale(d.x)).y(d => yScale(d.y));
+
+            state.components.forEach((c, i) => {
+                const posteriorData = xValues.map(x => {
+                    const likelihood = CONTINUOUS_DISTRIBUTIONS[c.dist].pdfpmf(x, jstats[i], c.params);
+                    const numerator = c.prior * likelihood;
+                    const denominator = state.components.reduce((sum, c2, j) => {
+                        return sum + c2.prior * CONTINUOUS_DISTRIBUTIONS[c2.dist].pdfpmf(x, jstats[j], c2.params);
+                    }, 0);
+                    const y = denominator > 0 ? numerator / denominator : 0;
+                    return { x, y };
+                });
+                g.append("path").datum(posteriorData).attr("fill", "none").attr("stroke", color(i)).attr("class", "line-path").attr("d", line);
+                g.append("text").attr("x", width + 5).attr("y", 20 + i*20).attr("dy", "0.35em").style("fill", color(i)).text(c.name);
+            });
+            
+            const interactionRect = svg.append("rect").attr("transform", `translate(${margin.left},${margin.top})`).style("fill", "none").style("pointer-events", "all").attr("width", width).attr("height", height);
+            interactionRect.on("mousemove", (event) => {
+                 const [tipX, tipY] = d3.pointer(event, svg.node().parentNode);
+                 tooltip.style("opacity", 1).style("left", tipX + "px").style("top", tipY + "px");
+                 const [x_coord] = d3.pointer(event, interactionRect.node());
+                 const x = xScale.invert(x_coord);
+                 let content = `<strong>x = ${x.toFixed(3)}</strong><br>`;
+                 const denominator = state.components.reduce((sum, c2, j) => {
+                    return sum + c2.prior * CONTINUOUS_DISTRIBUTIONS[c2.dist].pdfpmf(x, jstats[j], c2.params);
+                 }, 0);
+                 state.components.forEach((c, i) => {
+                     const likelihood = CONTINUOUS_DISTRIBUTIONS[c.dist].pdfpmf(x, jstats[i], c.params);
+                     const numerator = c.prior * likelihood;
+                     const posterior = denominator > 0 ? numerator / denominator : 0;
+                     content += `<span style="color:${color(i)};">■</span> ${c.name}: ${posterior.toFixed(4)}<br>`;
+                 });
+                 tooltip.html(content);
+            }).on("mouseout", () => tooltip.style("opacity", 0));
+        }
+
+        return {
+            init: () => {
+                addComponentBtn.addEventListener('click', addComponent);
+                normalizeBtn.addEventListener('click', normalizePriors);
+                renderTable();
+                calculateAndRender();
+
+                const resizeObserver = new ResizeObserver(() => {
+                    setTimeout(calculateAndRender, 0);
+                });
+                document.querySelectorAll('#mixture-app .plot-container').forEach(el => {
+                    resizeObserver.observe(el);
+                });
+            },
+            updateFromURL: () => { /* Not implemented yet */ }
+        };
+    })();
 
     const bernoulliApp = (() => {
         let state = {};
@@ -5354,6 +5722,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'expected-value': document.getElementById('expected-value-app'),
         'information-value': document.getElementById('information-value-app'),
         'multiple-hypothesis-testing': document.getElementById('multiple-hypothesis-testing-app'),
+        mixture: document.getElementById('mixture-app'),
         combinatorics: document.getElementById('combinatorics-app'),
         about: document.getElementById('about-app'),
         install: document.getElementById('install-app')
@@ -5367,9 +5736,10 @@ document.addEventListener('DOMContentLoaded', () => {
         'expected-value': expectedValueApp,
         'information-value': informationValueApp,
         'multiple-hypothesis-testing': multipleHypothesisTestingApp,
+        mixture: mixtureApp,
         combinatorics: combinatoricsApp
     };
-    const initializedApps = { distributions: false, 'order-statistics': false, 'gaussian-copula': false, 'wiener-process': false, bernoulli: false, 'expected-value': false, 'information-value': false, 'multiple-hypothesis-testing': false, combinatorics: false };
+    const initializedApps = { distributions: false, 'order-statistics': false, 'gaussian-copula': false, 'wiener-process': false, bernoulli: false, 'expected-value': false, 'information-value': false, 'multiple-hypothesis-testing': false, mixture: false, combinatorics: false };
     const appTitles = {
         distributions: 'Distributions',
         'order-statistics': 'Order Statistics',
@@ -5379,6 +5749,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'expected-value': 'Expected Value',
         'information-value': 'Information Value',
         'multiple-hypothesis-testing': 'Multiple Hypothesis Testing',
+        mixture: 'Mixture Model',
         combinatorics: 'Selection Combinatorics',
         about: 'About',
         install: 'Install on device'
