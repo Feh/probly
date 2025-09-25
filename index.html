@@ -1256,18 +1256,27 @@
         <div id="about-app" class="app-container">
             <div class="panel">
                 <h3>About</h3>
-                <p>This is a web app that helps you do quick probability calculations on your phone or computer.</p>
-                <h4>What the app can do:</h4>
+                <p>This is a web app that helps you do quick probability calculations on your phone or computer. Its features fall into three main categories:</p>
+                <h4>1. Exploring Probability Distributions</h4>
+                <p>These tools let you visualize and work with various probability distributions:</p>
                 <ul>
-                    <li>Plot densities of widely used continuous and discrete probability distributions, and compute summary statistics.</li>
-                    <li>For any probability density graph, compute the area under the curve as well as conditional expectations (click and move over the density graphs). Useful for e.g. estimating tail probabilities of conditional variables, or for estimating a value given a lower/upper bound.</li>
-                    <li>For a mixture of distributions, given a sample value, calculate the posterior probability that the sample came from a specific group.</li>
-                    <li>Compute the density of order statistics of i.i.d. variables (for example if you want to know what the 2nd largest of 10 samples is).</li>
-                    <li>Plot, generate samples, and compute summary statistics of dependent variables (either continuous, or Bernoulli variables).</li>
-                    <li>Compute Brownian Motion sample paths, first hitting time distributions, and hitting probabilities.</li>
-                    <li>Given a list of probability/outcome pairs, compute the expected value, and optionally fit a continuous distribution to the data.</li>
-                    <li>Given a decision under uncertainty, calculate the value of additional information through repeated application of Bayes’ theorem.</li>
-                    <li>Compute the (naive) Bayesian update steps for judging multiple hypotheses as evidence emerges.</li>
+                    <li><strong>Distributions:</strong> Plot density functions for common continuous and discrete distributions, see summary statistics, and interactively calculate probabilities and conditional expectations.</li>
+                    <li><strong>Order Statistics:</strong> Calculate and plot the distribution of the <em>k</em>-th smallest value from a sample of <em>n</em> i.i.d. random variables.</li>
+                    <li><strong>Gaussian Copula:</strong> Construct and visualize joint distributions for two continuous random variables with arbitrary marginals and a given correlation.</li>
+                    <li><strong>Expected Value:</strong> Calculate the expected value from a discrete probability mass function, and optionally fit a continuous distribution to it.</li>
+                </ul>
+                <h4>2. Bayesian Reasoning</h4>
+                <p>These tools are applications of Bayes' theorem, which is fundamental for updating your beliefs in light of new evidence:</p>
+                <ul>
+                    <li><strong>Correlated Bernoulli Variables:</strong> Define the joint probability of two binary events using marginal probabilities, conditional probabilities, or their correlation.</li>
+                    <li><strong>Mixture Models:</strong> For a value drawn from a mixed population, find the posterior probability that it came from a specific sub-population (component).</li>
+                    <li><strong>Information Value:</strong> Calculate the economic value of acquiring new, imperfect information before making a decision (the Expected Value of Sample Information).</li>
+                    <li><strong>Multiple Hypothesis Testing:</strong> Track how the probabilities of competing hypotheses change as new evidence comes in.</li>
+                </ul>
+                <h4>3. Other Probabilistic Models</h4>
+                <ul>
+                    <li><strong>Wiener Process:</strong> Simulate sample paths of Brownian motion, and analyze first hitting time distributions and hitting probabilities.</li>
+                    <li><strong>Selection Combinatorics:</strong> Calculate permutations, combinations, and other counting problems. This section also includes a "Birthday Problem" calculator.</li>
                 </ul>
                 <h4>How it works</h4>
                 <p>For all calculations there are either closed form solutions available, or some simple numeric calculations. The app uses <a href="https://ccc-js.github.io/numeric2/">numeric.js</a> and <a href="https://jstat.github.io/">jStat</a> for most calculations. The values you input never leave your device, all computation is done locally.</p>
