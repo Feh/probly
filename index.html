@@ -1591,6 +1591,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.querySelectorAll('#mixture-app .plot-container').forEach(el => {
                     resizeObserver.observe(el);
                 });
+
+                renderMathInElement(document.getElementById('mixture-app'), {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '\\[', right: '\\]', display: true},
+                        {left: '\\(', right: '\\)', display: false}
+                    ]
+                });
             },
             updateFromURL: () => { /* Not implemented yet */ }
         };
